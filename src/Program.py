@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import re
 import scrapy
 
@@ -19,11 +21,11 @@ class AppInfoSpider(scrapy.Spider):
 		try:
 			# the first match is the rating box.
 			ariaLabel = response.css('c-wiz div[aria-label][role=img]::attr(aria-label)').get()
-			rating = float(re.search('\d\.\d', ariaLabel)[0])
+			rating = float(re.search(r'\d\.\d', ariaLabel)[0])
 		except:
 			rating = None
 
-		print('appName={0},  rating={1}, inAppPurchases={2}, containsAds={3}'.format(appName, rating, inAppPurchases, containsAds))
+		print(f'appName={appName},  rating={rating}, inAppPurchases={inAppPurchases}, containsAds={containsAds}')
 
 
 process = CrawlerProcess(settings={
