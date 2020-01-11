@@ -27,15 +27,9 @@ class AppInfoSpider(scrapy.Spider):
 
 		print(f'appName={appName},  rating={rating}, inAppPurchases={inAppPurchases}, containsAds={containsAds}')
 
-		r = scrapy.Request(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=xdSrCf&f.sid=324256068901206895&bl=boq_playuiserver_20200108.06_p0&hl=en&authuser&soc-app=121&soc-platform=1&soc-device=1&_reqid=244757&rt=c',
-						   method='POST',
-							headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-										"Origin": "https://play.google.com",
-										"Referer": "https://play.google.com/",
-										"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
-										"X-Same-Domain": "1"
-										},
-							body='f.req=%5B%5B%5B%22xdSrCf%22%2C%22%5B%5Bnull%2C%5B%5C%22com.sega.sonic1px%5C%22%2C7%5D%2C%5B%5D%5D%5D%22%2Cnull%2C%221%22%5D%5D%5D&',
+		r = scrapy.FormRequest(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=xdSrCf&f.sid=324256068901206895&hl=en',
+							headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
+							formdata={'f.req':r'[[["xdSrCf","[[null,[\"com.sega.sonic1px\",7],[]]]",null,"1"]]]'},
 							callback=self.callback,
 							errback=self.errback)
 		yield r
