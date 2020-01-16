@@ -2,7 +2,7 @@
 
 Team name: Random
 
-_Team Membership:_
+_Team Membership:_\
 Weikeng Yang - 405346443\
 Yingzhe Hu - 505366341\
 Qiqi Gu - 604253019\
