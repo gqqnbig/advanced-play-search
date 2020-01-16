@@ -35,7 +35,7 @@ class AppInfoSpider(scrapy.Spider):
 			appInfo['rating'] = None
 
 		try:
-			ariaLabel_review = response.css('span[aria-label]::attr(aria-label)').get()
+			ariaLabel_review = parentBox.css('span[aria-label]::attr(aria-label)').getall()
 			appInfo['num_reviews'] = int(ariaLabel_review.split(' ')[0].replace(',', ''))
 		except:
 			appInfo['num_reviews'] = None
