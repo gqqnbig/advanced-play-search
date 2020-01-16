@@ -11,6 +11,7 @@ class AppItem(Item):
 	inAppPurchases = Field()
 	containsAds = Field()
 	permissions = Field()
+	num_reviews = Field()
 
 
 def doesTableExist(TABLE_NAME, cur):
@@ -53,7 +54,8 @@ class DatabasePipeline(object):
 			item['appName'],
 			item['rating'],
 			item['inAppPurchases'],
-			item['containsAds']
+			item['containsAds'],
+			item['num_reviews']
 		))
 
 		for p in item['permissions']:

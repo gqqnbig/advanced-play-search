@@ -34,6 +34,12 @@ class AppInfoSpider(scrapy.Spider):
 		except:
 			appInfo['rating'] = None
 
+		try:
+			ariaLabel_review = response.css('span[aria-label]::attr(aria-label)').get()
+			appInfo['num_reviews'] = int(ariaLabel_review.split(' ')[0].replace(',', ''))
+		except:
+			appInfo['num_reviews'] = None
+
 		r = scrapy.FormRequest(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=xdSrCf&hl=en',
 							   headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
 							   formdata={'f.req': r'[[["xdSrCf","[[null,[\"' + appInfo['id'] + r'\",7],[]]]",null,"1"]]]'},
@@ -45,7 +51,8 @@ class AppInfoSpider(scrapy.Spider):
 
 	def errback(self, failure):
 		appInfo = failure.request.meta['appInfo']
-		print(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, containsAds={appInfo.containsAds}, permissions=Not available')
+		print(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, '
+		      f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
 
 	# print(failure)
 
@@ -75,7 +82,8 @@ class AppInfoSpider(scrapy.Spider):
 		if len(permissionData) > 3:
 			print('Unknown data in permission block.\npermissionData={}'.format(permissionData), file=sys.stderr)
 
-		print(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}')
+		print(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
+		      f'number of reviews={appInfo["num_reviews"]}')
 		print(f'permissions={permissions}')
 		appInfo['permissions']=permissions
 		yield appInfo
