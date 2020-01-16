@@ -11,6 +11,7 @@ class AppItem(Item):
 	inAppPurchases = Field()
 	containsAds = Field()
 	permissions = Field()
+	num_reviews = Field()
 
 
 def doesTableExist(TABLE_NAME, cur):
@@ -47,13 +48,14 @@ class DatabasePipeline(object):
 		if self.cursor.fetchone() is not None:
 			return item
 
-		sql = "INSERT INTO App(id,name,rating,inAppPurchases,containsAds) VALUES (?,?,?,?,?)"
+		sql = "INSERT INTO App(id,name,rating,inAppPurchases,containsAds,num_reviews) VALUES (?,?,?,?,?,?)"
 		self.cursor.execute(sql, (
 			item['id'],
 			item['appName'],
 			item['rating'],
 			item['inAppPurchases'],
-			item['containsAds']
+			item['containsAds'],
+			item['num_reviews']
 		))
 
 		for p in item['permissions']:
@@ -66,7 +68,15 @@ class DatabasePipeline(object):
 		self.conn = sqlite3.connect('../data/db.sqlite3')
 		self.cursor = self.conn.cursor()
 		if doesTableExist('App', self.cursor) is False:
-			self.cursor.execute('create table App(id text NOT NULL PRIMARY KEY, name text NOT NULL, rating real, inAppPurchases integer NOT NULL, containsAds integer NOT NULL)')
+			self.cursor.execute('''
+create table App(
+id text NOT NULL PRIMARY KEY, 
+name text NOT NULL, 
+rating real, 
+inAppPurchases integer NOT NULL, 
+containsAds integer NOT NULL,
+num_reviews integer
+)''')
 			self.conn.commit()
 
 	def close_spider(self, spider):
