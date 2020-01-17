@@ -33,15 +33,14 @@ Our web scraper follows links on Google Play and intakes app data. We have to ma
 |7      |Optimize code, project prototype|
 
 ## 6. Assignments:
-
-    - Weikeng Yang -
+ - Weikeng Yang -
 Database (subject to change)
-    - Yingzhe Hu - 
+ - Yingzhe Hu - 
 Database (subject to change)
-    - Qiqi Gu - 
+ - Qiqi Gu - 
 Website (subject to change)
-    - Dongyao Liang - 
+ - Dongyao Liang - 
 Website (subject to change)
-    - Shuhua Zhan -
+ - Shuhua Zhan -
 Scraper (subject to change)
 
