@@ -29,10 +29,10 @@ Schedule
 | 1     | Scrape single app data | 
 | 2     |Scrape apps on Google Play  |  
 | 3     | Store app data into database, project design document  |    
-|4|Build website
-|5|Query database from website
-|6|Polish website UI
-|7|Optimize code, project prototype
+|4|Build website|
+|5|Query database from website|
+|6|Polish website UI|
+|7|Optimize code, project prototype|
 5. Assignments:
 
     - Weikeng Yang -
