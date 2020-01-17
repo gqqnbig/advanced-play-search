@@ -21,7 +21,7 @@ If we have time, we will try to implement an Android app for our Google Play App
 
     Our web scraper follows links on Google Play and intakes app data. We have to make sure not to follow malicious links or run malicious (JavaScript) code from the web. When saving app data to database, we need to prevent SQL injection as well.The search bar of our website is a big security risk. We have to code carefully to prevent SQL injection. When a user eventually find a desired app, our website will take him to the official Google Play page, during this process, we should be careful not to pass additional information to Google, protecting user’s privacy. Our website shall support HTTPS that protects users’ privacy and ensures content integrity.As of our Android app, we foresee that the app needs to acquire users’ permissions such as viewing WIFI connections, accessing pictures and videos. We should not require excessive permissions to reduce our attack surfaces. 
     
-5.  Schedule 
+## 5. Schedule 
 
 | Week     | Task           | 
 | -------|:----------------------------:| 
@@ -33,7 +33,7 @@ If we have time, we will try to implement an Android app for our Google Play App
 |6      |Polish website UI          |
 |7      |Optimize code, project prototype|
 
-5. Assignments:
+## 6. Assignments:
 
     - Weikeng Yang -
 Database (subject to change)
