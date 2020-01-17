@@ -36,13 +36,13 @@ Schedule
 5. Assignments:
 
     - Weikeng Yang -
-Database (subject to change)\
+Database (subject to change)
     - Yingzhe Hu - 
-Database (subject to change)\
+Database (subject to change)
     - Qiqi Gu - 
-Website (subject to change)\
+Website (subject to change)
     - Dongyao Liang - 
-Website (subject to change)\
+Website (subject to change)
     - Shuhua Zhan -
 Scraper (subject to change)
 
