@@ -12,6 +12,8 @@ class AppItem(Item):
 	containsAds = Field()
 	permissions = Field()
 	num_reviews = Field()
+	install_fee = Field()
+
 
 
 def doesTableExist(TABLE_NAME, cur):
@@ -48,14 +50,15 @@ class DatabasePipeline(object):
 		if self.cursor.fetchone() is not None:
 			return item
 
-		sql = "INSERT INTO App(id,name,rating,inAppPurchases,containsAds,num_reviews) VALUES (?,?,?,?,?,?)"
+		sql = "INSERT INTO App(id,name,rating,inAppPurchases,containsAds,num_reviews, install_fee) VALUES (?,?,?,?,?,?,?)"
 		self.cursor.execute(sql, (
 			item['id'],
 			item['appName'],
 			item['rating'],
 			item['inAppPurchases'],
 			item['containsAds'],
-			item['num_reviews']
+			item['num_reviews'],
+			item['install_fee']
 		))
 
 		for p in item['permissions']:
@@ -75,7 +78,8 @@ name text NOT NULL,
 rating real, 
 inAppPurchases integer NOT NULL, 
 containsAds integer NOT NULL,
-num_reviews integer
+num_reviews integer,
+install_fee integer NOT NULL
 )''')
 			self.conn.commit()
 
