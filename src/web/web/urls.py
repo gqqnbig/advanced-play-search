@@ -22,4 +22,5 @@ from . import view
 
 urlpatterns = [
     url(r'^$',view.index),
+    url(r'^advance_search/keyword_search', view.keyword_search),
 ]
