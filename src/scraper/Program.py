@@ -24,7 +24,7 @@ class AppInfoSpider(scrapy.Spider):
 		h1 = response.css("h1[itemprop=name]")
 		appInfo['appName'] = h1.css("*::text").get()
 
-		parentBox = h1.xpath('../../..')
+		parentBox = h1.xpath('../..')
 		appInfo['inAppPurchases'] = parentBox.xpath("div[text()[contains(.,'Offers in-app purchases')]]").get() is not None
 		appInfo['containsAds'] = parentBox.xpath("div[text()[contains(.,'Contains Ads')]]").get() is not None
 		try:
@@ -40,7 +40,7 @@ class AppInfoSpider(scrapy.Spider):
 		except:
 			appInfo['num_reviews'] = None
 
-		ariaLabel_fee = parentBox.css('span button[aria-label]::attr(aria-label)').get()
+		ariaLabel_fee = parentBox.xpath('following-sibling::*').css('span button[aria-label]::attr(aria-label)').get()
 		if(ariaLabel_fee == "Install"):
 			appInfo['install_fee'] = 0
 		else:
