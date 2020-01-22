@@ -1,3 +1,11 @@
+# CS 188 Project - Google Play Advanced Search
+## Install
+Run `pip install -r requirements.txt` to install the dependencies. If you see conflicts, like "something has requirements xxx but you'll have xxx", you will need to update your pip.
+
+## Test
+Run `pytest --root src/tests` in project root.
+
+
 # CS 188 Project Proposal
 
 ## Team name: Random
