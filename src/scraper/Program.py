@@ -41,6 +41,13 @@ class AppInfoSpider(scrapy.Spider):
 		except:
 			appInfo['num_reviews'] = None
 
+		ariaLabel_fee = parentBox.xpath('following-sibling::*').css('span button[aria-label]::attr(aria-label)').get()
+		if(ariaLabel_fee == "Install"):
+			appInfo['install_fee'] = 0
+		else:
+			appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
+
+
 		r = scrapy.FormRequest(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=xdSrCf&hl=en',
 							   headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
 							   formdata={'f.req': r'[[["xdSrCf","[[null,[\"' + appInfo['id'] + r'\",7],[]]]",null,"1"]]]'},
@@ -84,7 +91,7 @@ class AppInfoSpider(scrapy.Spider):
 			print('Unknown data in permission block.\npermissionData={}'.format(permissionData), file=sys.stderr)
 
 		print(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
-		      f'number of reviews={appInfo["num_reviews"]}')
+		      f'number of reviews={appInfo["num_reviews"]},  install_fee={appInfo["install_fee"]}')
 		print(f'permissions={permissions}')
 		appInfo['permissions']=permissions
 		yield appInfo
