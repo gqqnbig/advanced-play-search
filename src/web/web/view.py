@@ -19,10 +19,10 @@ def keyword_search(request):
 	url = 'http://play.google.com/store/search?q=%s&c=apps' % keyword
 	page = requests.get(url)
 	soup = BeautifulSoup(page.text, 'html.parser')
-	app_box = soup.select('div[class*=Ktdaqe ] a[href] div[class][title]')
+	app_box = soup.select('c-wiz[data-page-items-component-name] div[jslog]')
 	app_urls = []
 	for i in app_box:
-		app_urls.append("http://play.google.com%s" % i.parent['href'])
+		app_urls.append("http://play.google.com%s" % i.select_one('a[href]')['href'])
 
 	os.system("./Program.py -p %s" % ",".join(app_urls))
 
