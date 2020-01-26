@@ -13,6 +13,7 @@ class AppItem(Item):
 	permissions = Field()
 	num_reviews = Field()
 	install_fee = Field()
+	categories = Field()
 
 
 
@@ -44,6 +45,16 @@ class DatabasePipeline(object):
 			except Exception as ex:
 				print(ex, file=sys.stderr)
 
+	def setCategory(self, appId, c):
+		try:
+			self.cursor.execute(f'update App set {delimiteDBIdentifier(c)}=1 where id=?', (appId,))
+		except:
+			try:
+				self.cursor.execute(f'alter table App add {delimiteDBIdentifier(c)} integer')
+				print(f'Add category column {delimiteDBIdentifier(c)}')
+				self.cursor.execute(f'update App set {delimiteDBIdentifier(c)}=1 where id=?', (appId,))
+			except Exception as ex:
+				print(ex, file=sys.stderr)
 
 	def process_item(self, item, spider):
 		self.cursor.execute('select 1 from App where id=?', (item['id'],))
@@ -63,6 +74,9 @@ class DatabasePipeline(object):
 
 		for p in item['permissions']:
 			self.setPermission(item['id'], p)
+
+		for c in item['categories']:
+			self.setCategory(item['id'], c)
 
 		self.conn.commit()
 		return item

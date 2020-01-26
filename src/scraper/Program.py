@@ -40,6 +40,8 @@ class AppInfoSpider(scrapy.Spider):
 		appInfo['appName'] = h1.css("*::text").get()
 
 		parentBox = h1.xpath('../..')
+		c1 = parentBox.css("a[itemprop=genre]")
+		appInfo['categories'] = c1.css("*::text").getall()
 		appInfo['inAppPurchases'] = parentBox.xpath("div[text()[contains(.,'Offers in-app purchases')]]").get() is not None
 		appInfo['containsAds'] = parentBox.xpath("div[text()[contains(.,'Contains Ads')]]").get() is not None
 		try:
@@ -72,8 +74,8 @@ class AppInfoSpider(scrapy.Spider):
 
 	def errback(self, failure):
 		appInfo = failure.request.meta['appInfo']
-		print(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, '
-			  f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
+		print(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, categories={appInfo["categories"]},'
+		      f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
 
 	# print(failure)
 
@@ -104,7 +106,7 @@ class AppInfoSpider(scrapy.Spider):
 			print('Unknown data in permission block.\npermissionData={}'.format(permissionData), file=sys.stderr)
 
 		print(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
-			  f'number of reviews={appInfo["num_reviews"]},  install_fee={appInfo["install_fee"]}')
+		      f'categories={appInfo["categories"]}, number of reviews={appInfo["num_reviews"]},  install_fee={appInfo["install_fee"]}')
 		print(f'permissions={permissions}')
 		appInfo['permissions'] = permissions
 		yield appInfo
