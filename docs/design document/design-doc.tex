@@ -21,11 +21,19 @@ BoldItalicFont=CONSOLAZ.ttf
 \fi
 
 \usepackage{forest}
-\usetikzlibrary{arrows.meta, angles}
-\forestset{
-  tree angle/.style={
-    tikz={\path () coordinate (A) -- (!u) coordinate (B) -- (!n) coordinate (C) pic [draw] {angle};}
-  }
+\usetikzlibrary{arrows.meta, %提供Stealth[]箭头类型
+angles} %提供angle pic
+	\forestset{
+	tree angle/.style={
+		% !表示开始相对引用。u是父节点，n是下一个兄弟节点。他们都是short-form step。
+		% pic {angle}: draw a small picture of type angle.
+		% angle是来自\usetikzlibrary{angles}。
+		% The angle pic draws an angle between the two lines BA and BC, where A, B, and C are three coordinates.
+		tikz={\path () coordinate (A) -- (!u) 
+			coordinate (B) -- (!n) 
+			coordinate (C) pic [draw, angle radius=#1] {angle};}
+	},
+	tree angle/.default=5mm
 }
 
 \usepackage{algorithm}
@@ -230,9 +238,9 @@ In order to mitigate DOS attack, our team have come up with several possible sol
         [Gain access \\to the server, name=access-to-server]
     ]
     [Send massive requests\\from outside
-        [Attacker gets\\many bots, tree angle]
+        [Attacker gets\\many bots, tree angle=9mm]
         [server firewall\\is down]
-            {\draw[->] () to[out=south west, in=south] (access-to-server);}
+            {\draw[->] () to[out=south west, in=south] (access-to-server);} % ()表示当前节点
     ]
     [Sends requests\\causing long execution
         [Find a bug in\\ our application]
@@ -266,14 +274,14 @@ Our website needs to render app data as text instead of as HTML so that even if 
     align=center,
   },
   [Run arbitrary code on our web page
-    [Code injected to database, tree angle
+    [Code injected to database, tree angle=9mm
         [Attacker gains\\direct access\\ to database]
         [The code\\ is from\\ Google Play
             [Attacker bypasses\\Google Play\\security check]
             [Man-in-the-middle\\attack on\\Google Play]
         ]
         [The code is\\from web search\\ interface
-            [Database\\is writable, tree angle]
+            [Database\\is writable, tree angle=12mm]
             [SQL\\paramertization\\failed]
         ]
     ]
