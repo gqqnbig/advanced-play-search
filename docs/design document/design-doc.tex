@@ -227,13 +227,12 @@ In order to mitigate DOS attack, our team have come up with several possible sol
   },
   [DOS Attack
     [Attack internally\\from the server
-        [Gain access \\to the server]
+        [Gain access \\to the server, name=access-to-server]
     ]
     [Send massive requests\\from outside
         [Attacker gets\\many bots, tree angle]
-        [server firewall\\is down
-            [Gain access \\to the server]
-        ]
+        [server firewall\\is down]
+            {\draw[->] () to[out=south west, in=south] (access-to-server);}
     ]
     [Sends requests\\causing long execution
         [Find a bug in\\ our application]
