@@ -12,19 +12,9 @@
 	<p>We have recorded {{appCount}} apps, and it's increasing!</p>
 {% endif %}
 
-
-<script type="text/javascript">
-	data = "{{ urls }}"
-	for(const url of data){
-		document.write(url)
-	}
-
-</script>
-
-
 {% if urls %}
 	{% for url in urls %}
-		<li><a href="{{ url }}">play.google.com{{ url }}</a></li>
+		<li><a href="{{ url }}">{{ url }}</a></li>
 	{% endfor %}
 {% endif %}
 
