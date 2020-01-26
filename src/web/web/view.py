@@ -1,14 +1,9 @@
-from django.http import HttpResponse
-from django.shortcuts import render
-
-from django.db import connection
-
-import requests
 import os
+import requests
 
 from bs4 import BeautifulSoup
-from scrapy.crawler import CrawlerProcess
-
+from django.db import connection
+from django.shortcuts import render
 
 def index(request):
 	context = {}
@@ -17,15 +12,6 @@ def index(request):
 		context['appCount'] = cursor.fetchone()[0]
 
 	return render(request, 'index.html', context)
-
-
-process = CrawlerProcess(settings={
-	#'LOG_ENABLED': False,
-	'ITEM_PIPELINES': {
-		'pipeline.DatabasePipeline': 300,
-	}
-})
-
 
 def keyword_search(request):
 	keyword = request.POST['keyword']
