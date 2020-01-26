@@ -18,6 +18,20 @@ class AppInfoSpider(scrapy.Spider):
 				  'https://play.google.com/store/apps/details?hl=en&id=com.sega.sonic1px',
 				  'https://play.google.com/store/apps/details?id=com.tencent.mm']
 
+	def __init__(self):
+		try:
+			index = sys.argv.index("-p")
+			self.url_list = sys.argv[index + 1].split(',')
+		except:
+			self.url_list = ['https://play.google.com/store/apps/details?hl=en&id=com.mojang.minecraftpe',
+							 'https://play.google.com/store/apps/details?hl=en&id=com.sega.sonic1px',
+							 'https://play.google.com/store/apps/details?id=com.tencent.mm']
+		print(self.url_list)
+
+	def start_requests(self):
+		for _url in self.url_list:
+			yield scrapy.Request(url=_url, callback=self.parse)
+
 	def parse(self, response):
 		appInfo = AppItem()
 		appInfo['id'] = urlParse.parse_qs(urlParse.urlparse(response.url).query)['id'][0]
@@ -42,11 +56,10 @@ class AppInfoSpider(scrapy.Spider):
 			appInfo['num_reviews'] = None
 
 		ariaLabel_fee = parentBox.xpath('following-sibling::*').css('span button[aria-label]::attr(aria-label)').get()
-		if(ariaLabel_fee == "Install"):
+		if (ariaLabel_fee == "Install"):
 			appInfo['install_fee'] = 0
 		else:
 			appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
-
 
 		r = scrapy.FormRequest(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=xdSrCf&hl=en',
 							   headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
@@ -60,7 +73,7 @@ class AppInfoSpider(scrapy.Spider):
 	def errback(self, failure):
 		appInfo = failure.request.meta['appInfo']
 		print(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, '
-		      f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
+			  f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
 
 	# print(failure)
 
@@ -91,9 +104,9 @@ class AppInfoSpider(scrapy.Spider):
 			print('Unknown data in permission block.\npermissionData={}'.format(permissionData), file=sys.stderr)
 
 		print(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
-		      f'number of reviews={appInfo["num_reviews"]},  install_fee={appInfo["install_fee"]}')
+			  f'number of reviews={appInfo["num_reviews"]},  install_fee={appInfo["install_fee"]}')
 		print(f'permissions={permissions}')
-		appInfo['permissions']=permissions
+		appInfo['permissions'] = permissions
 		yield appInfo
 
 
