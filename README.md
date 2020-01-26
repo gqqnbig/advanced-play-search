@@ -5,6 +5,12 @@ Run `pip install -r requirements.txt` to install the dependencies. If you see co
 ## Test
 Run `pytest --root src/tests` in project root.
 
+## Execute
+
+Run `python manage.py runserver` in `src/web` folder for the website.
+
+Run `python Program.py` in `src/scraper` folder for the web scraper.
+
 
 # CS 188 Project Proposal
 
