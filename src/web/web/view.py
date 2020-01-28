@@ -32,7 +32,7 @@ def keyword_search(request):
 	data = jsonLoads(matches[-1])
 	data = data[0][1]
 
-	app_urls = []
+	app_ids = []
 	while True:
 		appsData = data[0][0][0]
 		print(f'Load {len(appsData)} apps.')
@@ -46,7 +46,7 @@ def keyword_search(request):
 			else:
 				appInfo['install_fee'] = 0
 			print(appInfo)
-			app_urls.append("http://play.google.com/store/apps/details?id=" + appInfo['id'])
+			app_ids.append(appInfo['id'])
 
 		# save the apps
 		if data[0][0][-2]:
@@ -63,7 +63,7 @@ def keyword_search(request):
 		package = jsonLoads(response.text[response.text.index('\n') + 1:])
 		data = jsonLoads(package[0][2])
 
-	print(f'total results: {len(app_urls)}')
-	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_urls))
+	print(f'total results: {len(app_ids)}')
+	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_ids))
 
-	return render(request, 'index.html', {'urls': app_urls, 'previous_keyword': keyword})
+	return render(request, 'index.html', {'app_ids': app_ids, 'previous_keyword': keyword})
