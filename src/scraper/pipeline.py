@@ -1,21 +1,6 @@
 import sqlite3
 import sys
 
-from scrapy import Item, Field
-
-
-class AppItem(Item):
-	appName = Field()
-	id = Field()
-	rating = Field()
-	inAppPurchases = Field()
-	containsAds = Field()
-	permissions = Field()
-	num_reviews = Field()
-	install_fee = Field()
-	categories = Field()
-
-
 
 def doesTableExist(TABLE_NAME, cur):
 	cur.execute("SELECT 1 FROM sqlite_master WHERE name =? and type='table'", (TABLE_NAME,))

@@ -9,7 +9,7 @@ import urllib.parse as urlParse
 from scrapy.crawler import CrawlerProcess
 from json import loads as jsonLoads
 
-from pipeline import AppItem
+from Models import AppItem
 
 
 class AppInfoSpider(scrapy.Spider):
@@ -81,8 +81,8 @@ class AppInfoSpider(scrapy.Spider):
 
 	def permissions_retrieved(self, response):
 		appInfo = response.meta['appInfo']
-		data = jsonLoads(response.text[response.text.index('\n') + 1:])
-		permissionData = jsonLoads(data[0][2])
+		package = jsonLoads(response.text[response.text.index('\n') + 1:])
+		permissionData = jsonLoads(package[0][2])
 
 		permissions = []
 
