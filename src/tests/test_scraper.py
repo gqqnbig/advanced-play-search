@@ -15,7 +15,7 @@ def test_scraper():
 		args = ['python', 'Program.py']
 	else:
 		args = ['./Program.py']
-	args.extend(['pytest'])
+	args.extend(['--pytest'])
 	subprocess.run(args, cwd=os.path.join(testFolder, '../scraper'))
 
 	assert os.path.exists(dbFilePath), "Database file is not created."

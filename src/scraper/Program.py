@@ -112,7 +112,7 @@ class AppInfoSpider(scrapy.Spider):
 		yield appInfo
 
 
-if 'pytest' in sys.argv and sys.platform == 'win32' and sys.stdout.encoding == 'cp936':
+if '--pytest' in sys.argv and sys.platform == 'win32' and sys.stdout.encoding == 'cp936':
 	# com.sega.sonic1px has unicode characters. Without this fix, if run in pytest, the print statement throws exception.
 	sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 
