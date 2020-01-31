@@ -12,9 +12,9 @@
 	<p>We have recorded {{appCount}} apps, and it's increasing!</p>
 {% endif %}
 
-{% if urls %}
-	{% for url in urls %}
-		<li><a href="{{ url }}">{{ url }}</a></li>
+{% if app_ids %}
+	{% for app_id in app_ids %}
+		<li><a href="http://play.google.com/store/apps/details?id={{ app_id }}">http://play.google.com/store/apps/details?id={{ app_id }}</a></li>
 	{% endfor %}
 {% endif %}
 

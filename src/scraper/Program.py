@@ -21,7 +21,7 @@ class AppInfoSpider(scrapy.Spider):
 	def __init__(self):
 		try:
 			index = sys.argv.index("-p")
-			self.url_list = sys.argv[index + 1].split(',')
+			self.url_list = ['https://play.google.com/store/apps/details?hl=en&id=' + id for id in sys.argv[index + 1].split(',')]
 		except:
 			self.url_list = ['https://play.google.com/store/apps/details?hl=en&id=com.mojang.minecraftpe',
 							 'https://play.google.com/store/apps/details?hl=en&id=com.sega.sonic1px',
