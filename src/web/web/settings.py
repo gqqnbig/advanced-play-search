@@ -25,9 +25,6 @@ SECRET_KEY = 'eq*%5!o7m0m6hnvlj87$w1^$f4_$j7vuz7hby-)em434g5sv%m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['35.236.119.106', 'beta.gqqnbig.me', 'localhost', '127.0.0.1']
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -118,3 +115,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+try:
+	# django will import settings twice on development environment
+	# probably because of auto reload.
+	from web.ProductionSettings import *
+	print(f'PID {os.getpid()}: Production settings loaded.')
+except ModuleNotFoundError as e:
+	pass
