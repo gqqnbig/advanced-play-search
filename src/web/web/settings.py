@@ -121,5 +121,5 @@ try:
 	# probably because of auto reload.
 	from web.ProductionSettings import *
 	print(f'PID {os.getpid()}: Production settings loaded.')
-except ModuleNotFoundError as e:
+except ModuleNotFoundError:
 	pass
