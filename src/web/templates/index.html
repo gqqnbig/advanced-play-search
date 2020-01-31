@@ -1,4 +1,4 @@
-<h1>Google Play Advanced Search</h1>
+<h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
 <div>
 	<form action="/advance_search/keyword_search" method="post">
@@ -8,9 +8,6 @@
 	</form>
 </div>
 
-{% if appCount %}
-	<p>We have recorded {{appCount}} apps, and it's increasing!</p>
-{% endif %}
 
 {% if app_ids %}
 	{% for app_id in app_ids %}
@@ -19,5 +16,6 @@
 {% endif %}
 
 
+<p>We have recorded {{appCount}} apps, and it's increasing!</p>
 
 

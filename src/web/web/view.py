@@ -64,6 +64,13 @@ def keyword_search(request):
 		data = jsonLoads(package[0][2])
 
 	print(f'total results: {len(app_ids)}')
-	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_ids))
 
-	return render(request, 'index.html', {'app_ids': app_ids, 'previous_keyword': keyword})
+	context = {}
+	context['app_ids'] = app_ids
+	context['previous_keyword'] = keyword
+	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_ids))
+	with connection.cursor() as cursor:
+		cursor.execute('select count(*) from app')
+		context['appCount'] = cursor.fetchone()[0]
+
+	return render(request, 'index.html', context)
