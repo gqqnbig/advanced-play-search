@@ -22,6 +22,7 @@ def index(request):
 
 
 def keyword_search(request):
+	context = {}
 	keyword = request.POST['keyword']
 
 	url = 'http://play.google.com/store/search?q=%s&c=apps' % keyword
@@ -63,14 +64,58 @@ def keyword_search(request):
 		package = jsonLoads(response.text[response.text.index('\n') + 1:])
 		data = jsonLoads(package[0][2])
 
-	print(f'total results: {len(app_ids)}')
 
-	context = {}
-	context['app_ids'] = app_ids
-	context['previous_keyword'] = keyword
-	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_ids))
+	app_ids_new = []
+	app_ids_new_index = []
+	context['app_infos'] = [None] * len(app_ids)
 	with connection.cursor() as cursor:
-		cursor.execute('select count(*) from app')
+		cursor.execute('select count(*) from App')
 		context['appCount'] = cursor.fetchone()[0]
 
+		#search database first pass
+		for (i, id) in enumerate(app_ids):
+			cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": id})
+			tmp = cursor.fetchone()
+			if (not tmp):
+				app_ids_new.append(id)
+				app_ids_new_index.append(i)
+			else:
+				context['app_infos'][i] = {
+					'name': tmp[0],
+					'rating': tmp[1],
+					'num_reviews': tmp[2],
+					'install_fee': tmp[3],
+					'inAppPurchases': tmp[4],
+					'id': id,
+				}
+
+	#search database second pass
+	#for first-pass non-found apps, pass into scraper
+	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_ids_new))
+
+	with connection.cursor() as cursor:
+		for i in app_ids_new_index:
+			cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": app_ids[i]})
+			tmp = cursor.fetchone()
+			if (not tmp):
+				context['app_infos'][i] = {'id': app_ids[i]} #if scraper fails, just pass "id" to app_info to display
+			else:
+				context['app_infos'][i] = {
+					'name': tmp[0],
+					'rating': tmp[1],
+					'num_reviews': tmp[2],
+					'install_fee': tmp[3],
+					'inAppPurchases': tmp[4],
+					'id': id,
+				}
+
+
+
+	print(f'total results: {len(app_ids)}')
+	print("There were %d ids not in our databse." % len(app_ids_new))
+
+	context['previous_keyword'] = keyword
+
 	return render(request, 'index.html', context)
+
+
