@@ -20,6 +20,7 @@ class DatabasePipeline(object):
 		return cls(connectionString=crawler.settings.get('connectionString'))
 
 	def setPermission(self, appId, permission):
+		permission = "permission_" + permission
 		try:
 			self.cursor.execute(f'update App set {delimiteDBIdentifier(permission)}=1 where id=?', (appId,))
 		except:
@@ -31,6 +32,7 @@ class DatabasePipeline(object):
 				print(ex, file=sys.stderr)
 
 	def setCategory(self, appId, c):
+		c = "category_" + c
 		try:
 			self.cursor.execute(f'update App set {delimiteDBIdentifier(c)}=1 where id=?', (appId,))
 		except:
