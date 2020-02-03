@@ -1,3 +1,9 @@
+<style>
+	label {
+		display: block;
+		}
+</style>
+
 <h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
 <div>
@@ -6,6 +12,23 @@
 		<input type="text" name="keyword" value={{ previous_keyword }}>
 		<input type="submit" value="Search">
 	</form>
+</div>
+
+<button class="button", onclick="hidecategory()">Category</button>
+
+<div id="category">
+    {% for category in categories %}
+        <label> <input type="checkbox"  value="category"> {{category}} </label>
+    {% endfor %}
+</div>
+
+<br>
+
+<button class="button", onclick="hidepermission()">Permission</button>
+<div id="permission">
+    {% for permission in permissions %}
+        <label> <input type="checkbox"  value="permission" checked> {{permission}} </label>
+    {% endfor %}
 </div>
 
 
@@ -44,6 +67,32 @@
                 app_detail.style.display = "block";
             }
         });
+    }
+</script>
+
+<script>
+    function hidecategory() {
+        var x = document.getElementById("category");
+        if (x.style.display === "none")
+        {
+            x.style.display = "block";
+        }
+        else
+        {
+            x.style.display = "none";
+        }
+    }
+    function hidepermission()
+    {
+        var x = document.getElementById("permission");
+        if (x.style.display === "none")
+        {
+            x.style.display = "block";
+        }
+        else
+        {
+            x.style.display = "none";
+        }
     }
 </script>
 

@@ -19,6 +19,7 @@ def index(request):
 	with connection.cursor() as cursor:
 		context['appCount'] = getAppCountInDatabase(cursor)
 
+	(context['categories'], context['permissions']) = getPermissionCategory()
 	return render(request, 'index.html', context)
 
 
@@ -32,6 +33,8 @@ def keyword_search(request):
 	context['app_infos'] = getAppInfo(app_ids)
 	with connection.cursor() as cursor:
 		context['appCount'] = getAppCountInDatabase(cursor)
+
+	(context['categories'], context['permissions']) = getPermissionCategory()
 
 	return render(request, 'index.html', context)
 
@@ -157,3 +160,18 @@ def getAppCountInDatabase(cursor):
 		return cursor.fetchone()[0]
 	except OperationalError:  # no such table: app
 		return 0
+
+
+def getPermissionCategory():
+	with connection.cursor() as cursor:
+		cursor.execute('Pragma table_info(App)')
+		columns = cursor.fetchall()
+		columnNames = list([c[1] for c in columns])
+		categories = []
+		permissions = []
+		for i in columnNames:
+			if i.startswith("category_"):
+				categories.append(i[9:])
+			if i.startswith("permission_"):
+				permissions.append(i[11:])
+		return (categories, permissions)
