@@ -42,7 +42,6 @@ class AppInfoSpider(scrapy.Spider):
 		parentBox = h1.xpath('../..')
 		c1 = parentBox.css("a[itemprop=genre]")
 		appInfo['categories'] = c1.css("*::text").getall()
-
 		appInfo['inAppPurchases'] = parentBox.xpath("div[text()[contains(.,'Offers in-app purchases')]]").get() is not None
 		appInfo['containsAds'] = parentBox.xpath("div[text()[contains(.,'Contains Ads')]]").get() is not None
 		try:
