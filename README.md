@@ -4,6 +4,8 @@ Run `pip install -r requirements.txt` to install the dependencies. If you see co
 
 ## Test
 Run `pytest --root src/tests` in project root.
+or
+Run `pytest --rootdir=src/tests` for Redhat.
 
 ## Execute
 
