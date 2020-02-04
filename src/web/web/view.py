@@ -68,16 +68,39 @@ def keyword_search(request):
 		package = jsonLoads(response.text[response.text.index('\n') + 1:])
 		data = jsonLoads(package[0][2])
 
-
-	app_ids_new = []
-	app_ids_new_index = []
-	context['app_infos'] = [None] * len(app_ids)
+	context['app_infos'] = get_appinfo(app_ids)
 	with connection.cursor() as cursor:
 		cursor.execute('SELECT count(name) FROM sqlite_master WHERE type="table" AND name="App"')
 		if (cursor.fetchone()[0] == 1):
 			cursor.execute('select count(*) from App')
 			context['appCount'] = cursor.fetchone()[0]
+		else:
+			context['appCount'] = 0
+	context['previous_keyword'] = keyword
 
+	return render(request, 'index.html', context)
+
+
+#input:
+#   list of app_id
+#return:
+#   list of dictionary(set). each set represents the app_info of the corresponding app_id,
+#                            the return list have the same length as the input list
+
+#description:
+#	search the app_ids in database
+#	run scraper against the apps that are not in our database
+#	if scraper failed for some app_id, their corresponding app_info will have only app_id
+def get_appinfo(app_ids):
+	if (len(app_ids) == 0):
+		return None
+
+	app_ids_new = []
+	app_ids_new_index = []
+	app_infos = [None] * len(app_ids)
+	with connection.cursor() as cursor:
+		cursor.execute('SELECT count(name) FROM sqlite_master WHERE type="table" AND name="App"')
+		if (cursor.fetchone()[0] == 1):
 			#search database first pass
 			for (i, id) in enumerate(app_ids):
 				cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": id})
@@ -86,7 +109,7 @@ def keyword_search(request):
 					app_ids_new.append(id)
 					app_ids_new_index.append(i)
 				else:
-					context['app_infos'][i] = {
+					app_infos[i] = {
 						'name': tmp[0],
 						'rating': tmp[1],
 						'num_reviews': tmp[2],
@@ -95,7 +118,6 @@ def keyword_search(request):
 						'id': id,
 					}
 		else:
-			context['appCount'] = 0
 			app_ids_new = app_ids
 			app_ids_new_index = [x for x in range(len(app_ids))]
 
@@ -103,14 +125,16 @@ def keyword_search(request):
 	#for first-pass non-found apps, pass into scraper
 	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_ids_new))
 
+	scraper_fail_id = []
 	with connection.cursor() as cursor:
 		for i in app_ids_new_index:
 			cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": app_ids[i]})
 			tmp = cursor.fetchone()
 			if (not tmp):
-				context['app_infos'][i] = {'id': app_ids[i]} #if scraper fails, just pass "id" to app_info to display
+				app_infos[i] = {'id': app_ids[i]} #if scraper fails, just pass "id" to app_info to display
+				scraper_fail_id.append(app_ids[i])
 			else:
-				context['app_infos'][i] = {
+				app_infos[i] = {
 					'name': tmp[0],
 					'rating': tmp[1],
 					'num_reviews': tmp[2],
@@ -119,13 +143,10 @@ def keyword_search(request):
 					'id': app_ids[i],
 				}
 
-
-
+	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ",".join(scraper_fail_id)))
 	print(f'total results: {len(app_ids)}')
-	print("There were %d ids not in our databse." % len(app_ids_new))
+	print("There were %d ids not in our database. %d are now added" % (len(app_ids_new), len(app_ids_new)-len(scraper_fail_id)))
 
-	context['previous_keyword'] = keyword
-
-	return render(request, 'index.html', context)
+	return app_infos
 
 
