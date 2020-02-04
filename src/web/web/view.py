@@ -105,20 +105,12 @@ def getAppInfo(app_ids: List[str]) -> List[Dict]:
 		if (cursor.fetchone()[0] == 1):
 			#search database first pass
 			for (i, id) in enumerate(app_ids):
-				cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": id})
-				tmp = cursor.fetchone()
+				tmp = getAppInfoInDatabase(cursor, id)
 				if (not tmp):
 					app_ids_new.append(id)
 					app_ids_new_index.append(i)
 				else:
-					app_infos[i] = {
-						'name': tmp[0],
-						'rating': tmp[1],
-						'num_reviews': tmp[2],
-						'install_fee': tmp[3],
-						'inAppPurchases': tmp[4],
-						'id': id,
-					}
+					app_infos[i] = tmp
 		else:
 			app_ids_new = app_ids
 			app_ids_new_index = [x for x in range(len(app_ids))]
@@ -130,20 +122,12 @@ def getAppInfo(app_ids: List[str]) -> List[Dict]:
 	scraper_fail_id = []
 	with connection.cursor() as cursor:
 		for i in app_ids_new_index:
-			cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": app_ids[i]})
-			tmp = cursor.fetchone()
+			tmp = getAppInfoInDatabase(cursor, app_ids[i])
 			if (not tmp):
 				app_infos[i] = {'id': app_ids[i]} #if scraper fails, just pass "id" to app_info to display
 				scraper_fail_id.append(app_ids[i])
 			else:
-				app_infos[i] = {
-					'name': tmp[0],
-					'rating': tmp[1],
-					'num_reviews': tmp[2],
-					'install_fee': tmp[3],
-					'inAppPurchases': tmp[4],
-					'id': app_ids[i],
-				}
+				app_infos[i] = tmp
 
 	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ",".join(scraper_fail_id)))
 	print(f'total results: {len(app_ids)}')
@@ -152,3 +136,17 @@ def getAppInfo(app_ids: List[str]) -> List[Dict]:
 	return app_infos
 
 
+def getAppInfoInDatabase(cursor, id):
+	cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": id})
+	tmp = cursor.fetchone()
+	if tmp:
+		return {
+			'name': tmp[0],
+			'rating': tmp[1],
+			'num_reviews': tmp[2],
+			'install_fee': tmp[3],
+			'inAppPurchases': tmp[4],
+			'id': id,
+		}
+	else:
+		return None
