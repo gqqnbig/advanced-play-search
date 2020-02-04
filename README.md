@@ -3,8 +3,7 @@
 Run `pip install -r requirements.txt` to install the dependencies. If you see conflicts, like "something has requirements xxx but you'll have xxx", you will need to update your pip.
 
 ## Test
-Run `pytest --root src/tests` in project root.
-or `pytest --rootdir=src/tests` for Redhat.
+Run `pytest --rootdir=src/tests` in project root.
 
 ## Execute
 
