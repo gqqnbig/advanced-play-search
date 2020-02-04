@@ -6,6 +6,7 @@ import sys
 from django.db import connection
 from django.shortcuts import render
 from json import loads as jsonLoads
+from typing import List, Dict
 
 # import local packages
 sys.path.append('..')
@@ -81,18 +82,19 @@ def keyword_search(request):
 	return render(request, 'index.html', context)
 
 
-#input:
-#   list of app_id
-#return:
-#   list of dictionary(set). each set represents the app_info of the corresponding app_id,
-#                            the return list have the same length as the input list
+def getAppInfo(app_ids: List[str]) -> List[Dict]:
+	"""
+	search the app_ids in database
 
-#description:
-#	search the app_ids in database
-#	run scraper against the apps that are not in our database
-#	if scraper failed for some app_id, their corresponding app_info will have only app_id
-def get_appinfo(app_ids):
-	if (len(app_ids) == 0):
+	run scraper against the apps that are not in our database
+	if scraper failed for some app_id, their corresponding app_info will have only app_id
+
+	:param app_ids: list of app_id
+	:return:    list of dictionary(set). each set represents the app_info of the corresponding app_id,
+                the return list have the same length as the input list
+	"""
+
+	if len(app_ids) == 0:
 		return None
 
 	app_ids_new = []
