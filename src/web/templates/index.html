@@ -9,12 +9,43 @@
 </div>
 
 
-{% if app_ids %}
-	{% for app_id in app_ids %}
-		<li><a href="http://play.google.com/store/apps/details?id={{ app_id }}">http://play.google.com/store/apps/details?id={{ app_id }}</a></li>
+{% if app_infos %}
+	{% for app_info in app_infos %}
+        {% if app_info.name %}
+        <li><a href="http://play.google.com/store/apps/details?id={{ app_info.id }}">{{ app_info.name }}</a>
+            <br>
+            <button type="button" class="collapsible">+</button>
+            <div class="app_detail_{{ app_info.id }}" style="display: none">
+                <ul>
+                    <li>rating: {{ app_info.rating }}</li>
+                    <li>num_reviews: {{ app_info.num_reviews }}</li>
+                    <li>install_fee: ${{ app_info.install_fee }}</li>
+                    <li>inAppPurchases: {{ app_info.inAppPurchases }}</li>
+                </ul>
+            </div>
+        </li>
+
+        {% else %}
+        <li><a href="http://play.google.com/store/apps/details?id={{ app_info.id }}">http://play.google.com/store/apps/details?id={{ app_info.id }}</a></li>
+        {% endif %}
 	{% endfor %}
 {% endif %}
 
+
+<script>
+    var coll = document.getElementsByClassName("collapsible");
+    for (var i=0; i<coll.length; i++){
+        coll[i].addEventListener("click", function(){
+            this.classList.toggle("active");
+            var app_detail = this.nextElementSibling;
+            if (app_detail.style.display === "block"){
+                app_detail.style.display = "none";
+            } else{
+                app_detail.style.display = "block";
+            }
+        });
+    }
+</script>
 
 <p>We have recorded {{appCount}} apps, and it's increasing!</p>
 

@@ -6,6 +6,8 @@ import sys
 from django.db import connection
 from django.shortcuts import render
 from json import loads as jsonLoads
+from django.db.utils import OperationalError
+from typing import List
 
 # import local packages
 sys.path.append('..')
@@ -15,15 +17,26 @@ from scraper.Models import AppItem
 def index(request):
 	context = {}
 	with connection.cursor() as cursor:
-		cursor.execute('select count(*) from app')
-		context['appCount'] = cursor.fetchone()[0]
+		context['appCount'] = getAppCountInDatabase(cursor)
 
 	return render(request, 'index.html', context)
 
 
 def keyword_search(request):
+	context = {}
 	keyword = request.POST['keyword']
+	context['previous_keyword'] = keyword
 
+	app_ids = searchGooglePlay(keyword)
+
+	context['app_infos'] = getAppInfo(app_ids)
+	with connection.cursor() as cursor:
+		context['appCount'] = getAppCountInDatabase(cursor)
+
+	return render(request, 'index.html', context)
+
+
+def searchGooglePlay(keyword):
 	url = 'http://play.google.com/store/search?q=%s&c=apps' % keyword
 	page = requests.get(url)
 
@@ -62,15 +75,85 @@ def keyword_search(request):
 												+ r'\"]]",null,"generic"]]]'})
 		package = jsonLoads(response.text[response.text.index('\n') + 1:])
 		data = jsonLoads(package[0][2])
+	return app_ids
 
-	print(f'total results: {len(app_ids)}')
 
-	context = {}
-	context['app_ids'] = app_ids
-	context['previous_keyword'] = keyword
-	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(app_ids))
+def getAppInfo(app_ids: List[str]):
+	"""
+	search the app_ids in database or retrieve from Google Play.
+
+	run scraper against the apps that are not in our database
+	if scraper failed for some app_id, their corresponding app_info will have only app_id
+
+	:param app_ids: list of app_id
+	:return:    list of dictionary(set). each set represents the app_info of the corresponding app_id,
+                the return list have the same length as the input list
+	"""
+
+	if len(app_ids) == 0:
+		return []
+
+	# https://stackoverflow.com/a/39537308/746461
+	# Python 3.6 and up keeps dict insertion order.
+	# Python 3.7 formalizes it to a language specification.
+	if sys.version_info < (3, 6):
+		# sys.version_info is a named tuple. https://docs.python.org/3/glossary.html#term-named-tuple
+		print(f'Python {tuple(sys.version_info)} may not keep dictionary insertion order. Upgrade to at least version 3.6.', file=sys.stderr)
+
 	with connection.cursor() as cursor:
-		cursor.execute('select count(*) from app')
-		context['appCount'] = cursor.fetchone()[0]
+		if getAppCountInDatabase(cursor) > 0:
+			# search database first pass. If the app isn't in database, leave it none. We will fill in the second pass.
+			app_infos = {id: getAppInfoInDatabase(cursor, id) for id in app_ids}
+		else:
+			app_infos = {id: None for id in app_ids}
 
-	return render(request, 'index.html', context)
+	# search database second pass
+	# for first-pass non-found apps, pass into scraper
+	appsMissingInDatabase = [k for k, v in app_infos.items() if v is None]
+	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+
+	scraper_fail_id = []
+	with connection.cursor() as cursor:
+		for id in appsMissingInDatabase:
+			tmp = getAppInfoInDatabase(cursor, id)
+			if tmp:
+				app_infos[id] = tmp
+			else:
+				assert id in app_infos
+				app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
+				scraper_fail_id.append(id)
+
+	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
+	print(f'total results: {len(app_ids)}')
+	print("There were %d ids not in our database. %d are now added" % (len(appsMissingInDatabase), len(appsMissingInDatabase) - len(scraper_fail_id)))
+
+	assert None not in app_infos.values(), "Every app id returned from Google should have an app detail."
+	return app_infos.values()
+
+
+def getAppInfoInDatabase(cursor, id):
+	"""
+	Find app id in database. If found, return the data, otherwise return null.
+	"""
+
+	cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": id})
+	tmp = cursor.fetchone()
+	if tmp:
+		return {
+			'name': tmp[0],
+			'rating': tmp[1],
+			'num_reviews': tmp[2],
+			'install_fee': tmp[3],
+			'inAppPurchases': tmp[4],
+			'id': id,
+		}
+	else:
+		return None
+
+
+def getAppCountInDatabase(cursor):
+	try:
+		cursor.execute('select count(*) from app')
+		return cursor.fetchone()[0]
+	except OperationalError:  # no such table: app
+		return 0
