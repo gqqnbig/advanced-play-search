@@ -10,7 +10,7 @@ from django.db.utils import OperationalError
 from typing import List
 
 # import local packages
-sys.path.append('..')
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 from scraper.Models import AppItem
 
 
