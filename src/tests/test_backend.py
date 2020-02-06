@@ -11,6 +11,9 @@ sys.path.append(os.path.join(testFolder, '../web'))
 import web.view
 
 
+def test_searchNoMatchKeyword():
+	web.view.searchGooglePlay('worldworldworldworldellohellohellohello')
+
 
 def test_searchNoDuplicate():
 	result = web.view.searchGooglePlay('youtube')
