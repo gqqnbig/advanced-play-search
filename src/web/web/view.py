@@ -50,16 +50,22 @@ def searchGooglePlay(keyword):
 		appsData = data[0][0][0]
 		print(f'Load {len(appsData)} apps.')
 		for app in appsData:
+			appId = app[12][0]
+			if appId in app_ids:
+				print(f'Duplicate app id {appId}.')
+				continue
+
 			appInfo = AppItem()
 			appInfo['appName'] = app[2]
-			appInfo['id'] = app[12][0]
+			appInfo['id'] = appId
 			appInfo['rating'] = app[6][0][2][1][1]
 			if app[7]:
 				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', app[7][0][3][2][1][0][2])[0])
 			else:
 				appInfo['install_fee'] = 0
-			print(appInfo)
-			app_ids.append(appInfo['id'])
+			print(appInfo['id'])
+
+			app_ids.append(appId)
 
 		# save the apps
 		if data[0][0][-2]:
