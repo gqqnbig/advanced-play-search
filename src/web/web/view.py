@@ -40,7 +40,7 @@ def keyword_search(request):
 
 
 def searchGooglePlay(keyword):
-	url = 'http://play.google.com/store/search?q=%s&c=apps' % keyword
+	url = 'https://play.google.com/store/search?q=%s&c=apps' % keyword
 	page = requests.get(url)
 
 	# "key: 'ds:3'" is not reliable.
