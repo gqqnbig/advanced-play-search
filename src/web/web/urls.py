@@ -18,9 +18,11 @@ from django.urls import path
 from django.conf.urls import url
 
 from . import view
+from . import Api
 
 
 urlpatterns = [
     url(r'^$',view.index),
     url(r'^advance_search/keyword_search', view.keyword_search),
+    url(r'^Api/AppCount', Api.getAppCount, name='Api/AppCount'),
 ]

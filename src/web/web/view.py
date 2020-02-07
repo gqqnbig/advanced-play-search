@@ -6,19 +6,16 @@ import sys
 from django.db import connection
 from django.shortcuts import render
 from json import loads as jsonLoads
-from django.db.utils import OperationalError
 from typing import List
 
 # import local packages
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
 from scraper.Models import AppItem
+from web.shared.dbUtils import getAppCountInDatabase
 
 
 def index(request):
 	context = {}
-	with connection.cursor() as cursor:
-		context['appCount'] = getAppCountInDatabase(cursor)
-
 	(context['categories'], context['permissions']) = getPermissionCategory()
 	return render(request, 'index.html', context)
 
@@ -27,13 +24,11 @@ def keyword_search(request):
 	context = {}
 	keyword = request.POST['keyword']
 	context['previous_keyword'] = keyword
+	context['refetchAppCount'] = True
 
 	app_ids = searchGooglePlay(keyword)
 
 	context['app_infos'] = getAppInfo(app_ids)
-	with connection.cursor() as cursor:
-		context['appCount'] = getAppCountInDatabase(cursor)
-
 	(context['categories'], context['permissions']) = getPermissionCategory()
 
 	return render(request, 'index.html', context)
@@ -160,19 +155,11 @@ def getAppInfoInDatabase(cursor, id):
 		return None
 
 
-def getAppCountInDatabase(cursor):
-	try:
-		cursor.execute('select count(*) from app')
-		return cursor.fetchone()[0]
-	except OperationalError:  # no such table: app
-		return 0
-
-
 def getPermissionCategory():
 	with connection.cursor() as cursor:
 		cursor.execute('Pragma table_info(App)')
 		columns = cursor.fetchall()
-		columnNames = list([c[1] for c in columns])
+		columnNames = [c[1] for c in columns]
 		categories = []
 		permissions = []
 		for i in columnNames:
@@ -180,4 +167,6 @@ def getPermissionCategory():
 				categories.append(i[9:])
 			if i.startswith("permission_"):
 				permissions.append(i[11:])
+
+		assert getAppCountInDatabase(cursor) == 0 or len(categories) + len(permissions) > 0, "There are apps in database, but there are no categories or permissions."
 		return (categories, permissions)

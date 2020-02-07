@@ -1,8 +1,15 @@
-<style>
-	label {
-		display: block;
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		label {
+			display: block;
 		}
-</style>
+	</style>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+	<title></title>
+</head>
+<body>
 
 <h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
@@ -96,7 +103,7 @@
     }
 </script>
 
-<p>We have recorded {{appCount}} apps, and it's increasing!</p>
+<p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
 
 <marquee> TEAM RANDOM: <br>
 Weikeng Yang <br>
@@ -105,5 +112,14 @@ Shuhua Zhan <br>
 Dongyao Liang <br>
 Yuchen Hu <br>
 </marquee>
+
+<script>
+	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.text()).then(text => {
+			$("#appCount").text(text);
+		}
+	);
+</script>
+</body>
+</html>
 
 
