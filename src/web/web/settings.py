@@ -27,6 +27,11 @@ DEBUG = True
 
 # Application definition
 
+CACHES = {
+	# disable cache
+	'default': {}
+}
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
