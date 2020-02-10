@@ -88,9 +88,12 @@ class AppInfoSpider(scrapy.Spider):
 
 		# permissionData[0] is grouped permissions.
 		if len(permissionData) > 0:
-			for g in permissionData[0]:
-				for p in g[2]:
-					permissions.append(p[1])
+			if (permissionData[0]):
+				for g in permissionData[0]:
+					if (not g):
+						continue
+					for p in g[2]:
+						permissions.append(p[1])
 
 		# permissionData[1] is other permissions.
 		if len(permissionData) > 1:
