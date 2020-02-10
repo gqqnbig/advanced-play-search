@@ -11,3 +11,4 @@ class AppItem(Item):
 	num_reviews = Field()
 	install_fee = Field()
 	categories = Field()
+	app_icon = Field()

@@ -140,7 +140,7 @@ def getAppInfoInDatabase(cursor, id):
 	Find app id in database. If found, return the data, otherwise return null.
 	"""
 
-	cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases FROM App WHERE id=:id", {"id": id})
+	cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE id=:id", {"id": id})
 	tmp = cursor.fetchone()
 	if tmp:
 		return {
@@ -150,6 +150,8 @@ def getAppInfoInDatabase(cursor, id):
 			'install_fee': tmp[3],
 			'inAppPurchases': tmp[4],
 			'id': id,
+			'app_icon': tmp[5]
+
 		}
 	else:
 		return None

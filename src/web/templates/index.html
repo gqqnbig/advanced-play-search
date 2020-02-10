@@ -43,6 +43,7 @@
 	{% for app_info in app_infos %}
         {% if app_info.name %}
         <li><a href="https://play.google.com/store/apps/details?id={{ app_info.id }}">{{ app_info.name }}</a>
+            <img src="{{ app_info.app_icon }}">
             <br>
             <button type="button" class="collapsible">+</button>
             <div class="app_detail_{{ app_info.id }}" style="display: none">

@@ -48,7 +48,7 @@ class DatabasePipeline(object):
 		if self.cursor.fetchone() is not None:
 			return item
 
-		sql = "INSERT INTO App(id,name,rating,inAppPurchases,updateDate,containsAds,num_reviews,install_fee) VALUES (?,?,?,?,date(datetime('now')),?,?,?)"
+		sql = "INSERT INTO App(id,name,rating,inAppPurchases,updateDate,containsAds,num_reviews,install_fee,app_icon) VALUES (?,?,?,?,date(datetime('now')),?,?,?,?)"
 		self.cursor.execute(sql, (
 			item['id'],
 			item['appName'],
@@ -56,7 +56,8 @@ class DatabasePipeline(object):
 			item['inAppPurchases'],
 			item['containsAds'],
 			item['num_reviews'],
-			item['install_fee']
+			item['install_fee'],
+			item['app_icon'],
 		))
 
 		for p in item['permissions']:
@@ -81,7 +82,8 @@ inAppPurchases integer NOT NULL,
 containsAds integer NOT NULL,
 num_reviews integer,
 install_fee integer NOT NULL,
-updateDate text NOT NULL
+updateDate text NOT NULL,
+app_icon text NOT NULL
 )''')
 			self.conn.commit()
 
