@@ -14,9 +14,6 @@ from Models import AppItem
 
 class AppInfoSpider(scrapy.Spider):
 	name = "brickset_spider"
-	start_urls = ['https://play.google.com/store/apps/details?hl=en&id=com.mojang.minecraftpe',
-				  'https://play.google.com/store/apps/details?hl=en&id=com.sega.sonic1px',
-				  'https://play.google.com/store/apps/details?id=com.tencent.mm']
 
 	def __init__(self):
 		try:
@@ -86,10 +83,17 @@ class AppInfoSpider(scrapy.Spider):
 
 		permissions = []
 
+		# permissionData may have
+		# nothing, or
+		# grouped permissions, or
+		# grouped permissions + other permissions, or
+		# grouped permissions + other permissions + miscellaneous permissions
+
 		# permissionData[0] is grouped permissions.
 		if len(permissionData) > 0:
 			if (permissionData[0]):
 				for g in permissionData[0]:
+					# permission group may be empty.
 					if (not g):
 						continue
 					for p in g[2]:
