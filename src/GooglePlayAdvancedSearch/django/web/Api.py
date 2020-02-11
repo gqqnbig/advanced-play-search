@@ -30,6 +30,6 @@ def getPermissions(request):
 def getCategories(request):
 	with connection.cursor() as cursor:
 		categories = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
-		response = JsonResponse(categories)
+		response = JsonResponse(categories, safe=False)
 		response['Cache-Control'] = "private, max-age=" + str(len(categories) * len(categories))
 		return response

@@ -49,6 +49,24 @@
 		.expandableList ul > li {
 			list-style: none;
 		}
+
+		.filters {
+			margin: 1em 0;
+		}
+
+		.filters .filter {
+			display: inline-block;
+		}
+
+		.filters .filter:not(:last-child) {
+			padding-right: 1em;
+			border-right: 2px darkgreen dotted;
+		}
+
+		.filters .filter:not(:first-child) {
+			padding-left: 1em;
+		}
+
 	</style>
 </head>
 <body>
@@ -63,25 +81,38 @@
 	</form>
 </div>
 
-<button class="button", onclick="hidecategory()">Category</button>
-
-<div id="category">
-    {% for category in categories %}
-        <label> <input type="checkbox"  value="category"> {{category}} </label>
-    {% endfor %}
-</div>
-
-<br>
-
-
 {% verbatim %}
-<div id="permissions" class="expandableList">
-	<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
-	<ul v-show="isExpanded">
-		<li v-for="p in permissions">
-			<label> <input type="checkbox" value="permission" v-model="p.checked"> {{ p.name }} </label>
-		</li>
-	</ul>
+<div class="filters">
+	<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
+	<label class="filter"><input type="checkbox" checked>Free install</label>
+	<label class="filter"><input type="checkbox" checked>Allow ads</label>
+
+	<div class="filter">
+		Rating >
+		<select style="width: 3em">
+			<option>0</option>
+			<option>1</option>
+			<option>2</option>
+			<option>3</option>
+			<option>4</option>
+		</select>
+	</div>
+	<div id="permissions" class="filter expandableList">
+		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+		<ul v-show="isExpanded" style="width: 500px">
+			<li v-for="p in permissions">
+				<label> <input type="checkbox" value="permission" v-model="p.checked"> {{ p.name }} </label>
+			</li>
+		</ul>
+	</div>
+	<div id="categories" class="filter expandableList">
+		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+		<ul v-show="isExpanded" style="width: 200px">
+			<li v-for="p in categories">
+				<label> <input type="checkbox" value="category" v-model="p.checked"> {{ p.name }} </label>
+			</li>
+		</ul>
+	</div>
 </div>
 {% endverbatim %}
 
@@ -121,32 +152,6 @@
                 app_detail.style.display = "block";
             }
         });
-    }
-</script>
-
-<script>
-    function hidecategory() {
-        var x = document.getElementById("category");
-        if (x.style.display === "none")
-        {
-            x.style.display = "block";
-        }
-        else
-        {
-            x.style.display = "none";
-        }
-    }
-    function hidepermission()
-    {
-        var x = document.getElementById("permission");
-        if (x.style.display === "none")
-        {
-            x.style.display = "block";
-        }
-        else
-        {
-            x.style.display = "none";
-        }
     }
 </script>
 
@@ -191,6 +196,35 @@ Yuchen Hu <br>
 						return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.name).join(', ');
 
 					return 'Allow ' + checkedPermissions[true].length + ' permissions';
+				}
+			}
+		});
+	});
+
+	fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
+		const vm = new Vue({
+			el: '#categories',
+			data: {
+				categories: data.map(p => {
+					return {name: p, checked: true}
+				}),
+				isExpanded: false
+			},
+			computed: {
+				summary: function () {
+					// `this` 指向 vm 实例
+
+					//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
+					//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
+					const checkedPermissions = _.groupBy(this.categories, p => p.checked);
+					if (checkedPermissions[false] != null && checkedPermissions[false].length === 0)
+						return "Allow all categories";
+					if (checkedPermissions[false] != null && checkedPermissions[false].length <= 2)
+						return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.name).join(', ');
+					if (checkedPermissions[true] != null && checkedPermissions[true].length <= 2)
+						return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.name).join(', ');
+
+					return 'Allow ' + checkedPermissions[true].length + ' categories';
 				}
 			}
 		});
