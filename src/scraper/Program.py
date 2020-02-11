@@ -46,7 +46,7 @@ class AppInfoSpider(scrapy.Spider):
 			ariaLabel = response.css('c-wiz div[aria-label][role=img]::attr(aria-label)').get()
 			appInfo['rating'] = float(re.search(r'\d\.\d', ariaLabel)[0])
 		except:
-			appInfo['rating'] = None
+			appInfo['rating'] = 0
 
 		try:
 			ariaLabel_review = parentBox.css('span[aria-label]::attr(aria-label)').get()
