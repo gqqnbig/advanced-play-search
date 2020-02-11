@@ -25,4 +25,6 @@ urlpatterns = [
     url(r'^$',view.index),
     url(r'^advance_search/keyword_search', view.keyword_search),
     url(r'^Api/AppCount', Api.getAppCount, name='Api/AppCount'),
+    url(r'^Api/Permissions', Api.getPermissions, name='Api/Permissions'),
+    url(r'^Api/Categories', Api.getCategories, name='Api/Categories'),
 ]

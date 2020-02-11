@@ -1,13 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+	<title></title>
+	{#    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>#}
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
 	<style>
 		label {
 			display: block;
 		}
+
+		.expandableList {
+			position: relative;
+		}
+
+		.expandableList ul {
+			position: absolute;
+			background-color: rgba(255, 255, 255, 0.8);
+			padding-left: 0;
+			padding-right: 0.5em;
+			border: blue solid 1px;
+			margin-top: 0.5em;
+		}
+
+		.expandableList ul > li {
+			list-style: none;
+		}
 	</style>
-	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-	<title></title>
 </head>
 <body>
 
@@ -31,13 +51,17 @@
 
 <br>
 
-<button class="button", onclick="hidepermission()">Permission</button>
-<div id="permission">
-    {% for permission in permissions %}
-        <label> <input type="checkbox"  value="permission" checked> {{permission}} </label>
-    {% endfor %}
-</div>
 
+{% verbatim %}
+<div id="permissions" class="expandableList">
+	<button v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+	<ul v-show="isExpanded">
+		<li v-for="p in permissions">
+			<label> <input type="checkbox" value="permission" v-model="p.checked"> {{ p.name }} </label>
+		</li>
+	</ul>
+</div>
+{% endverbatim %}
 
 {% if app_infos %}
 	{% for app_info in app_infos %}
@@ -119,6 +143,36 @@ Yuchen Hu <br>
 			$("#appCount").text(text);
 		}
 	);
+
+
+	fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
+		const vm = new Vue({
+			el: '#permissions',
+			data: {
+				permissions: data.map(p => {
+					return {name: p, checked: true}
+				}),
+				isExpanded: false
+			},
+			computed: {
+				summary: function () {
+					// `this` 指向 vm 实例
+
+					//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
+					//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
+					const checkedPermissions = _.groupBy(this.permissions, p => p.checked);
+					if (checkedPermissions[false] != null && checkedPermissions[false].length === 0)
+						return "Allow all permissions";
+					if (checkedPermissions[false] != null && checkedPermissions[false].length <= 2)
+						return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.name).join(', ');
+					if (checkedPermissions[true] != null && checkedPermissions[true].length <= 2)
+						return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.name).join(', ');
+
+					return 'Allow ' + checkedPermissions[true].length + ' permissions';
+				}
+			}
+		});
+	});
 </script>
 </body>
 </html>
