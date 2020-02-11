@@ -22,7 +22,10 @@ class AppInfoSpider(scrapy.Spider):
 		except:
 			self.url_list = ['https://play.google.com/store/apps/details?hl=en&id=com.mojang.minecraftpe',
 							 'https://play.google.com/store/apps/details?hl=en&id=com.sega.sonic1px',
-							 'https://play.google.com/store/apps/details?id=com.tencent.mm']
+							 'https://play.google.com/store/apps/details?id=com.tencent.mm',
+							 'https://play.google.com/store/apps/details?id=com.freecamchat.liverandomchat',
+							 'https://play.google.com/store/apps/details?id=com.matchdating.meetsingles34'
+							 ]
 		print(self.url_list)
 
 	def start_requests(self):

@@ -76,7 +76,7 @@ class DatabasePipeline(object):
 create table App(
 id text NOT NULL PRIMARY KEY, 
 name text NOT NULL, 
-rating real, 
+rating real NOT NULL, 
 inAppPurchases integer NOT NULL, 
 containsAds integer NOT NULL,
 num_reviews integer,
