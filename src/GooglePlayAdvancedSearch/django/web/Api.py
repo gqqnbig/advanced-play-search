@@ -4,7 +4,9 @@ import sys
 from django.db import connection
 from django.http import HttpResponse
 
-from .shared.dbUtils import getAppCountInDatabase
+# import local packages
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
+from GooglePlayAdvancedSearch.DBUtils import getAppCountInDatabase
 
 def getAppCount(request):
 	with connection.cursor() as cursor:

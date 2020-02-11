@@ -9,14 +9,16 @@ from json import loads as jsonLoads
 from typing import List
 
 # import local packages
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
-from Models import AppItem
-from web.shared.dbUtils import getAppCountInDatabase
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
+import GooglePlayAdvancedSearch.DBUtils
+from GooglePlayAdvancedSearch.Models import AppItem
 
 
 def index(request):
 	context = {}
-	(context['categories'], context['permissions']) = getPermissionCategory()
+	with connection.cursor() as cursor:
+		context['categories'] = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
+		context['permissions'] = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
 	return render(request, 'index.html', context)
 
 
@@ -29,7 +31,9 @@ def keyword_search(request):
 	app_ids = searchGooglePlay(keyword)
 
 	context['app_infos'] = getAppInfo(app_ids)
-	(context['categories'], context['permissions']) = getPermissionCategory()
+	with connection.cursor() as cursor:
+		context['categories'] = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
+		context['permissions'] = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
 
 	return render(request, 'index.html', context)
 
@@ -44,6 +48,8 @@ def searchGooglePlay(keyword):
 	data = data[0][1]
 
 	app_ids = []
+
+	appSaver = GooglePlayAdvancedSearch.DBUtils.AppSaver(1)
 	while True:
 		appsData = data[0][0][0]
 		print(f'Load {len(appsData)} apps.')
@@ -62,6 +68,8 @@ def searchGooglePlay(keyword):
 			else:
 				appInfo['install_fee'] = 0
 			print(appInfo['id'])
+
+			appSaver.insertOrUpdateApp(appInfo)
 
 			app_ids.append(appId)
 
@@ -105,7 +113,7 @@ def getAppInfo(app_ids: List[str]):
 		print(f'Python {tuple(sys.version_info)} may not keep dictionary insertion order. Upgrade to at least version 3.6.', file=sys.stderr)
 
 	with connection.cursor() as cursor:
-		if getAppCountInDatabase(cursor) > 0:
+		if GooglePlayAdvancedSearch.DBUtils.getAppCountInDatabase(cursor) > 0:
 			# search database first pass. If the app isn't in database, leave it none. We will fill in the second pass.
 			app_infos = {id: getAppInfoInDatabase(cursor, id) for id in app_ids}
 		else:
@@ -113,23 +121,23 @@ def getAppInfo(app_ids: List[str]):
 
 	# search database second pass
 	# for first-pass non-found apps, pass into scraper
-	appsMissingInDatabase = [k for k, v in app_infos.items() if v is None]
-	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+	# appsMissingInDatabase = [k for k, v in app_infos.items() if v is None]
+	# os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+	#
+	# scraper_fail_id = []
+	# with connection.cursor() as cursor:
+	# 	for id in appsMissingInDatabase:
+	# 		tmp = getAppInfoInDatabase(cursor, id)
+	# 		if tmp:
+	# 			app_infos[id] = tmp
+	# 		else:
+	# 			assert id in app_infos
+	# 			app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
+	# 			scraper_fail_id.append(id)
 
-	scraper_fail_id = []
-	with connection.cursor() as cursor:
-		for id in appsMissingInDatabase:
-			tmp = getAppInfoInDatabase(cursor, id)
-			if tmp:
-				app_infos[id] = tmp
-			else:
-				assert id in app_infos
-				app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
-				scraper_fail_id.append(id)
-
-	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
-	print(f'total results: {len(app_ids)}')
-	print("There were %d ids not in our database. %d are now added" % (len(appsMissingInDatabase), len(appsMissingInDatabase) - len(scraper_fail_id)))
+	# print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
+	# print(f'total results: {len(app_ids)}')
+	# print("There were %d ids not in our database. %d are now added" % (len(appsMissingInDatabase), len(appsMissingInDatabase) - len(scraper_fail_id)))
 
 	assert None not in app_infos.values(), "Every app id returned from Google should have an app detail."
 	return app_infos.values()
@@ -155,20 +163,3 @@ def getAppInfoInDatabase(cursor, id):
 		}
 	else:
 		return None
-
-
-def getPermissionCategory():
-	with connection.cursor() as cursor:
-		cursor.execute('Pragma table_info(App)')
-		columns = cursor.fetchall()
-		columnNames = [c[1] for c in columns]
-		categories = []
-		permissions = []
-		for i in columnNames:
-			if i.startswith("category_"):
-				categories.append(i[9:])
-			if i.startswith("permission_"):
-				permissions.append(i[11:])
-
-		assert getAppCountInDatabase(cursor) == 0 or len(categories) + len(permissions) > 0, "There are apps in database, but there are no categories or permissions."
-		return (categories, permissions)

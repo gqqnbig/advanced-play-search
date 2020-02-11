@@ -9,8 +9,8 @@ import urllib.parse as urlParse
 from scrapy.crawler import CrawlerProcess
 from json import loads as jsonLoads
 
-sys.path.append("..")
-from Models import AppItem
+sys.path.append("../..")
+from GooglePlayAdvancedSearch.Models import AppItem
 
 
 class AppInfoSpider(scrapy.Spider):
