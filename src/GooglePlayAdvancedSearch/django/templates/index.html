@@ -15,6 +15,28 @@
 			position: relative;
 		}
 
+		.expandableList .expanded::before {
+			content: "";
+			background-image: url("/static/images/expanded.png");
+			background-repeat: no-repeat;
+			background-size: contain;
+			width: 10px;
+			height: 10px;
+			display: inline-block;
+			margin-right: 0.5em;
+		}
+
+		.expandableList .expandable::before {
+			content: "";
+			background-image: url(/static/images/expandable.png);
+			background-repeat: no-repeat;
+			background-size: contain;
+			width: 10px;
+			height: 10px;
+			display: inline-block;
+			margin-right: 0.5em;
+		}
+
 		.expandableList ul {
 			position: absolute;
 			background-color: rgba(255, 255, 255, 0.8);
@@ -54,7 +76,7 @@
 
 {% verbatim %}
 <div id="permissions" class="expandableList">
-	<button v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+	<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
 	<ul v-show="isExpanded">
 		<li v-for="p in permissions">
 			<label> <input type="checkbox" value="permission" v-model="p.checked"> {{ p.name }} </label>
