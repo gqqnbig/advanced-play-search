@@ -5,8 +5,12 @@ import sys
 
 from django.db import connection
 from django.shortcuts import render
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.http import HttpResponseRedirect
 from json import loads as jsonLoads
 from typing import List
+
 
 # import local packages
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
@@ -23,8 +27,9 @@ def index(request):
 
 
 def keyword_search(request):
+	keyword = request.GET['q']
 	context = {}
-	keyword = request.POST['keyword']
+
 	context['previous_keyword'] = keyword
 	context['refetchAppCount'] = True
 

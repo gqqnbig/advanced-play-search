@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 	<title></title>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
 	{#    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>#}
 	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
@@ -73,15 +75,12 @@
 
 <h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
-<div>
-	<form action="/advance_search/keyword_search" method="post">
-		{% csrf_token %}
-		<input type="text" name="keyword" value={{ previous_keyword }}>
-		<input type="submit" value="Search">
-	</form>
+{% verbatim %}
+<div id="searchBox">
+	<input type="text" name="keyword" v-model='keyword'>
+	<a :href=`/search?q=${encodeURIComponent(keyword)}` class="btn btn-primary" >Search</a>
 </div>
 
-{% verbatim %}
 <div class="filters">
 	<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
 	<label class="filter"><input type="checkbox" checked>Free install</label>
@@ -166,6 +165,13 @@ Yuchen Hu <br>
 </marquee>
 
 <script>
+	new Vue({
+		el:"#searchBox",
+		data: {
+			keyword:''
+		}
+	});
+
 	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.text()).then(text => {
 			$("#appCount").text(text);
 		}
