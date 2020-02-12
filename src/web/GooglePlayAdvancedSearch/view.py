@@ -27,25 +27,45 @@ def keyword_search(request):
 	context['refetchAppCount'] = True
 
 	app_ids = searchGooglePlay(keyword)
+	if not app_ids:
+		#context['previous_keyword'] = None
+		context['app_infos'] = None
+		context['categories'] = None
+		context['permissions'] = None
 
-	context['app_infos'] = getAppInfo(app_ids)
-	(context['categories'], context['permissions']) = getPermissionCategory()
+	else:
+		context['app_infos'] = getAppInfo(app_ids)
+		(context['categories'], context['permissions']) = getPermissionCategory()
 
 	return render(request, 'index.html', context)
 
 
 def searchGooglePlay(keyword):
+	app_ids = []
+
 	url = 'https://play.google.com/store/search?q=%s&c=apps' % keyword
 	page = requests.get(url)
-
+	print("page is ", page)
+	#if "keyword" not found.
 	# "key: 'ds:3'" is not reliable.
 	matches = re.findall(r'<script.*?>AF_initDataCallback\(\s*{.*?data:function\(\){return\s+(\[.+?\])\s*}\s*}\s*\)\s*;\s*</script>', page.text, flags=re.DOTALL)
+	print("matches are ", matches)
 	data = jsonLoads(matches[-1])
-	data = data[0][1]
 
-	app_ids = []
+	data = data[0][1]
+	# print("Data is ", data)
+
+	if not data:
+		print("We couldn't find anything for your search.")
+		return None
+
+		#quit()
+
+
+
 	while True:
 		appsData = data[0][0][0]
+
 		print(f'Load {len(appsData)} apps.')
 		for app in appsData:
 			appId = app[12][0]

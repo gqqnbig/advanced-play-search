@@ -13,6 +13,8 @@
 
 <h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
+
+
 <div>
 	<form action="/advance_search/keyword_search" method="post">
 		{% csrf_token %}
@@ -20,6 +22,8 @@
 		<input type="submit" value="Search">
 	</form>
 </div>
+
+
 
 <button class="button", onclick="hidecategory()">Category</button>
 
@@ -38,6 +42,9 @@
     {% endfor %}
 </div>
 
+{% if app_infos == None %}
+    <h2> <mark>Error:</mark> We could not find anything for your search. </h2>
+{% endif %}
 
 {% if app_infos %}
 	{% for app_info in app_infos %}
