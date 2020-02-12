@@ -99,17 +99,17 @@
 		</div>
 		<div id="permissions" class="filter expandableList">
 			<!--  v-bind:disabled is the same as :disabled -->
-			<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasPermissions" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
-			<ul v-show="isExpanded" style="width: 500px">
-				<li v-for="p in permissions">
+			<button v-bind:class="{expanded: permissionFilter.isExpanded, expandable:!permissionFilter.isExpanded}" :disabled="!hasPermissions" v-on:click="permissionFilter.isExpanded=!permissionFilter.isExpanded">{{permissionSummary}}</button>
+			<ul v-show="permissionFilter.isExpanded" style="width: 500px">
+				<li v-for="p in permissionFilter.items">
 					<label> <input type="checkbox" :value=`permission${p.item.id}` v-model="p.checked"> {{ p.item.name }} </label>
 				</li>
 			</ul>
 		</div>
 		<div id="categories" class="filter expandableList">
-			<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasCategories" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
-			<ul v-show="isExpanded" style="width: 200px">
-				<li v-for="p in categories">
+			<button v-bind:class="{expanded: categoryFilter.isExpanded, expandable:!categoryFilter.isExpanded}" :disabled="!hasCategories" v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded">{{categorySummary}}</button>
+			<ul v-show="categoryFilter.isExpanded" style="width: 200px">
+				<li v-for="p in categoryFilter.items">
 					<label> <input type="checkbox" :value=`category${p.item.id}` v-model="p.checked"> {{ p.item.name }} </label>
 				</li>
 			</ul>
@@ -117,41 +117,99 @@
 	</div>
 </div>
 
-<div id="appsList">
-	<li v-for="app in apps">
-		<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
-		<img :src="app.app_icon">
-		<br>
-		<button type="button" class="collapsible">+</button>
-		<div>
-			<ul>
-				<li>rating: {{ app.rating }}</li>
-				<li>num_reviews: {{ app.num_reviews }}</li>
-				<li>install_fee: ${{ app.install_fee }}</li>
-				<li>inAppPurchases: {{ app.inAppPurchases }}</li>
-			</ul>
-		</div>
-	</li>
-</div>
 {% endverbatim %}
+
+{% if keyword %}
+	{% verbatim %}
+	<div id="appsList">
+		<li v-for="app in apps">
+			<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
+			<img :src="app.app_icon">
+			<br>
+			<button type="button" class="collapsible">+</button>
+			<div>
+				<ul>
+					<li>rating: {{ app.rating }}</li>
+					<li>num_reviews: {{ app.num_reviews }}</li>
+					<li>install_fee: ${{ app.install_fee }}</li>
+					<li>inAppPurchases: {{ app.inAppPurchases }}</li>
+				</ul>
+			</div>
+		</li>
+	</div>
+	{% endverbatim %}
+{% endif %}
 
 <p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
 
 <marquee> TEAM RANDOM: <br>
-Weikeng Yang <br>
-Qiqi Gu <br>
-Shuhua Zhan <br>
-Dongyao Liang <br>
-Yuchen Hu <br>
+	Weikeng Yang <br>
+	Qiqi Gu <br>
+	Shuhua Zhan <br>
+	Dongyao Liang <br>
+	Yuchen Hu <br>
 </marquee>
 
 <script>
-	new Vue({
-		el:"#searchBox",
+	const searchTool = new Vue({
+		el: '#searchTool',
 		data: {
-			keyword: '{{ keyword }}'
+			keyword: '{{ keyword }}',
+			permissionFilter: {
+				items: [],
+				isExpanded: false
+			},
+			categoryFilter: {
+				items: [{"item":{"id":15,"name":"Action"},"checked":true},{"item":{"id":16,"name":"Action & Adventure"},"checked":true},{"item":{"id":55,"name":"Communication"},"checked":true},{"item":{"id":56,"name":"Dating"},"checked":true},{"item":{"id":57,"name":"Arcade"},"checked":true}],
+				isExpanded: false
+			}
+		},
+		computed: {
+			hasPermissions: function () {
+				return this.permissionFilter.items.length > 0;
+			},
+			permissionSummary: function () {
+				// `this` 指向 vue 实例
+				if (!this.hasPermissions)
+					return 'No permissions available';
+
+				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
+				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
+				const checkedPermissions = _.groupBy(this.permissionFilter.items, p => p.checked);
+				if (!checkedPermissions[false])
+					return "Allow all permissions";
+				if (checkedPermissions[false] && checkedPermissions[false].length <= 2)
+					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.item.name).join(', ');
+				if (checkedPermissions[true] && checkedPermissions[true].length <= 2)
+					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.item.name).join(', ');
+
+				return 'Allow ' + checkedPermissions[true].length + ' permissions';
+			},
+
+			hasCategories: function () {
+				return this.categoryFilter.items.length > 0;
+			},
+			categorySummary: function () {
+				// `this` 指向 vue 实例
+				if (!this.hasCategories)
+					return 'No categories available';
+
+				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
+				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
+				const checkedPermissions = _.groupBy(this.categoryFilter.items, p => p.checked);
+				if (!checkedPermissions[false])
+					return "Allow all categories";
+				if (checkedPermissions[false] && checkedPermissions[false].length <= 2)
+					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.item.name).join(', ');
+				if (checkedPermissions[true] && checkedPermissions[true].length <= 2)
+					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.item.name).join(', ');
+
+				return 'Allow ' + checkedPermissions[true].length + ' categories';
+			}
 		}
 	});
+
+<!--	searchTool.categorieFilter.items=[{"item":{"id":15,"name":"Action"},"checked":true},{"item":{"id":16,"name":"Action & Adventure"},"checked":true},{"item":{"id":55,"name":"Communication"},"checked":true},{"item":{"id":56,"name":"Dating"},"checked":true},{"item":{"id":57,"name":"Arcade"},"checked":true}] -->
 
 	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.text()).then(text => {
 			$("#appCount").text(text);
@@ -160,72 +218,17 @@ Yuchen Hu <br>
 
 
 	fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
-		new Vue({
-			el: '#permissions',
-			data: {
-				permissions: data.map(p => {
-					return {item: p, checked: true}
-				}),
-				isExpanded: false
-			},
-			computed: {
-				hasPermissions: function () {
-					return this.permissions.length > 0;
-				},
-				summary: function () {
-					// `this` 指向 vue 实例
-					if (!this.hasPermissions)
-						return 'No permissions available';
-
-					//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
-					//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
-					const checkedPermissions = _.groupBy(this.permissions, p => p.checked);
-					if (checkedPermissions[false] != null && checkedPermissions[false].length === 0)
-						return "Allow all permissions";
-					if (checkedPermissions[false] != null && checkedPermissions[false].length <= 2)
-						return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.name).join(', ');
-					if (checkedPermissions[true] != null && checkedPermissions[true].length <= 2)
-						return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.name).join(', ');
-
-					return 'Allow ' + checkedPermissions[true].length + ' permissions';
-				}
-			}
+		searchTool.permissionFilter.items = data.map(p => {
+			return {item: p, checked: true}
 		});
 	});
 
 	fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
-		new Vue({
-			el: '#categories',
-			data: {
-				categories: data.map(p => {
-					return {item: p, checked: true}
-				}),
-				isExpanded: false
-			},
-			computed: {
-				hasCategories: function () {
-					return this.categories.length > 0;
-				},
-				summary: function () {
-					// `this` 指向 vue 实例
-					if (!this.hasCategories)
-						return 'No categories available';
-
-					//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
-					//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
-					const checkedPermissions = _.groupBy(this.categories, p => p.checked);
-					if (checkedPermissions[false] != null && checkedPermissions[false].length === 0)
-						return "Allow all categories";
-					if (checkedPermissions[false] != null && checkedPermissions[false].length <= 2)
-						return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.name).join(', ');
-					if (checkedPermissions[true] != null && checkedPermissions[true].length <= 2)
-						return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.name).join(', ');
-
-					return 'Allow ' + checkedPermissions[true].length + ' categories';
-				}
-			}
+		searchTool.categoryFilter.items = data.map(p => {
+			return {item: p, checked: true}
 		});
 	});
+
 </script>
 {% if keyword %}
 	<script>
