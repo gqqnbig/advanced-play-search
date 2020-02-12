@@ -97,7 +97,8 @@
 		</select>
 	</div>
 	<div id="permissions" class="filter expandableList">
-		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+		<!--  v-bind:disabled is the same as :disabled -->
+		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}"  :disabled="!hasPermissions"  v-on:click="isExpanded=!isExpanded">{{summary}}</button>
 		<ul v-show="isExpanded" style="width: 500px">
 			<li v-for="p in permissions">
 				<label> <input type="checkbox" value="permission" v-model="p.checked"> {{ p.name }} </label>
@@ -105,7 +106,7 @@
 		</ul>
 	</div>
 	<div id="categories" class="filter expandableList">
-		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasCategories" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
 		<ul v-show="isExpanded" style="width: 200px">
 			<li v-for="p in categories">
 				<label> <input type="checkbox" value="category" v-model="p.checked"> {{ p.name }} </label>
@@ -179,7 +180,7 @@ Yuchen Hu <br>
 
 
 	fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
-		const vm = new Vue({
+		new Vue({
 			el: '#permissions',
 			data: {
 				permissions: data.map(p => {
@@ -188,8 +189,13 @@ Yuchen Hu <br>
 				isExpanded: false
 			},
 			computed: {
+				hasPermissions: function () {
+					return this.permissions.length > 0;
+				},
 				summary: function () {
-					// `this` 指向 vm 实例
+					// `this` 指向 vue 实例
+					if (!this.hasPermissions)
+						return 'No permissions available';
 
 					//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
 					//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
@@ -208,7 +214,7 @@ Yuchen Hu <br>
 	});
 
 	fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
-		const vm = new Vue({
+		new Vue({
 			el: '#categories',
 			data: {
 				categories: data.map(p => {
@@ -217,8 +223,13 @@ Yuchen Hu <br>
 				isExpanded: false
 			},
 			computed: {
+				hasCategories: function () {
+					return this.categories.length > 0;
+				},
 				summary: function () {
-					// `this` 指向 vm 实例
+					// `this` 指向 vue 实例
+					if (!this.hasCategories)
+						return 'No categories available';
 
 					//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
 					//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
