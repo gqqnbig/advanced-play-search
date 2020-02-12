@@ -4,6 +4,8 @@ import sys
 
 from typing import Optional
 
+from GooglePlayAdvancedSearch.Models import AppItem
+
 
 def getAppCountInDatabase(cursor):
 	try:
@@ -14,21 +16,28 @@ def getAppCountInDatabase(cursor):
 
 
 def getAllPermissions(cursor):
+	"""
+
+	:param cursor:
+	:return: a dict, key is permission id, value is permission name.
+	"""
 	cursor.execute('Pragma table_info(App)')
 	columns = cursor.fetchall()
-	permissions = [{'id': c[0], 'name': c[1][11:]} for c in columns if c[1].startswith("permission_")]
+	permissions = {int(c[0]): c[1][11:] for c in columns if c[1].startswith("permission_")}
 	return permissions
 
 
 def getAllCategories(cursor):
 	cursor.execute('Pragma table_info(App)')
 	columns = cursor.fetchall()
-	categories = [{'id': c[0], 'name': c[1][9:]} for c in columns if c[1].startswith("category_")]
+	categories = {int(c[0]): c[1][9:] for c in columns if c[1].startswith("category_")}
 	return categories
 
 
 def doesTableExist(TABLE_NAME, cur):
-	cur.execute("SELECT 1 FROM sqlite_master WHERE name =? and type='table'", (TABLE_NAME,))
+	# The SQL must use named style! This shared DBUtils may be called from django application,
+	# django db requires named parameter style.
+	cur.execute("SELECT 1 FROM sqlite_master WHERE name =:tableName and type='table'", {'tableName': TABLE_NAME})
 	return cur.fetchone() is not None
 
 
@@ -40,7 +49,7 @@ def saveSqlValue(str: str):
 	return str.replace('"', '').replace("'", '').replace('--', '')
 
 
-class AppSaver:
+class AppAccessor:
 
 	def __init__(self, freshDays=0):
 		self.__conn = sqlite3.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/db.sqlite3'))
@@ -49,8 +58,8 @@ class AppSaver:
 		self.__freshDays = freshDays
 
 		if doesTableExist('App', self.__cursor):
-			self.__allPermissions = [p['name'] for p in getAllPermissions(self.__cursor)]
-			self.__allCategories = [p['name'] for p in getAllCategories(self.__cursor)]
+			self.__allPermissions = getAllPermissions(self.__cursor)
+			self.__allCategories = getAllCategories(self.__cursor)
 		else:
 			self.__cursor.execute('''
 create table App(
@@ -65,12 +74,9 @@ updateDate text NOT NULL, -- utc time
 app_icon text NOT NULL,
 isPartialInfo integer not null
 )''')
-			self.__allPermissions = []
-			self.__allCategories = []
+			self.__allPermissions = {}
+			self.__allCategories = {}
 			self.__conn.commit()
-
-		self.__clearCategoriesSql = ''.join([',' + delimiteDBIdentifier('category_' + p) + '=0' for p in self.__allCategories])
-		self.__clearPermissionsSql = ''.join([',' + delimiteDBIdentifier('permission_' + p) + '=0' for p in self.__allPermissions])
 
 	def __del__(self):
 		self.__conn.close()
@@ -110,6 +116,9 @@ isPartialInfo integer not null
 		else:
 			isPartialInfo = True
 
+		clearCategoriesSql = ''.join([',' + delimiteDBIdentifier('category_' + v) + '=0' for k, v in self.__allCategories.items()])
+		clearPermissionsSql = ''.join([',' + delimiteDBIdentifier('permission_' + v) + '=0' for k, v in self.__allPermissions.items()])
+
 		sql = f'''
 INSERT INTO App(id,name,rating,install_fee,app_icon,isPartialInfo,updateDate{''.join([',' + x for x in valuesToInsert])}) VALUES (?,?,?,?,?,?,date('now'){''.join([',?'] * len(valuesToInsert))})
 on conflict(id) do update set 
@@ -120,8 +129,8 @@ app_icon=excluded.app_icon,
 isPartialInfo=excluded.isPartialInfo,
 updateDate=excluded.updateDate
 {''.join([',' + x + '=excluded.' + x for x in valuesToInsert])}
-{self.__clearPermissionsSql}
-{self.__clearCategoriesSql}
+{clearCategoriesSql}
+{clearPermissionsSql}
 where julianday('now')-julianday(updateDate)>=?'''
 		self.__cursor.execute(sql, (
 			item['id'],
@@ -150,7 +159,6 @@ where julianday('now')-julianday(updateDate)>=?'''
 		permission = "permission_" + permission
 		try:
 			self.__cursor.execute(f'update App set {delimiteDBIdentifier(permission)}=1 where id=?', (appId,))
-			self.__allPermissions.append(permission)
 		except:
 			try:
 				self.__cursor.execute(f'alter table App add {delimiteDBIdentifier(permission)} integer')
@@ -164,7 +172,6 @@ where julianday('now')-julianday(updateDate)>=?'''
 		c = "category_" + c
 		try:
 			self.__cursor.execute(f'update App set {delimiteDBIdentifier(c)}=1 where id=?', (appId,))
-			self.__allCategories.append(c)
 		except:
 			try:
 				self.__cursor.execute(f'alter table App add {delimiteDBIdentifier(c)} integer')
@@ -173,3 +180,40 @@ where julianday('now')-julianday(updateDate)>=?'''
 				self.__allCategories.append(c)
 			except Exception as ex:
 				print(ex, file=sys.stderr)
+
+	def getCompleteAppInfo(self, id: str) -> Optional[AppItem]:
+		"""
+		Find app id in database. If found, return the data, otherwise return null.
+		"""
+
+		self.__cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE id=:id and isPartialInfo=0", {"id": id})
+		tmp = self.__cursor.fetchone()
+		if tmp is None:
+			return None
+		else:
+			permissions = self.getAppPermissions(id)
+			assert permissions is not None
+			appItem = AppItem()
+			appItem['id'] = id
+			appItem['appName'] = tmp[0]
+			appItem['rating'] = tmp[1]
+			appItem['num_reviews'] = tmp[2]
+			appItem['install_fee'] = tmp[3]
+			appItem['inAppPurchases'] = tmp[4]
+			appItem['app_icon'] = tmp[5]
+			appItem['permissions'] = permissions
+			return appItem
+
+	def getAppPermissions(self, appId):
+		selectPermissionsSql = ','.join([delimiteDBIdentifier('permission_' + v) for (k, v) in self.__allPermissions.items()])
+
+		self.__cursor.execute(f"SELECT {selectPermissionsSql} FROM App WHERE id=:id", {"id": appId})
+		data = self.__cursor.fetchall()
+		if len(data) == 0:
+			return None
+
+		row = data[0]
+
+		l = list(self.__allPermissions.items())
+		usedPermissions = {l[i][0]: l[i][1] for i in range(len(row)) if row[i]}
+		return usedPermissions

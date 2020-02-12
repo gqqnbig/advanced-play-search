@@ -79,7 +79,7 @@
 <div id="searchTool">
 	<div id="searchBox">
 		<input type="text" name="keyword" v-model='keyword'>
-		<a :href='queryString' class="btn btn-primary">Search</a>
+		<a :href=`/search?${queryString}` class="btn btn-primary">Search</a>
 	</div>
 
 	<div class="filters">
@@ -119,7 +119,7 @@
 
 {% endverbatim %}
 
-{% if keyword %}
+{% if isSearch %}
 	{% verbatim %}
 	<div id="appsList">
 		<li v-for="app in apps">
@@ -212,7 +212,7 @@
 				return 'Allow ' + checkedPermissions[true].length + ' categories';
 			},
 			queryString: function () {
-				let query = `/search?q=${encodeURIComponent(this.keyword)}`;
+				let query = `q=${encodeURIComponent(this.keyword)}`;
 				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.item.id).join(',');
 				if (excludedPIds)
 					query += "&pids=" + excludedPIds;
@@ -229,22 +229,21 @@
 		}
 	);
 
-	fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
-		searchTool.permissionFilter.items = data.map(p => {
-			return {item: p, checked: !excludedPIds.includes(p.id)}
+	const permissionPromise = fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
+		searchTool.permissionFilter.items = Object.entries(data).map(p => {
+			return {item: {id: parseInt(p[0]), name: p[1]}, checked: !excludedPIds.includes(parseInt(p[0]))}
 		});
 	});
 
-	fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
-		searchTool.categoryFilter.items = data.map(p => {
-			return {item: p, checked: !excludedCIds.includes(p.id)}
+	const categoryPromise = fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
+		searchTool.categoryFilter.items = Object.entries(data).map(p => {
+			return {item: {id: parseInt(p[0]), name: p[1]}, checked: !excludedCIds.includes(parseInt(p[0]))}
 		});
 	});
 
-</script>
-{% if keyword %}
-	<script>
-		fetch('{% url 'Api/Search' %}?q=' + encodeURIComponent('{{ keyword }}')).then(r => r.json()).then(data => {
+	//When we got permission list and category list, then run the following code.
+	Promise.all([permissionPromise, categoryPromise]).then(function () {
+		fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
 			new Vue({
 				el: "#appsList",
 				data: {
@@ -252,8 +251,9 @@
 				}
 			});
 		});
-	</script>
-{% endif %}
+	});
+
+</script>
 </body>
 </html>
 
