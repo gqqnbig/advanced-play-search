@@ -21,7 +21,11 @@ def callback_searchPermissionFilter():
 
 	response = requests.get('http://localhost:8090/Api/Search?q=wechat&pids=' + str(pid))
 	text = response.text
-	assert 'com.tencent.mm' not in text
+	assert 'com.tencent.mm' not in text, "Search for wechat without storage permission. The search result should not have wechat."
+
+	response = requests.get('http://localhost:8090/Api/Search?q=wechat')
+	text = response.text
+	assert 'com.tencent.mm' in text, "Search for wechat allowing storage permission. The search result not have wechat."
 
 
 def test_searchPermissionFilter():
