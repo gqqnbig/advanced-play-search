@@ -6,6 +6,7 @@ import sys
 from django.db import connection
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.views.decorators.cache import cache_control
 from json import loads as jsonLoads
 from typing import List
 
@@ -15,12 +16,12 @@ import GooglePlayAdvancedSearch.DBUtils
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
+@cache_control(max_age=3600)
 def getAppCount(request):
 	with connection.cursor() as cursor:
 		count = GooglePlayAdvancedSearch.DBUtils.getAppCountInDatabase(cursor)
 		response = HttpResponse(count, content_type="text/plain")
 
-		response['Cache-Control'] = "private, max-age=3600"
 		return response
 
 
@@ -40,6 +41,7 @@ def getCategories(request):
 		return response
 
 
+@cache_control(max_age=3600)
 def search(request):
 	keyword = request.GET['q']
 

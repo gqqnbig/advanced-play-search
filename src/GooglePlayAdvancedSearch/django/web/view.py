@@ -30,16 +30,8 @@ def keyword_search(request):
 	keyword = request.GET['q']
 	context = {}
 
-	context['previous_keyword'] = keyword
+	context['keyword'] = keyword
 	context['refetchAppCount'] = True
-
-	app_ids = searchGooglePlay(keyword)
-
-	context['app_infos'] = getAppInfo(app_ids)
-	with connection.cursor() as cursor:
-		context['categories'] = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
-		context['permissions'] = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
-
 	return render(request, 'index.html', context)
 
 

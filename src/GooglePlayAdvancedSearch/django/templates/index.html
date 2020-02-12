@@ -78,7 +78,7 @@
 {% verbatim %}
 <div id="searchBox">
 	<input type="text" name="keyword" v-model='keyword'>
-	<a :href=`/search?q=${encodeURIComponent(keyword)}` class="btn btn-primary" >Search</a>
+	<a :href=`/search?q=${encodeURIComponent(keyword)}` class="btn btn-primary">Search</a>
 </div>
 
 <div class="filters">
@@ -98,7 +98,7 @@
 	</div>
 	<div id="permissions" class="filter expandableList">
 		<!--  v-bind:disabled is the same as :disabled -->
-		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}"  :disabled="!hasPermissions"  v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasPermissions" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
 		<ul v-show="isExpanded" style="width: 500px">
 			<li v-for="p in permissions">
 				<label> <input type="checkbox" value="permission" v-model="p.checked"> {{ p.name }} </label>
@@ -114,46 +114,24 @@
 		</ul>
 	</div>
 </div>
+
+<div id="appsList">
+	<li v-for="app in apps">
+		<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
+		<img src="{{ app.app_icon }}">
+		<br>
+		<button type="button" class="collapsible">+</button>
+		<div>
+			<ul>
+				<li>rating: {{ app.rating }}</li>
+				<li>num_reviews: {{ app.num_reviews }}</li>
+				<li>install_fee: ${{ app.install_fee }}</li>
+				<li>inAppPurchases: {{ app.inAppPurchases }}</li>
+			</ul>
+		</div>
+	</li>
+</div>
 {% endverbatim %}
-
-{% if app_infos %}
-	{% for app_info in app_infos %}
-        {% if app_info.name %}
-        <li><a href="https://play.google.com/store/apps/details?id={{ app_info.id }}">{{ app_info.name }}</a>
-            <img src="{{ app_info.app_icon }}">
-            <br>
-            <button type="button" class="collapsible">+</button>
-            <div class="app_detail_{{ app_info.id }}" style="display: none">
-                <ul>
-                    <li>rating: {{ app_info.rating }}</li>
-                    <li>num_reviews: {{ app_info.num_reviews }}</li>
-                    <li>install_fee: ${{ app_info.install_fee }}</li>
-                    <li>inAppPurchases: {{ app_info.inAppPurchases }}</li>
-                </ul>
-            </div>
-        </li>
-
-        {% else %}
-        <li><a href="https://play.google.com/store/apps/details?id={{ app_info.id }}">https://play.google.com/store/apps/details?id={{ app_info.id }}</a></li>
-        {% endif %}
-	{% endfor %}
-{% endif %}
-
-
-<script>
-    var coll = document.getElementsByClassName("collapsible");
-    for (var i=0; i<coll.length; i++){
-        coll[i].addEventListener("click", function(){
-            this.classList.toggle("active");
-            var app_detail = this.nextElementSibling;
-            if (app_detail.style.display === "block"){
-                app_detail.style.display = "none";
-            } else{
-                app_detail.style.display = "block";
-            }
-        });
-    }
-</script>
 
 <p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
 
@@ -169,7 +147,7 @@ Yuchen Hu <br>
 	new Vue({
 		el:"#searchBox",
 		data: {
-			keyword:''
+			keyword: '{{ keyword }}'
 		}
 	});
 
@@ -247,6 +225,18 @@ Yuchen Hu <br>
 		});
 	});
 </script>
+{% if keyword %}
+	<script>
+		fetch('{% url 'Api/Search' %}?q=' + encodeURIComponent('{{ keyword }}')).then(r => r.json()).then(data => {
+			new Vue({
+				el:"#appsList",
+				data:{
+					apps:data
+				}
+			});
+		});
+	</script>
+{% endif %}
 </body>
 </html>
 
