@@ -27,4 +27,5 @@ urlpatterns = [
     path(r'Api/AppCount', Api.getAppCount, name='Api/AppCount'),
     url(r'^Api/Permissions', Api.getPermissions, name='Api/Permissions'),
     url(r'^Api/Categories', Api.getCategories, name='Api/Categories'),
+    url(r'^Api/Search', Api.search, name='Api/Search'),
 ]
