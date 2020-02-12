@@ -76,49 +76,51 @@
 <h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
 {% verbatim %}
-<div id="searchBox">
-	<input type="text" name="keyword" v-model='keyword'>
-	<a :href=`/search?q=${encodeURIComponent(keyword)}` class="btn btn-primary">Search</a>
-</div>
-
-<div class="filters">
-	<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
-	<label class="filter"><input type="checkbox" checked>Free install</label>
-	<label class="filter"><input type="checkbox" checked>Allow ads</label>
-
-	<div class="filter">
-		Rating >
-		<select style="width: 3em">
-			<option>0</option>
-			<option>1</option>
-			<option>2</option>
-			<option>3</option>
-			<option>4</option>
-		</select>
+<div id="searchTool">
+	<div id="searchBox">
+		<input type="text" name="keyword" v-model='keyword'>
+		<a :href=`/search?q=${encodeURIComponent(keyword)}` class="btn btn-primary">Search</a>
 	</div>
-	<div id="permissions" class="filter expandableList">
-		<!--  v-bind:disabled is the same as :disabled -->
-		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasPermissions" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
-		<ul v-show="isExpanded" style="width: 500px">
-			<li v-for="p in permissions">
-				<label> <input type="checkbox" value="permission" v-model="p.checked"> {{ p.name }} </label>
-			</li>
-		</ul>
-	</div>
-	<div id="categories" class="filter expandableList">
-		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasCategories" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
-		<ul v-show="isExpanded" style="width: 200px">
-			<li v-for="p in categories">
-				<label> <input type="checkbox" value="category" v-model="p.checked"> {{ p.name }} </label>
-			</li>
-		</ul>
+
+	<div class="filters">
+		<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
+		<label class="filter"><input type="checkbox" checked>Free install</label>
+		<label class="filter"><input type="checkbox" checked>Allow ads</label>
+
+		<div class="filter">
+			Rating >
+			<select style="width: 3em">
+				<option>0</option>
+				<option>1</option>
+				<option>2</option>
+				<option>3</option>
+				<option>4</option>
+			</select>
+		</div>
+		<div id="permissions" class="filter expandableList">
+			<!--  v-bind:disabled is the same as :disabled -->
+			<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasPermissions" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+			<ul v-show="isExpanded" style="width: 500px">
+				<li v-for="p in permissions">
+					<label> <input type="checkbox" :value=`permission${p.item.id}` v-model="p.checked"> {{ p.item.name }} </label>
+				</li>
+			</ul>
+		</div>
+		<div id="categories" class="filter expandableList">
+			<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasCategories" v-on:click="isExpanded=!isExpanded">{{summary}}</button>
+			<ul v-show="isExpanded" style="width: 200px">
+				<li v-for="p in categories">
+					<label> <input type="checkbox" :value=`category${p.item.id}` v-model="p.checked"> {{ p.item.name }} </label>
+				</li>
+			</ul>
+		</div>
 	</div>
 </div>
 
 <div id="appsList">
 	<li v-for="app in apps">
 		<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
-		<img src="{{ app.app_icon }}">
+		<img :src="app.app_icon">
 		<br>
 		<button type="button" class="collapsible">+</button>
 		<div>
@@ -162,7 +164,7 @@ Yuchen Hu <br>
 			el: '#permissions',
 			data: {
 				permissions: data.map(p => {
-					return {name: p, checked: true}
+					return {item: p, checked: true}
 				}),
 				isExpanded: false
 			},
@@ -196,7 +198,7 @@ Yuchen Hu <br>
 			el: '#categories',
 			data: {
 				categories: data.map(p => {
-					return {name: p, checked: true}
+					return {item: p, checked: true}
 				}),
 				isExpanded: false
 			},

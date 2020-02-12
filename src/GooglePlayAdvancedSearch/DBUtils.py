@@ -16,14 +16,14 @@ def getAppCountInDatabase(cursor):
 def getAllPermissions(cursor):
 	cursor.execute('Pragma table_info(App)')
 	columns = cursor.fetchall()
-	permissions = [c[1][11:] for c in columns if c[1].startswith("permission_")]
+	permissions = [{'id': c[0], 'name': c[1][11:]} for c in columns if c[1].startswith("permission_")]
 	return permissions
 
 
 def getAllCategories(cursor):
 	cursor.execute('Pragma table_info(App)')
 	columns = cursor.fetchall()
-	categories = [c[1][9:] for c in columns if c[1].startswith("category_")]
+	categories = [{'id': c[0], 'name': c[1][9:]} for c in columns if c[1].startswith("category_")]
 	return categories
 
 
@@ -49,8 +49,8 @@ class AppSaver:
 		self.__freshDays = freshDays
 
 		if doesTableExist('App', self.__cursor):
-			self.__allPermissions = getAllPermissions(self.__cursor)
-			self.__allCategories = getAllCategories(self.__cursor)
+			self.__allPermissions = [p['name'] for p in getAllPermissions(self.__cursor)]
+			self.__allCategories = [p['name'] for p in getAllCategories(self.__cursor)]
 		else:
 			self.__cursor.execute('''
 create table App(
