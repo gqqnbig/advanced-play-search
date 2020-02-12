@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import requests
@@ -27,10 +28,8 @@ def index(request):
 
 
 def keyword_search(request):
-	keyword = request.GET['q']
 	context = {}
 
-	context['keyword'] = keyword
 	context['refetchAppCount'] = True
 	return render(request, 'index.html', context)
 

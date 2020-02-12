@@ -79,7 +79,7 @@
 <div id="searchTool">
 	<div id="searchBox">
 		<input type="text" name="keyword" v-model='keyword'>
-		<a :href=`/search?q=${encodeURIComponent(keyword)}` class="btn btn-primary">Search</a>
+		<a :href='queryString' class="btn btn-primary">Search</a>
 	</div>
 
 	<div class="filters">
@@ -151,16 +151,21 @@
 </marquee>
 
 <script>
+	const currentQuery = new URLSearchParams(location.search);
+	//Cannot write map(parseInt) because parseInt can accept 2 parameters!
+	const excludedPIds = currentQuery.has('pids') ? currentQuery.get('pids').split(',').map(n => parseInt(n)) : [];
+	const excludedCIds = currentQuery.has('cids') ? currentQuery.get('cids').split(',').map(n => parseInt(n)) : [];
+
 	const searchTool = new Vue({
 		el: '#searchTool',
 		data: {
-			keyword: '{{ keyword }}',
+			keyword: currentQuery.has('q') ? currentQuery.get('q') : "",
 			permissionFilter: {
 				items: [],
 				isExpanded: false
 			},
 			categoryFilter: {
-				items: [{"item":{"id":15,"name":"Action"},"checked":true},{"item":{"id":16,"name":"Action & Adventure"},"checked":true},{"item":{"id":55,"name":"Communication"},"checked":true},{"item":{"id":56,"name":"Dating"},"checked":true},{"item":{"id":57,"name":"Arcade"},"checked":true}],
+				items: [],
 				isExpanded: false
 			}
 		},
@@ -205,27 +210,34 @@
 					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.item.name).join(', ');
 
 				return 'Allow ' + checkedPermissions[true].length + ' categories';
+			},
+			queryString: function () {
+				let query = `/search?q=${encodeURIComponent(this.keyword)}`;
+				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.item.id).join(',');
+				if (excludedPIds)
+					query += "&pids=" + excludedPIds;
+				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.item.id).join(',');
+				if (excludedCIds)
+					query += "&cids=" + excludedCIds;
+				return query;
 			}
 		}
 	});
-
-<!--	searchTool.categorieFilter.items=[{"item":{"id":15,"name":"Action"},"checked":true},{"item":{"id":16,"name":"Action & Adventure"},"checked":true},{"item":{"id":55,"name":"Communication"},"checked":true},{"item":{"id":56,"name":"Dating"},"checked":true},{"item":{"id":57,"name":"Arcade"},"checked":true}] -->
 
 	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.text()).then(text => {
 			$("#appCount").text(text);
 		}
 	);
 
-
 	fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
 		searchTool.permissionFilter.items = data.map(p => {
-			return {item: p, checked: true}
+			return {item: p, checked: !excludedPIds.includes(p.id)}
 		});
 	});
 
 	fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
 		searchTool.categoryFilter.items = data.map(p => {
-			return {item: p, checked: true}
+			return {item: p, checked: !excludedCIds.includes(p.id)}
 		});
 	});
 
@@ -234,9 +246,9 @@
 	<script>
 		fetch('{% url 'Api/Search' %}?q=' + encodeURIComponent('{{ keyword }}')).then(r => r.json()).then(data => {
 			new Vue({
-				el:"#appsList",
-				data:{
-					apps:data
+				el: "#appsList",
+				data: {
+					apps: data
 				}
 			});
 		});

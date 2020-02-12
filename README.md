@@ -21,6 +21,10 @@ Run `python Program.py` in `src/scraper` folder for the web scraper.
 Run server:
 (cs188) root@server:/project-random/src/web# nohup uwsgi --uid 1003 --gid 1004 --socket /tmp/GooglePlayAdvancedSearch.sock --module GooglePlayAdvancedSearch.wsgi --chmod-socket=666 &> /tmp/django.log &
 
+## System Requirements
+
+Browsers supporting URLSearchParams, Chrome >=49, Edge>=17, Firefix>=29.
+
 ## Related Projects
 https://github.com/facundoolano/google-play-scraper/ It's a Node.js scraper to get data from Google Play. It's a Nodejs library and provides some RESTful API support. This project helped us understand some Google Play behavior.
 
