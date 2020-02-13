@@ -8,12 +8,12 @@ testFolder = os.path.dirname(os.path.abspath(__file__))
 
 # import local packages
 sys.path.append(os.path.join(testFolder, '../web'))
-import web.view
+import GooglePlayAdvancedSearch.django.web.Api as api
 
 
 
 def test_searchNoDuplicate():
-	result = web.view.searchGooglePlay('youtube')
+	result = api.searchGooglePlay('youtube')
 
 	duplicates = [(item,count) for item, count in Counter(result).items() if count > 1]
 	if len(duplicates):

@@ -5,7 +5,7 @@ import sqlite3
 import subprocess
 import sys
 
-testFolder = os.path.dirname(os.path.abspath(__file__))
+import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
 
 def test_scrapeAppsWithExoticPermissions():
@@ -15,22 +15,17 @@ def test_scrapeAppsWithExoticPermissions():
 	:return:
 	"""
 
-	testCases = {'com.om.calc',
+	testCases = {'kr.co.kcp.wechatpaycheckout',
+				 'com.om.calc',
 				 'com.appdevgenie.electronicscalculator',
 				 'com.androidapps.unitconverter',
 				 'com.videos.freemusic.song.mp3.musicplayer.mv'}
 
-	dbFilePath = os.path.join(testFolder, '../data/db.sqlite3')
+	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
 	if os.path.exists(dbFilePath):
 		os.remove(dbFilePath)
 
-	if sys.platform == 'win32':
-		args = ['python', 'Program.py']
-	else:
-		args = ['./Program.py']
-	args.extend(['--pytest', '-p', ','.join(testCases)])
-	subprocess.run(args, cwd=os.path.join(testFolder, '../scraper'))
-
+	testUtils.runScraper(['--pytest', '-p', ','.join(testCases)])
 	assert os.path.exists(dbFilePath), "Database file is not created."
 
 	connection = sqlite3.connect(dbFilePath)
