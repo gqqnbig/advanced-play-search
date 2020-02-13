@@ -119,6 +119,9 @@ isPartialInfo integer not null
 		clearCategoriesSql = ''.join([',' + delimiteDBIdentifier('category_' + v) + '=0' for k, v in self.__allCategories.items()])
 		clearPermissionsSql = ''.join([',' + delimiteDBIdentifier('permission_' + v) + '=0' for k, v in self.__allPermissions.items()])
 
+		if sqlite3.sqlite_version_info<=(3,24,0):
+			raise Exception(f"sqlite3 {sqlite3.sqlite_version_info} doesn't support upset construct. Please upgrade sqlite3 to at least 3.24.")
+
 		sql = f'''
 INSERT INTO App(id,name,rating,install_fee,app_icon,isPartialInfo,updateDate{''.join([',' + x for x in valuesToInsert])}) VALUES (?,?,?,?,?,?,date('now'){''.join([',?'] * len(valuesToInsert))})
 on conflict(id) do update set 
