@@ -4,7 +4,7 @@ import sys
 from django.db import connection
 from django.http import HttpResponse
 
-from GooglePlayAdvancedSearch.shared.dbUtils import getAppCountInDatabase
+from .shared.dbUtils import getAppCountInDatabase
 
 def getAppCount(request):
 	with connection.cursor() as cursor:

@@ -8,12 +8,12 @@ testFolder = os.path.dirname(os.path.abspath(__file__))
 
 # import local packages
 sys.path.append(os.path.join(testFolder, '../web'))
-import GooglePlayAdvancedSearch.view
+import web.view
 
 
 
 def test_searchNoDuplicate():
-	result = GooglePlayAdvancedSearch.view.searchGooglePlay('youtube')
+	result = web.view.searchGooglePlay('youtube')
 
 	duplicates = [(item,count) for item, count in Counter(result).items() if count > 1]
 	if len(duplicates):

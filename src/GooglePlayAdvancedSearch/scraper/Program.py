@@ -9,6 +9,7 @@ import urllib.parse as urlParse
 from scrapy.crawler import CrawlerProcess
 from json import loads as jsonLoads
 
+sys.path.append("..")
 from Models import AppItem
 
 
@@ -18,18 +19,13 @@ class AppInfoSpider(scrapy.Spider):
 	def __init__(self):
 		try:
 			index = sys.argv.index("-p")
-			self.url_list = ['https://play.google.com/store/apps/details?hl=en&id=' + id for id in sys.argv[index + 1].split(',')]
+			self.targetAppIds = sys.argv[index + 1].split(',')
 		except:
-			self.url_list = ['https://play.google.com/store/apps/details?hl=en&id=com.mojang.minecraftpe',
-							 'https://play.google.com/store/apps/details?hl=en&id=com.sega.sonic1px',
-							 'https://play.google.com/store/apps/details?id=com.tencent.mm',
-							 'https://play.google.com/store/apps/details?id=com.freecamchat.liverandomchat',
-							 'https://play.google.com/store/apps/details?id=com.matchdating.meetsingles34'
-							 ]
-		print(self.url_list)
+			self.targetAppIds = ['com.mojang.minecraftpe', 'com.sega.sonic1px', 'com.tencent.mm',
+								 'com.freecamchat.liverandomchat', 'com.matchdating.meetsingles34']
 
 	def start_requests(self):
-		for _url in self.url_list:
+		for _url in ['https://play.google.com/store/apps/details?hl=en&id=' + id for id in self.targetAppIds]:
 			yield scrapy.Request(url=_url, callback=self.parse)
 
 	def parse(self, response):
@@ -79,7 +75,7 @@ class AppInfoSpider(scrapy.Spider):
 	def errback(self, failure):
 		appInfo = failure.request.meta['appInfo']
 		print(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, categories={appInfo["categories"]},'
-		      f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
+			  f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
 
 	# print(failure)
 
@@ -135,9 +131,10 @@ process = CrawlerProcess(settings={
 	# don't have to output log to the console.
 	# https://docs.scrapy.org/en/latest/topics/settings.html#log-enabled
 	# 'LOG_ENABLED': False
-	'ITEM_PIPELINES' :{
-	   'pipeline.DatabasePipeline': 300,
-	   # 'myproject.pipelines.JsonWriterPipeline': 800 #another pipline
+	'LOG_LEVEL': 'WARNING',
+	'ITEM_PIPELINES': {
+		'pipeline.DatabasePipeline': 300,
+		# 'myproject.pipelines.JsonWriterPipeline': 800 #another pipline
 	}
 })
 

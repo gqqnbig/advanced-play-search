@@ -10,8 +10,8 @@ from typing import List
 
 # import local packages
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..'))
-from scraper.Models import AppItem
-from GooglePlayAdvancedSearch.shared.dbUtils import getAppCountInDatabase
+from Models import AppItem
+from web.shared.dbUtils import getAppCountInDatabase
 
 
 def index(request):
