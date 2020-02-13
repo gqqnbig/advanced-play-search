@@ -1,4 +1,7 @@
 # CS 188 Project - Google Play Advanced Search
+
+![](https://github.com/cs188-software-design-security-w20/project-random/workflows/Python%20application/badge.svg)
+
 ## Install
 Run `pip install -r requirements.txt` to install the dependencies. If you see conflicts, like "something has requirements xxx but you'll have xxx", you will need to update your pip.
 
