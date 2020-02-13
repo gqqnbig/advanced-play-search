@@ -27,8 +27,20 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: install sqlite 3.31
+      run: |
+          curl -O  https://www.sqlite.org/2020/sqlite-autoconf-3310100.tar.gz
+          tar xvfz sqlite-autoconf-3310100.tar.gz
+          cd sqlite-autoconf-3310100/
+          ./configure
+          make
+          sudo make install
+          sudo LD_RUN_PATH=/usr/local/lib ./configure
+
     - name: Test with pytest
       run: |
         pip install pytest
         cd src
+        export LD_LIBRARY_PATH="/usr/local/lib"
         python -m pytest --rootdir GooglePlayAdvancedSearch/tests
