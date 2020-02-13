@@ -30,4 +30,5 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest --rootdir src/GooglePlayAdvancedSearch/tests
+        cd src
+        python -m pytest --rootdir GooglePlayAdvancedSearch/tests
