@@ -241,6 +241,7 @@
 		});
 	});
 
+	{% if isSearch %}
 	//When we got permission list and category list, then run the following code.
 	Promise.all([permissionPromise, categoryPromise]).then(function () {
 		fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
@@ -252,6 +253,7 @@
 			});
 		});
 	});
+	{% endif %}
 
 </script>
 </body>
