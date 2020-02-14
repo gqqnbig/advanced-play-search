@@ -38,7 +38,13 @@
 			display: inline-block;
 			margin-right: 0.5em;
 		}
+         .bear{
+             cursor: url(/static/images/bear.png), auto;
+        }
+        div.teamname{
+           position: static;;
 
+        }
 		.expandableList ul {
 			position: absolute;
 			background-color: rgba(255, 255, 255, 0.8);
@@ -69,7 +75,8 @@
 			padding-left: 1em;
 		}
 
-	</style>
+
+    </style>
 </head>
 <body>
 
@@ -142,13 +149,14 @@
 
 <p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
 
-<marquee> TEAM RANDOM: <br>
-	Weikeng Yang <br>
-	Qiqi Gu <br>
-	Shuhua Zhan <br>
-	Dongyao Liang <br>
-	Yuchen Hu <br>
-</marquee>
+<div class="cursors">
+    <div class="bear">TEAM RANDOM: <br>
+Weikeng Yang <br>
+Qiqi Gu <br>
+Shuhua Zhan <br>
+Dongyao Liang <br>
+Yuchen Hu <br> </div>
+</div>
 
 <script>
 	const currentQuery = new URLSearchParams(location.search);
