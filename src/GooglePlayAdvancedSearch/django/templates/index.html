@@ -38,13 +38,12 @@
 			display: inline-block;
 			margin-right: 0.5em;
 		}
-         .bear{
-             cursor: url(/static/images/bear.png), auto;
-        }
-        div.teamname{
-           position: static;;
 
-        }
+		.bear {
+			/* A fallback keyword value is required when using a URL */
+			cursor: url(/static/images/bear.png), auto;
+		}
+
 		.expandableList ul {
 			position: absolute;
 			background-color: rgba(255, 255, 255, 0.8);
@@ -149,14 +148,12 @@
 
 <p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
 
-<div class="cursors">
-    <div class="bear">TEAM RANDOM: <br>
+<div class="bear">TEAM RANDOM: <br>
 Weikeng Yang <br>
 Qiqi Gu <br>
 Shuhua Zhan <br>
 Dongyao Liang <br>
 Yuchen Hu <br> </div>
-</div>
 
 <script>
 	const currentQuery = new URLSearchParams(location.search);
