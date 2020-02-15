@@ -70,6 +70,12 @@
 		}
 
 		.searchingPrompt {
+			margin-left: auto;
+			margin-right: auto;
+			text-align: center;
+		}
+
+		.searchingPrompt-text {
 			background: linear-gradient(-45deg, red 10%, orange 20%, yellow 30%, green 40%, teal 50%, blue 60%, purple 70%, green 80%, teal 90%, blue 100%);
 			background-size: 200% 200%;
 			animation: gradient 10s ease infinite;
@@ -160,16 +166,22 @@
 			</div>
 		</li>
 		</template>
-		<template v-else>
-			{% endverbatim %}
-			<div class="spinerContainer">
-				{% include 'cssLoader/spinner.html' %}
-			</div>
-			<div class="searchingPrompt">
-				Searching...
-			</div>
-			{% verbatim %}
-		</template>
+		<div class="searchingPrompt" v-else>
+			<template v-if="errorMessage">
+				<div style="font-size: 180px">😭</div>
+				<div class="text-danger">{{ errorMessage }}</div>
+			</template>
+			<template v-else>
+				<div>
+					{% endverbatim %}
+					{% include 'cssLoader/spinner.html' %}
+					{% verbatim %}
+				</div>
+				<div class="searchingPrompt-text">
+					Searching...
+				</div>
+			</template>
+		</div>
 	</div>
 	{% endverbatim %}
 {% endif %}
@@ -279,14 +291,18 @@
 		const appsList = new Vue({
 			el: "#appsList",
 			data: {
-				apps: undefined
+				apps: undefined,
+				errorMessage: undefined
 			}
 		});
+
+		setTimeout(() => appsList.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
 
 		//When we got permission list and category list, then run the following code.
 		Promise.all([permissionPromise, categoryPromise]).then(function () {
 			fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
 				appsList.apps = data;
+				appsList.errorMessage = undefined;
 			});
 		});
 	{% endif %}
