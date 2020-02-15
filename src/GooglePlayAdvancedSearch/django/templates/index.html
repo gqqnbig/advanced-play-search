@@ -122,6 +122,7 @@
 {% if isSearch %}
 	{% verbatim %}
 	<div id="appsList">
+		<template v-if="apps">
 		<li v-for="app in apps">
 			<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
 			<img :src="app.app_icon">
@@ -136,6 +137,15 @@
 				</ul>
 			</div>
 		</li>
+		</template>
+		<template v-else>
+		{% endverbatim %}
+		Searching...
+		<div class="spinerContainer">
+			{% include 'cssLoader/spinner.html' %}
+		</div>
+		{% verbatim %}
+		</template>
 	</div>
 	{% endverbatim %}
 {% endif %}
@@ -242,17 +252,19 @@
 	});
 
 	{% if isSearch %}
-	//When we got permission list and category list, then run the following code.
-	Promise.all([permissionPromise, categoryPromise]).then(function () {
-		fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
-			new Vue({
-				el: "#appsList",
-				data: {
-					apps: data
-				}
+		const appsList = new Vue({
+			el: "#appsList",
+			data: {
+				apps: undefined
+			}
+		});
+
+		//When we got permission list and category list, then run the following code.
+		Promise.all([permissionPromise, categoryPromise]).then(function () {
+			fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
+				appsList.apps = data;
 			});
 		});
-	});
 	{% endif %}
 
 </script>
