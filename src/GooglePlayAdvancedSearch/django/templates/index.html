@@ -69,6 +69,28 @@
 			padding-left: 1em;
 		}
 
+		.searchingPrompt {
+			background: linear-gradient(-45deg, red 10%, orange 20%, yellow 30%, green 40%, teal 50%, blue 60%, purple 70%, green 80%, teal 90%, blue 100%);
+			background-size: 200% 200%;
+			animation: gradient 10s ease infinite;
+			font-size: 30px;
+			font-weight: bold;
+			-webkit-background-clip: text;
+			color: transparent;
+		}
+
+
+		@keyframes gradient {
+			0% {
+				background-position: 0% 50%;
+			}
+			50% {
+				background-position: 100% 50%;
+			}
+			100% {
+				background-position: 0% 50%;
+			}
+		}
 	</style>
 </head>
 <body>
@@ -139,12 +161,14 @@
 		</li>
 		</template>
 		<template v-else>
-		{% endverbatim %}
-		Searching...
-		<div class="spinerContainer">
-			{% include 'cssLoader/spinner.html' %}
-		</div>
-		{% verbatim %}
+			{% endverbatim %}
+			<div class="spinerContainer">
+				{% include 'cssLoader/spinner.html' %}
+			</div>
+			<div class="searchingPrompt">
+				Searching...
+			</div>
+			{% verbatim %}
 		</template>
 	</div>
 	{% endverbatim %}
