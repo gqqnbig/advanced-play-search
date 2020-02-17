@@ -13,11 +13,11 @@
 			display: block;
 		}
 
-		.expandableList {
+		.expandable {
 			position: relative;
 		}
 
-		.expandableList .expanded::before {
+		.expandable .expanded::before {
 			content: "";
 			background-image: url("/static/images/expanded.png");
 			background-repeat: no-repeat;
@@ -28,7 +28,7 @@
 			margin-right: 0.5em;
 		}
 
-		.expandableList .expandable::before {
+		.expandable .expandable::before {
 			content: "";
 			background-image: url(/static/images/expandable.png);
 			background-repeat: no-repeat;
@@ -39,18 +39,22 @@
 			margin-right: 0.5em;
 		}
 
-		.expandableList ul {
-			position: absolute;
+		.expandable ul {
 			background-color: rgba(255, 255, 255, 0.8);
 			padding-left: 0;
 			padding-right: 0.5em;
-			border: blue solid 1px;
 			margin-top: 0.5em;
 		}
 
-		.expandableList ul > li {
+		.expandable ul > li {
 			list-style: none;
 		}
+
+        .searchableList {
+            position: absolute;
+            border: blue solid 1px;
+            padding-top: 0.5em;
+        }
 
 		.filters {
 			margin: 1em 0;
@@ -125,22 +129,28 @@
 				<option>4</option>
 			</select>
 		</div>
-		<div id="permissions" class="filter expandableList">
+		<div id="permissions" class="filter expandable">
 			<!--  v-bind:disabled is the same as :disabled -->
-			<button v-bind:class="{expanded: permissionFilter.isExpanded, expandable:!permissionFilter.isExpanded}" :disabled="!hasPermissions" v-on:click="permissionFilter.isExpanded=!permissionFilter.isExpanded">{{permissionSummary}}</button>
-			<ul v-show="permissionFilter.isExpanded" style="width: 500px">
-				<li v-for="p in permissionFilter.items">
-					<label> <input type="checkbox" :value=`permission${p.item.id}` v-model="p.checked"> {{ p.item.name }} </label>
-				</li>
-			</ul>
+			<button v-bind:class="{expanded: permissionFilter.isExpanded, expandable:!permissionFilter.isExpanded}" :disabled="!hasPermissions" v-on:click="permissionFilter.isExpanded=!permissionFilter.isExpanded, categoryFilter.isExpanded=false">{{permissionSummary}}</button>
+            <div v-show="permissionFilter.isExpanded" class="searchableList">
+                <input v-model="permissionFilter.userInput" type="text" style="width: calc(100% - 1em); margin-left: auto; margin-right: auto; display: block;" placeholder="find the permission here">
+                <ul style="width: 500px">
+                    <li v-for="p in filteredPermissions">
+                        <label> <input type="checkbox" :value=`permission${p.permission.id}` v-model="p.checked"> {{ p.permission.name }} </label>
+                    </li>
+                </ul>
+            </div>
 		</div>
-		<div id="categories" class="filter expandableList">
-			<button v-bind:class="{expanded: categoryFilter.isExpanded, expandable:!categoryFilter.isExpanded}" :disabled="!hasCategories" v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded">{{categorySummary}}</button>
-			<ul v-show="categoryFilter.isExpanded" style="width: 200px">
-				<li v-for="p in categoryFilter.items">
-					<label> <input type="checkbox" :value=`category${p.item.id}` v-model="p.checked"> {{ p.item.name }} </label>
-				</li>
-			</ul>
+		<div id="categories" class="filter expandable">
+			<button v-bind:class="{expanded: categoryFilter.isExpanded, expandable:!categoryFilter.isExpanded}" :disabled="!hasCategories" v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded, permissionFilter.isExpanded=false">{{categorySummary}}</button>
+            <div v-show="categoryFilter.isExpanded" class="searchableList">
+                <input v-model="categoryFilter.userInput" type="text" style="width: calc(100% - 1em); margin-left: auto; margin-right: auto; display: block;" placeholder="find the category here">
+                <ul style="width: 300px">
+                    <li v-for="p in filteredCategories">
+                        <label> <input type="checkbox" :value=`category${p.category.id}` v-model="p.checked"> {{ p.category.name }} </label>
+                    </li>
+                </ul>
+            </div>
 		</div>
 	</div>
 </div>
@@ -208,11 +218,13 @@
 			keyword: currentQuery.has('q') ? currentQuery.get('q') : "",
 			permissionFilter: {
 				items: [],
-				isExpanded: false
+				isExpanded: false,
+                userInput: ""
 			},
 			categoryFilter: {
 				items: [],
-				isExpanded: false
+				isExpanded: false,
+                userInput: ""
 			}
 		},
 		computed: {
@@ -230,12 +242,33 @@
 				if (!checkedPermissions[false])
 					return "Allow all permissions";
 				if (checkedPermissions[false] && checkedPermissions[false].length <= 2)
-					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.item.name).join(', ');
+					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.permission.name).join(', ');
 				if (checkedPermissions[true] && checkedPermissions[true].length <= 2)
-					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.item.name).join(', ');
+					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.permission.name).join(', ');
 
 				return 'Allow ' + checkedPermissions[true].length + ' permissions';
 			},
+
+            filteredPermissions: function () {
+			    if (this.permissionFilter.userInput)
+                    return this.permissionFilter.items.filter(item => {
+                        return item.permission.name.toUpperCase().includes(this.permissionFilter.userInput.toUpperCase());
+                    }
+                    );
+			    else
+                    return this.permissionFilter.items;
+            },
+
+            filteredCategories: function () {
+                if (this.categoryFilter.userInput)
+                    return this.categoryFilter.items.filter(item => {
+                            return item.category.name.toUpperCase().includes(this.categoryFilter.userInput.toUpperCase());
+                        }
+                    );
+                else
+                    return this.categoryFilter.items;
+            },
+
 
 			hasCategories: function () {
 				return this.categoryFilter.items.length > 0;
@@ -251,18 +284,18 @@
 				if (!checkedPermissions[false])
 					return "Allow all categories";
 				if (checkedPermissions[false] && checkedPermissions[false].length <= 2)
-					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.item.name).join(', ');
+					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.category.name).join(', ');
 				if (checkedPermissions[true] && checkedPermissions[true].length <= 2)
-					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.item.name).join(', ');
+					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.category.name).join(', ');
 
 				return 'Allow ' + checkedPermissions[true].length + ' categories';
 			},
 			queryString: function () {
 				let query = `q=${encodeURIComponent(this.keyword)}`;
-				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.item.id).join(',');
+				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.permission.id).join(',');
 				if (excludedPIds)
 					query += "&pids=" + excludedPIds;
-				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.item.id).join(',');
+				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.category.id).join(',');
 				if (excludedCIds)
 					query += "&cids=" + excludedCIds;
 				return query;
@@ -277,13 +310,13 @@
 
 	const permissionPromise = fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
 		searchTool.permissionFilter.items = Object.entries(data).map(p => {
-			return {item: {id: parseInt(p[0]), name: p[1]}, checked: !excludedPIds.includes(parseInt(p[0]))}
+			return {permission: {id: parseInt(p[0]), name: p[1]}, checked: !excludedPIds.includes(parseInt(p[0]))}
 		});
 	});
 
 	const categoryPromise = fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
 		searchTool.categoryFilter.items = Object.entries(data).map(p => {
-			return {item: {id: parseInt(p[0]), name: p[1]}, checked: !excludedCIds.includes(parseInt(p[0]))}
+			return {category: {id: parseInt(p[0]), name: p[1]}, checked: !excludedCIds.includes(parseInt(p[0]))}
 		});
 	});
 
