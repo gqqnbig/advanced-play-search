@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import requests
@@ -6,12 +5,7 @@ import sys
 
 from django.db import connection
 from django.shortcuts import render
-from django.shortcuts import redirect
-from django.urls import reverse
-from django.http import HttpResponseRedirect
 from json import loads as jsonLoads
-from typing import List
-
 
 # import local packages
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
