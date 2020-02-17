@@ -19,7 +19,9 @@ Run `python manage.py runserver` in `src/web` folder for the website.
 Run `python Program.py` in `src/scraper` folder for the web scraper.
 
 Run server:
-(cs188) root@server:/project-random/src/web# nohup uwsgi --uid 1003 --gid 1004 --socket /tmp/GooglePlayAdvancedSearch.sock --module GooglePlayAdvancedSearch.wsgi --chmod-socket=666 &> /tmp/django.log &
+make sure to `conda activate cs188` first as root
+(cs188) root@server:/project-random/src/GooglePlayAdvancedSearch/django# `nohup uwsgi --uid 1003 --gid 1004 --socket /tmp/GooglePlayAdvancedSearch.sock --module web.wsgi --chmod-socket=666 &> /tmp/django.log &`
+
 
 ## System Requirements
 
