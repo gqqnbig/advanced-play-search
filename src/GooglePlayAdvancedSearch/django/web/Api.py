@@ -57,7 +57,16 @@ def search(request):
 
 	appInfos = searchGooglePlay(keyword)
 
+	needCompleteInfo = False
 	if len(excludedPIds):
+		needCompleteInfo = True
+	else:
+		with connection.cursor() as cursor:
+			permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
+			if len(permissions) == 0:
+				needCompleteInfo = True
+
+	if needCompleteInfo:
 		# We have to run scraper
 		appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
 		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
