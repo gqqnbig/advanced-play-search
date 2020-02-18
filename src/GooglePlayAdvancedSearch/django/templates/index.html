@@ -56,6 +56,13 @@
             padding-top: 0.5em;
         }
 
+		.listFilterBox {
+			width: calc(100% - 1em);
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
+		}
+
 		.filters {
 			margin: 1em 0;
 		}
@@ -131,9 +138,10 @@
 		</div>
 		<div id="permissions" class="filter expandable">
 			<!--  v-bind:disabled is the same as :disabled -->
-			<button v-bind:class="{expanded: permissionFilter.isExpanded, expandable:!permissionFilter.isExpanded}" :disabled="!hasPermissions" v-on:click="permissionFilter.isExpanded=!permissionFilter.isExpanded; categoryFilter.isExpanded=false">{{permissionSummary}}</button>
+			<button v-bind:class="{expanded: permissionFilter.isExpanded, expandable:!permissionFilter.isExpanded}" :disabled="!hasPermissions"
+					v-on:click="permissionFilter.isExpanded=!permissionFilter.isExpanded; categoryFilter.isExpanded=false">{{permissionSummary}}</button>
             <div v-show="permissionFilter.isExpanded" class="searchableList">
-                <input v-model="permissionFilter.userInput" type="text" style="width: calc(100% - 1em); margin-left: auto; margin-right: auto; display: block;" placeholder="find the permission here">
+                <input v-model="permissionFilter.userInput" class="listFilterBox" type="text" placeholder="find the permission here">
                 <ul style="width: 500px">
                     <li v-for="p in filteredPermissions">
                         <label> <input type="checkbox" :value=`permission${p.permission.id}` v-model="p.checked"> {{ p.permission.name }} </label>
@@ -142,9 +150,10 @@
             </div>
 		</div>
 		<div id="categories" class="filter expandable">
-			<button v-bind:class="{expanded: categoryFilter.isExpanded, expandable:!categoryFilter.isExpanded}" :disabled="!hasCategories" v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded; permissionFilter.isExpanded=false">{{categorySummary}}</button>
+			<button v-bind:class="{expanded: categoryFilter.isExpanded, expandable:!categoryFilter.isExpanded}" :disabled="!hasCategories"
+					v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded; permissionFilter.isExpanded=false">{{categorySummary}}</button>
             <div v-show="categoryFilter.isExpanded" class="searchableList">
-                <input v-model="categoryFilter.userInput" type="text" style="width: calc(100% - 1em); margin-left: auto; margin-right: auto; display: block;" placeholder="find the category here">
+                <input v-model="categoryFilter.userInput" class="listFilterBox" type="text" placeholder="find the category here">
                 <ul style="width: 300px">
                     <li v-for="p in filteredCategories">
                         <label> <input type="checkbox" :value=`category${p.category.id}` v-model="p.checked"> {{ p.category.name }} </label>
