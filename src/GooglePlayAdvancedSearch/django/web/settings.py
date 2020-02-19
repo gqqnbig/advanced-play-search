@@ -24,6 +24,7 @@ SECRET_KEY = 'eq*%5!o7m0m6hnvlj87$w1^$f4_$j7vuz7hby-)em434g5sv%m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
 
