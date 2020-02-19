@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import io
+import logging
 import os
 import re
 
@@ -69,7 +70,10 @@ class AppInfoSpider(scrapy.Spider):
 		if (ariaLabel_fee == "Install"):
 			appInfo['install_fee'] = 0
 		else:
-			appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
+			try:
+				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
+			except:
+				self.log("Unexpected install label: " + ariaLabel_fee, logging.ERROR)
 
 		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
 		appInfo['app_icon'] = ariaLabel_icon
