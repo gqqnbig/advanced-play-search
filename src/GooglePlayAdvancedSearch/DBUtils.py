@@ -167,7 +167,7 @@ where julianday('now')-julianday(updateDate)>=?'''
 				self.__cursor.execute(f'alter table App add {delimiteDBIdentifier(permission)} integer')
 				print(f'Add permission column {delimiteDBIdentifier(permission)}')
 				self.__cursor.execute(f'update App set {delimiteDBIdentifier(permission)}=1 where id=?', (appId,))
-				self.__allPermissions.append(permission)
+				self.__allPermissions = getAllPermissions(self.__cursor)
 			except Exception as ex:
 				print(ex, file=sys.stderr)
 
@@ -180,7 +180,7 @@ where julianday('now')-julianday(updateDate)>=?'''
 				self.__cursor.execute(f'alter table App add {delimiteDBIdentifier(c)} integer')
 				print(f'Add category column {delimiteDBIdentifier(c)}')
 				self.__cursor.execute(f'update App set {delimiteDBIdentifier(c)}=1 where id=?', (appId,))
-				self.__allCategories.append(c)
+				self.__allCategories = getAllCategories(self.__cursor)
 			except Exception as ex:
 				print(ex, file=sys.stderr)
 
