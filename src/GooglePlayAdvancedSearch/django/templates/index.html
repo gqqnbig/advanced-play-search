@@ -16,56 +16,6 @@
 			display: block;
 		}
 
-		.expandable {
-			position: relative;
-		}
-
-		.expandable .expanded::before {
-			content: "";
-			background-image: url("/static/images/expanded.png");
-			background-repeat: no-repeat;
-			background-size: contain;
-			width: 10px;
-			height: 10px;
-			display: inline-block;
-			margin-right: 0.5em;
-		}
-
-		.expandable .expandable::before {
-			content: "";
-			background-image: url(/static/images/expandable.png);
-			background-repeat: no-repeat;
-			background-size: contain;
-			width: 10px;
-			height: 10px;
-			display: inline-block;
-			margin-right: 0.5em;
-		}
-
-		.expandable ul {
-			background-color: rgba(255, 255, 255, 0.8);
-			padding-left: 0;
-			padding-right: 0.5em;
-			margin-top: 0.5em;
-		}
-
-		.expandable ul > li {
-			list-style: none;
-		}
-
-        .searchableList {
-            position: absolute;
-            border: blue solid 1px;
-            padding-top: 0.5em;
-        }
-
-		.listFilterBox {
-			width: calc(100% - 1em);
-			margin-left: auto;
-			margin-right: auto;
-			display: block;
-		}
-
 		.filters {
 			margin: 1em 0;
 		}
@@ -139,22 +89,10 @@
 				<option>4</option>
 			</select>
 		</div>
-		<div id="permissions" class="filter expandable">
-			<!--  v-bind:disabled is the same as :disabled -->
-			<button v-bind:class="{expanded: permissionFilter.isExpanded, expandable:!permissionFilter.isExpanded}" :disabled="!hasPermissions"
-					v-on:click="permissionFilter.isExpanded=!permissionFilter.isExpanded; categoryFilter.isExpanded=false">{{permissionSummary}}</button>
-            <div v-show="permissionFilter.isExpanded" class="searchableList">
-                <input v-model="permissionFilter.userInput" class="listFilterBox" type="text" placeholder="find the permission here">
-                <ul style="width: 500px">
-                    <li v-for="p in filteredPermissions">
-                        <label> <input type="checkbox" :value=`permission${p.permission.id}` v-model="p.checked"> {{ p.permission.name }} </label>
-                    </li>
-                </ul>
-            </div>
-		</div>
+		<collapsible-searchable-list label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
 		<div id="categories" class="filter expandable">
 			<button v-bind:class="{expanded: categoryFilter.isExpanded, expandable:!categoryFilter.isExpanded}" :disabled="!hasCategories"
-					v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded; permissionFilter.isExpanded=false">{{categorySummary}}</button>
+					v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded;">{{categorySummary}}</button>
             <div v-show="categoryFilter.isExpanded" class="searchableList">
                 <input v-model="categoryFilter.userInput" class="listFilterBox" type="text" placeholder="find the category here">
                 <ul style="width: 300px">
@@ -218,6 +156,8 @@
 	Yuchen Hu <br>
 </marquee>
 
+{% include "vue/collapsible-searchable-list.html" %}
+
 <script>
 	const currentQuery = new URLSearchParams(location.search);
 	//Cannot write map(parseInt) because parseInt can accept 2 parameters!
@@ -230,8 +170,6 @@
 			keyword: currentQuery.has('q') ? currentQuery.get('q') : "",
 			permissionFilter: {
 				items: [],
-				isExpanded: false,
-                userInput: ""
 			},
 			categoryFilter: {
 				items: [],
@@ -240,37 +178,6 @@
 			}
 		},
 		computed: {
-			hasPermissions: function () {
-				return this.permissionFilter.items.length > 0;
-			},
-			permissionSummary: function () {
-				// `this` 指向 vue 实例
-				if (!this.hasPermissions)
-					return 'No permissions available';
-
-				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
-				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
-				const checkedPermissions = _.groupBy(this.permissionFilter.items, p => p.checked);
-				if (!checkedPermissions[false])
-					return "Allow all permissions";
-				if (checkedPermissions[false] && checkedPermissions[false].length <= 2)
-					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.permission.name).join(', ');
-				if (checkedPermissions[true] && checkedPermissions[true].length <= 2)
-					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.permission.name).join(', ');
-
-				return 'Allow ' + checkedPermissions[true].length + ' permissions';
-			},
-
-            filteredPermissions: function () {
-			    if (this.permissionFilter.userInput)
-                    return this.permissionFilter.items.filter(item => {
-                        return item.permission.name.toUpperCase().includes(this.permissionFilter.userInput.toUpperCase());
-                    }
-                    );
-			    else
-                    return this.permissionFilter.items;
-            },
-
             filteredCategories: function () {
                 if (this.categoryFilter.userInput)
                     return this.categoryFilter.items.filter(item => {
