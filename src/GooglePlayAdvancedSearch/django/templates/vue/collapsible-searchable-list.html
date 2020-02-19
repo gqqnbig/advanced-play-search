@@ -1,5 +1,7 @@
 {% verbatim %}
 
+<script src="/static/js/vue-click-outside.js"></script>
+
 <style>
 	.expandable {
 		position: relative;
@@ -53,17 +55,18 @@
 </style>
 
 <script type="text/x-template" id="collapsible-searchable-list">
-	<div class="filter expandable">
+	<!-- According to https://github.com/vuejs/vue/issues/5588 , custom directive doesn't execute functions. Hence I pass in a function definition. -->
+	<div class="expandable" v-cloak v-click-outside="()=>{isExpanded=false}">
 		<!--  v-bind:disabled is the same as :disabled -->
 		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasItems"
 				v-on:click="isExpanded=!isExpanded;">{{summary}}
 		</button>
 		<div v-show="isExpanded" class="searchableList">
 			<input v-model="userInput" class="listFilterBox" type="text" :placeholder="`find ${label} here`">
-			<ul style="width: 500px">
-				<li v-for="p in filteredItems">
+			<ul class="itemList">
+				<li v-for="p in matchedItems">
 					<!-- data binding must use single or double quotes. Inside it, you can use tick (`). -->
-					<label> <input type="checkbox" v-model="p.checked"> {{ p.permission.name }} </label>
+					<label> <input type="checkbox" v-model="p.checked"> {{ p.name }} </label>
 				</li>
 			</ul>
 		</div>
@@ -74,42 +77,48 @@
 <script>
 	Vue.component('collapsible-searchable-list', {
 		template: "#collapsible-searchable-list",
-		props: ['items', 'isExpanded', 'label'],
+		props: ['items', 'label'],
 		data: function () {
-			return {userInput: ""};
+			return {userInput: "", isExpanded: false};
 		},
 		computed: {
 			hasItems: function () {
 				return this.items && this.items.length > 0;
+			},
+			checkedItemsGrouping: function () {
+				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
+				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
+				return _.groupBy(this.items, p => p.checked);
+			},
+			checkedItems: function () {
+				return this.checkedItemsGrouping[true];
+			},
+			uncheckedItems: function () {
+				return this.checkedItemsGrouping[false];
 			},
 			summary: function () {
 				// `this` 指向 vue 实例
 				if (!this.hasItems)
 					return 'No ' + this.label + ' available';
 
-				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
-				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
-				const checkedItems = _.groupBy(this.items, p => p.checked);
-				if (!checkedItems[false])
+				if (!this.uncheckedItems)
 					return "Allow all " + this.label;
-				if (checkedItems[false] && checkedItems[false].length <= 2)
-					return 'Disallow ' + checkedItems[false].length + ": " + checkedItems[false].map(p => p.permission.name).join(', ');
-				if (checkedItems[true] && checkedItems[true].length <= 2)
-					return 'Allow ' + checkedItems[true].length + ": " + checkedItems[true].map(p => p.permission.name).join(', ');
+				if (this.uncheckedItems && this.uncheckedItems.length <= 2)
+					return 'Disallow ' + this.uncheckedItems.length + ": " + this.uncheckedItems.map(p => p.name).join(', ');
+				if (this.checkedItems && this.checkedItems.length <= 2)
+					return 'Allow ' + this.checkedItems.length + ": " + this.checkedItems.map(p => p.name).join(', ');
 
-				return 'Allow ' + checkedItems[true].length + ' ' + this.label;
+				return 'Allow ' + this.checkedItems.length + ' ' + this.label;
 			},
-
-			filteredItems: function () {
+			matchedItems: function () {
 				if (this.userInput && this.items)
 					return this.items.filter(item => {
-							return item.permission.name.toUpperCase().includes(this.userInput.toUpperCase());
+							return item.name.toUpperCase().includes(this.userInput.toUpperCase());
 						}
 					);
 				else
 					return this.items;
 			},
-
 		}
 	});
 </script>

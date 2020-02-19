@@ -33,6 +33,14 @@
 			padding-left: 1em;
 		}
 
+		.permissionFilter .itemList {
+			width: 500px;
+		}
+
+		.categoryFilter .itemList {
+			width: 300px;
+		}
+
 		.searchingPrompt {
 			margin-left: auto;
 			margin-right: auto;
@@ -89,19 +97,8 @@
 				<option>4</option>
 			</select>
 		</div>
-		<collapsible-searchable-list label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
-		<div id="categories" class="filter expandable">
-			<button v-bind:class="{expanded: categoryFilter.isExpanded, expandable:!categoryFilter.isExpanded}" :disabled="!hasCategories"
-					v-on:click="categoryFilter.isExpanded=!categoryFilter.isExpanded;">{{categorySummary}}</button>
-            <div v-show="categoryFilter.isExpanded" class="searchableList">
-                <input v-model="categoryFilter.userInput" class="listFilterBox" type="text" placeholder="find the category here">
-                <ul style="width: 300px">
-                    <li v-for="p in filteredCategories">
-                        <label> <input type="checkbox" :value=`category${p.category.id}` v-model="p.checked"> {{ p.category.name }} </label>
-                    </li>
-                </ul>
-            </div>
-		</div>
+		<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
+		<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
 	</div>
 </div>
 
@@ -111,20 +108,20 @@
 	{% verbatim %}
 	<div id="appsList">
 		<template v-if="apps">
-		<li v-for="app in apps">
-			<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
-			<img :src="app.app_icon">
-			<br>
-			<button type="button" class="collapsible">+</button>
-			<div>
-				<ul>
-					<li>rating: {{ app.rating }}</li>
-					<li>num_reviews: {{ app.num_reviews }}</li>
-					<li>install_fee: ${{ app.install_fee }}</li>
-					<li>inAppPurchases: {{ app.inAppPurchases }}</li>
-				</ul>
-			</div>
-		</li>
+			<li v-for="app in apps">
+				<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
+				<img :src="app.app_icon">
+				<br>
+				<button type="button" class="collapsible">+</button>
+				<div>
+					<ul>
+						<li>rating: {{ app.rating }}</li>
+						<li>num_reviews: {{ app.num_reviews }}</li>
+						<li>install_fee: ${{ app.install_fee }}</li>
+						<li>inAppPurchases: {{ app.inAppPurchases }}</li>
+					</ul>
+				</div>
+			</li>
 		</template>
 		<div class="searchingPrompt" v-else>
 			<template v-if="errorMessage">
@@ -173,42 +170,9 @@
 			},
 			categoryFilter: {
 				items: [],
-				isExpanded: false,
-                userInput: ""
 			}
 		},
 		computed: {
-            filteredCategories: function () {
-                if (this.categoryFilter.userInput)
-                    return this.categoryFilter.items.filter(item => {
-                            return item.category.name.toUpperCase().includes(this.categoryFilter.userInput.toUpperCase());
-                        }
-                    );
-                else
-                    return this.categoryFilter.items;
-            },
-
-
-			hasCategories: function () {
-				return this.categoryFilter.items.length > 0;
-			},
-			categorySummary: function () {
-				// `this` 指向 vue 实例
-				if (!this.hasCategories)
-					return 'No categories available';
-
-				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
-				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
-				const checkedPermissions = _.groupBy(this.categoryFilter.items, p => p.checked);
-				if (!checkedPermissions[false])
-					return "Allow all categories";
-				if (checkedPermissions[false] && checkedPermissions[false].length <= 2)
-					return 'Disallow ' + checkedPermissions[false].length + ": " + checkedPermissions[false].map(p => p.category.name).join(', ');
-				if (checkedPermissions[true] && checkedPermissions[true].length <= 2)
-					return 'Allow ' + checkedPermissions[true].length + ": " + checkedPermissions[true].map(p => p.category.name).join(', ');
-
-				return 'Allow ' + checkedPermissions[true].length + ' categories';
-			},
 			queryString: function () {
 				let query = `q=${encodeURIComponent(this.keyword)}`;
 				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.permission.id).join(',');
@@ -229,13 +193,13 @@
 
 	const permissionPromise = fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
 		searchTool.permissionFilter.items = Object.entries(data).map(p => {
-			return {permission: {id: parseInt(p[0]), name: p[1]}, checked: !excludedPIds.includes(parseInt(p[0]))}
+			return {id: parseInt(p[0]), name: p[1], checked: !excludedPIds.includes(parseInt(p[0]))}
 		});
 	});
 
 	const categoryPromise = fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
 		searchTool.categoryFilter.items = Object.entries(data).map(p => {
-			return {category: {id: parseInt(p[0]), name: p[1]}, checked: !excludedCIds.includes(parseInt(p[0]))}
+			return {id: parseInt(p[0]), name: p[1], checked: !excludedCIds.includes(parseInt(p[0]))}
 		});
 	});
 
