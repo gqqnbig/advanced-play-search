@@ -41,6 +41,5 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        cd src
         export LD_LIBRARY_PATH="/usr/local/lib"
-        python -m pytest --rootdir GooglePlayAdvancedSearch/tests --tb=short
+        pytest --rootdir=src/GooglePlayAdvancedSearch/tests --tb=short

@@ -6,9 +6,9 @@
 Run `pip install -r requirements.txt` to install the dependencies. If you see conflicts, like "something has requirements xxx but you'll have xxx", you will need to update your pip.
 
 ## Test
-Run `python -m pytest --rootdir=GooglePlayAdvancedSearch/tests` in the src folder.
+Run `pytest --rootdir=GooglePlayAdvancedSearch/tests` in the src folder.
 
-If you want to run a single test file, use `pytest src/tests/test_scraper.py` or check [pytest documentation](https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests)
+If you want to run a single test file, use `pytest src/GooglePlayAdvancedSearch/tests/test_scraper.py` or check [pytest documentation](https://docs.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests)
 
 If you see warnings like "the imp module is deprecated in favour of importlib", add option `--disable-pytest-warnings`.
 
