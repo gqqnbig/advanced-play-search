@@ -31,7 +31,7 @@ def startWebsite(test):
 		waitTime = 2
 		while True:
 			try:
-				response = requests.get('http://localhost:8090')
+				response = requests.get('http://localhost:8090', verify=True)
 				if test:
 					test()
 				break

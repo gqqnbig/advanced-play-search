@@ -72,7 +72,7 @@ def isExcluded(d: Dict, ids: List[int]):
 
 def searchGooglePlay(keyword) -> List[AppItem]:
 	url = 'https://play.google.com/store/search?q=%s&c=apps' % keyword
-	page = requests.get(url)
+	page = requests.get(url, verify=True)
 
 	# "key: 'ds:3'" is not reliable.
 	matches = re.findall(r'<script.*?>AF_initDataCallback\(\s*{.*?data:function\(\){return\s+(\[.+?\])\s*}\s*}\s*\)\s*;\s*</script>', page.text, flags=re.DOTALL)
@@ -116,7 +116,8 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 								 headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
 								 data={'f.req': r'[[["qnKhOb","[[null,[[10,[10,50]],true,null,[96,27,4,8,57,30,110,79,11,16,49,1,3,9,12,104,55,56,51,10,34,31,77],[null,null,null,[[[[7,31],[[1,52,43,112,92,58,69,31,19,96]]]]]]],null,\"'
 												+ pageToken
-												+ r'\"]]",null,"generic"]]]'})
+												+ r'\"]]",null,"generic"]]]'},
+								 verify=True)
 		package = jsonLoads(response.text[response.text.index('\n') + 1:])
 		data = jsonLoads(package[0][2])
 	return appInfos
