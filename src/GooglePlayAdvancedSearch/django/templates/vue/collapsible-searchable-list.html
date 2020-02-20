@@ -46,11 +46,21 @@
 		padding-top: 0.5em;
 	}
 
-	.listFilterBox {
-		width: calc(100% - 1em);
-		margin-left: auto;
-		margin-right: auto;
-		display: block;
+	.inputContainer {
+		display: flex;
+		align-items: center;
+	}
+	
+	.inputContainer input{
+		flex-grow: 1;
+		margin-left: 0.5em;
+		margin-right: 0.5em;
+	}
+
+	.inputContainer img{
+		width: 20px;
+		height: 20px;
+		margin-right: 0.5em;
 	}
 </style>
 
@@ -62,7 +72,10 @@
 				v-on:click="isExpanded=!isExpanded;">{{summary}}
 		</button>
 		<div v-show="isExpanded" class="searchableList">
-			<input v-model="userInput" class="listFilterBox" type="text" :placeholder="`find ${label} here`">
+			<div class="inputContainer">
+				<input v-model="userInput" class="listFilterBox" type="text" :placeholder="`find ${label} here`" v-on:keyup.esc="userInput=''" title="press esc key to clear the textbox">
+				<img v-if="showHelp" title="Browser extensions listening key events, for example Vimium, may be incompatible with the shortcuts on this web application." src="static/images/question.png">
+			</div>
 			<ul class="itemList">
 				<li v-for="p in matchedItems">
 					<!-- data binding must use single or double quotes. Inside it, you can use tick (`). -->
@@ -75,11 +88,34 @@
 
 
 <script>
+	//copied from https://github.com/philc/vimium/issues/2399#issuecomment-304966439
+	function detectVimumC() {
+		return new Promise((resolve) => {
+			fetch("chrome-extension://hfjbmagddngcpeloejdejnfgbamkjaeg/content/vimium-c.js").then(response => response.text()).then(text => {
+				vimiumEnabled = text !== "";
+				resolve(vimiumEnabled)
+			}).catch(() => resolve(false));
+		});
+	}
+
+	function detectVimum() {
+		return new Promise((resolve) => {
+			fetch("chrome-extension://dbepggeogbaibhgnhhndojpepiihcmeb/content_scripts/vimium.css").then(response => response.text()).then(text => {
+				vimiumEnabled = text !== "";
+				resolve(vimiumEnabled)
+			}).catch(() => resolve(false));
+		});
+	}
+
 	Vue.component('collapsible-searchable-list', {
 		template: "#collapsible-searchable-list",
 		props: ['items', 'label'],
 		data: function () {
-			return {userInput: "", isExpanded: false};
+			return {
+				userInput: "",
+				isExpanded: false,
+				showHelp: false,
+			};
 		},
 		computed: {
 			hasItems: function () {
@@ -119,6 +155,10 @@
 				else
 					return this.items;
 			},
+		},
+		created: function () {
+			detectVimumC().then(isVimEnabled => this.showHelp = this.showHelp || isVimEnabled);
+			detectVimum().then(isVimEnabled => this.showHelp = this.showHelp || isVimEnabled);
 		}
 	});
 </script>
