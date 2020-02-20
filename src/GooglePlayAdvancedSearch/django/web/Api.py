@@ -100,6 +100,10 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 	data = jsonLoads(matches[-1])
 	data = data[0][1]
 
+	if not data:
+		print("We couldn't find anything for your search.")
+		return []
+
 	appInfos = []
 
 	appSaver = GooglePlayAdvancedSearch.DBUtils.AppAccessor(1)

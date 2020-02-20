@@ -118,6 +118,7 @@
 
 {% endverbatim %}
 
+
 {% if isSearch %}
 	{% verbatim %}
 	<div id="appsList">
@@ -240,10 +241,19 @@
 					clearTimeout(searchingTimeoutHandler);
 					appsList.errorMessage = data.error;
 					appsList.errorType = "security";
-				} else {
-					appsList.apps = data;
-					appsList.errorMessage = undefined;
 				}
+				else if (data.length == 0) {
+					clearTimeout(searchingTimeoutHandler);
+					appsList.errorMessage = "We couldn't find anything for your search.";
+					appsList.apps = '';
+				}
+				else{
+				appsList.apps = data;
+				appsList.errorMessage = undefined;
+				}
+
+
+
 			});
 		});
 	{% endif %}
