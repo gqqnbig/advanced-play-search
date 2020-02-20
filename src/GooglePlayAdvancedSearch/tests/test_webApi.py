@@ -27,9 +27,32 @@ def callback_searchPermissionFilter():
 	text = response.text
 	assert 'com.tencent.mm' in text, "Search for wechat allowing storage permission. The search result not have wechat."
 
+def callback_searchCategoryFilter():
+	# com.facebook.katana uses category 'Social'
+	# we exclude this category in the search, and make sure the result doesn't have com.facebook.katana.
+
+	testUtils.runScraper(['--pytest', '-p', 'com.facebook.katana'])
+
+	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+	connection = sqlite3.connect(dbFilePath)
+	cursor = connection.cursor()
+	categories = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
+	cid = next((k for k, v in categories.items() if 'Social' in v), None)
+
+	response = requests.get('http://localhost:8090/Api/Search?q=facebook&cids=' + str(cid), verify=True)
+	text = response.text
+	assert 'com.facebook.katana' not in text, "Search for facebook without Social category. The search result should not have it."
+
+	response = requests.get('http://localhost:8090/Api/Search?q=facebook', verify=True)
+	text = response.text
+	assert 'com.facebook.katana' in text, "Search for facebook allowing Social category. The search result should have it."
 
 def test_searchPermissionFilter():
 	testUtils.startWebsite(callback_searchPermissionFilter)
 
+def test_searchCategoryFilter():
+	testUtils.startWebsite(callback_searchCategoryFilter)
+
 if __name__ == "__main__":
 	test_searchPermissionFilter()
+	test_searchCategoryFilter()

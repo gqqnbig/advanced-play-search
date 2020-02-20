@@ -137,6 +137,8 @@
 				if (!this.hasItems)
 					return 'No ' + this.label + ' available';
 
+				if (!this.checkedItems)
+					return "Disallow all " + this.label;
 				if (!this.uncheckedItems)
 					return "Allow all " + this.label;
 				if (this.uncheckedItems && this.uncheckedItems.length <= 2)
