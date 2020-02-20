@@ -14,7 +14,9 @@ from json import loads as jsonLoads
 
 from scrapy.exceptions import CloseSpider
 
+
 sys.path.append("../..")
+import GooglePlayAdvancedSearch.Errors
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
@@ -30,6 +32,11 @@ class AppInfoSpider(scrapy.Spider):
 								 'com.freecamchat.liverandomchat', 'com.matchdating.meetsingles34']
 
 	def start_requests(self):
+		if '--bad-ssl-url' in sys.argv:
+			i = sys.argv.index('--bad-ssl-url')
+			yield scrapy.Request(url=sys.argv[i + 1], callback=self.parse, errback=self.detail_errorback)
+			return
+
 		for _url in ['https://play.google.com/store/apps/details?hl=en&id=' + id for id in self.targetAppIds]:
 			yield scrapy.Request(url=_url, callback=self.parse, errback=self.detail_errorback)
 
@@ -144,7 +151,7 @@ You may find the location by running
 			# https://twistedmatrix.com/documents/current/api/twisted.internet.ssl.html#platformTrust read SSL_CERT_FILE environment variable.
 
 			self.logger.error(message)
-			exitCode = 500
+			exitCode = GooglePlayAdvancedSearch.Errors.sslErrorCode
 			raise CloseSpider('SSL error on ' + failure.request.url)
 
 

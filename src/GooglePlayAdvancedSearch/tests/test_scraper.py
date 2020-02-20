@@ -5,6 +5,7 @@ import sqlite3
 import subprocess
 import sys
 
+import GooglePlayAdvancedSearch.Errors
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
 
@@ -37,3 +38,8 @@ def test_scrapeAppsWithExoticPermissions():
 
 	if len(failedCases) > 0:
 		pytest.fail('Failed to scrape ' + ', '.join(failedCases))
+
+
+def test_sslVerify():
+	completed = testUtils.runScraper(['--pytest', '--bad-ssl-url', 'https://expired.badssl.com/'])
+	assert completed.returncode == GooglePlayAdvancedSearch.Errors.sslErrorCode, 'Expect to detect invalid SSL certificate'

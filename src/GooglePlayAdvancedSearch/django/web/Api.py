@@ -12,6 +12,7 @@ from typing import List, Dict, Union
 from urllib.parse import urlparse
 
 # import local packages
+import GooglePlayAdvancedSearch.Errors
 from GooglePlayAdvancedSearch.DBUtils import AppAccessor
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
@@ -176,7 +177,8 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 	# search database second pass
 	# for first-pass non-found apps, pass into scraper
 	appsMissingInDatabase = [k for k, v in app_infos.items() if v is None]
-	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+	if os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase)) == GooglePlayAdvancedSearch.Errors.sslErrorCode:
+		pass
 
 	appAccessor = AppAccessor(1)
 	scraper_fail_id = []
