@@ -192,15 +192,19 @@
 	);
 
 	const permissionPromise = fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
-		searchTool.permissionFilter.items = Object.entries(data).map(p => {
+		res = Object.entries(data).map(p => {
 			return {id: parseInt(p[0]), name: p[1], checked: !excludedPIds.includes(parseInt(p[0]))}
 		});
+		res.sort((x, y) => x.name.localeCompare(y.name));
+		searchTool.permissionFilter.items = res
 	});
 
 	const categoryPromise = fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
-		searchTool.categoryFilter.items = Object.entries(data).map(p => {
+		res = Object.entries(data).map(p => {
 			return {id: parseInt(p[0]), name: p[1], checked: !excludedCIds.includes(parseInt(p[0]))}
 		});
+		res.sort((x, y) => x.name.localeCompare(y.name));
+		searchTool.categoryFilter.items = res;
 	});
 
 	{% if isSearch %}
