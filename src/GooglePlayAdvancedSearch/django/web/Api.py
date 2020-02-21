@@ -49,9 +49,9 @@ def getCategories(request):
 
 def search(request):
 	keyword = request.GET['q']
-	excludedPIds = [int(n) for n in request.GET.get('pids').split(',')]
+	excludedPIds = [int(n) for n in request.GET.get('pids', '').split(',') if n != '']
 
-	excludedCIds = [int(n) for n in request.GET.get('cids').split(',')]
+	excludedCIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
 
 	try:
 		appInfos = searchGooglePlay(keyword)
@@ -69,6 +69,21 @@ def search(request):
 			appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
 		if len(excludedCIds):
 			appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
+
+
+		# If we cannot find 200 matches from our database, we try to find more matches from Google.
+		if len(appInfos) < 200:
+			appInfos2 = searchGooglePlay(keyword)
+			if needCompleteInfo:
+				appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
+			if len(excludedPIds):
+				appInfos2 = [a for a in appInfos2 if isExcluded(a['permissions'], excludedPIds) == False]
+			if len(excludedCIds):
+				appInfos2 = [a for a in appInfos2 if isExcluded(a['categories'], excludedCIds) == False]
+
+
+			appInfoIds = [a['id'] for a in appInfos]
+			appInfos.extend([a for a in appInfos2 if a['id'] not in appInfoIds])
 
 		sortType = request.GET.get('sort')
 		if sortType == 'rlh':  # rating low to high
