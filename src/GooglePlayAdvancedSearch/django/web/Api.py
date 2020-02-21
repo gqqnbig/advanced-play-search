@@ -49,32 +49,51 @@ def getCategories(request):
 
 def search(request):
 	keyword = request.GET['q']
-	if 'pids' in request.GET:
-		excludedPIds = [int(n) for n in request.GET['pids'].split(',')]
-	else:
-		excludedPIds = []
+	excludedPIds = [int(n) for n in request.GET.get('pids', '').split(',') if n != '']
 
-	if 'cids' in request.GET:
-		excludedCIds = [int(n) for n in request.GET['cids'].split(',')]
-	else:
-		excludedCIds = []
-		
+	excludedCIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
+
 	try:
 		appInfos = searchGooglePlay(keyword)
 
-		needCompleteInfo = False
-		if len(excludedPIds) or len(excludedCIds):
-			needCompleteInfo = True
-		else:
-			with connection.cursor() as cursor:
-				if len(GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)) == 0 or len(GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)) == 0:
-					needCompleteInfo = True
+		if request.GET.get('sort') != '':
+			appAccessor = AppAccessor(1)
+			appInfos = appAccessor.searchApps(keyword)
+
+		needCompleteInfo = determineAppInfoCompleteness(request)
 
 		if needCompleteInfo:
-			# We have to run scraper
 			appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
+
+		if len(excludedPIds):
 			appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
+		if len(excludedCIds):
 			appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
+
+
+		# If we cannot find 200 matches from our database, we try to find more matches from Google.
+		if len(appInfos) < 200:
+			appInfos2 = searchGooglePlay(keyword)
+			if needCompleteInfo:
+				appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
+			if len(excludedPIds):
+				appInfos2 = [a for a in appInfos2 if isExcluded(a['permissions'], excludedPIds) == False]
+			if len(excludedCIds):
+				appInfos2 = [a for a in appInfos2 if isExcluded(a['categories'], excludedCIds) == False]
+
+
+			appInfoIds = [a['id'] for a in appInfos]
+			appInfos.extend([a for a in appInfos2 if a['id'] not in appInfoIds])
+
+		sortType = request.GET.get('sort')
+		if sortType == 'rlh':  # rating low to high
+			appInfos = sorted(appInfos, key=lambda a: a['rating'])
+		elif sortType == 'rhl':  # rating high to low
+			appInfos = sorted(appInfos, key=lambda a: a['rating'], reverse=True)
+		elif sortType == 'plh':  # number of permissions low to high
+			appInfos = sorted(appInfos, key=lambda a: len(a['permissions']))
+		elif sortType == 'phl':  # number of permissions low to high
+			appInfos = sorted(appInfos, key=lambda a: len(a['permissions']), reverse=True)
 
 		response = JsonResponse([dict(a) for a in appInfos], safe=False)
 		response['Cache-Control'] = "private, max-age=3600"
@@ -86,6 +105,24 @@ def search(request):
 			return JsonResponse({'error': f'Searching is aborted because secure connection to https://{url.netloc} is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 		else:
 			return JsonResponse({'error': f'Searching is aborted because secure connection is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
+
+
+def determineAppInfoCompleteness(request):
+	"""
+	If user filter by permissions or sort by the number of permission, we must return the complete app information.
+	"""
+	if request.GET.get('pids'):
+		return True
+	if request.GET.get('cids'):
+		return True
+	if request.GET.get('sort') == 'phl' or request.GET.get('sort') == 'plh':
+		return True
+	else:
+		with connection.cursor() as cursor:
+			permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
+			if len(permissions) == 0:
+				return True
+	return False
 
 def isExcluded(d: Dict, ids: List[int]):
 	return any(excludedId in d for excludedId in ids)

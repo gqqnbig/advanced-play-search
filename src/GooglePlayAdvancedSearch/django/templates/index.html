@@ -12,25 +12,25 @@
 	{% endif %}
 	<script src="/static/js/lodash.min.js"></script>
 	<style>
-		label {
-			display: block;
+		.advancedSearch-filters {
+			flex-grow: 1;
 		}
 
-		.filters {
-			margin: 1em 0;
-		}
-
-		.filters .filter {
+		.advancedSearch-filters .filter {
 			display: inline-block;
 		}
 
-		.filters .filter:not(:last-child) {
+		.advancedSearch-filters .filter:not(:last-child) {
 			padding-right: 1em;
 			border-right: 2px darkgreen dotted;
 		}
 
-		.filters .filter:not(:first-child) {
+		.advancedSearch-filters .filter:not(:first-child) {
 			padding-left: 1em;
+		}
+
+		.advancedSearch-sortingTool {
+			flex-shrink: 0;
 		}
 
 		.permissionFilter .itemList {
@@ -39,6 +39,11 @@
 
 		.categoryFilter .itemList {
 			width: 300px;
+		}
+
+		.advancedSearch {
+			display: flex;
+			margin: 1em 0;
 		}
 
 		.searchingPrompt {
@@ -90,29 +95,41 @@
 <h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
 {% verbatim %}
-<div id="searchTool">
+<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
 	<div id="searchBox">
 		<input type="text" name="keyword" v-model='keyword'>
-		<a :href=`/search?${queryString}` class="btn btn-primary">Search</a>
+		<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}">Search</a>
 	</div>
 
-	<div class="filters">
-		<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
-		<label class="filter"><input type="checkbox" checked>Free install</label>
-		<label class="filter"><input type="checkbox" checked>Allow ads</label>
+	<div class="advancedSearch">
+		<div class="advancedSearch-filters">
+			<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
+			<label class="filter"><input type="checkbox" checked>Free install</label>
+			<label class="filter"><input type="checkbox" checked>Allow ads</label>
 
-		<div class="filter">
-			Rating >
-			<select style="width: 3em">
-				<option>0</option>
-				<option>1</option>
-				<option>2</option>
-				<option>3</option>
-				<option>4</option>
-			</select>
+			<div class="filter">
+				Rating >
+				<select style="width: 3em">
+					<option>0</option>
+					<option>1</option>
+					<option>2</option>
+					<option>3</option>
+					<option>4</option>
+				</select>
+			</div>
+			<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
+			<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
 		</div>
-		<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
-		<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
+		<label class="advancedSearch-sortingTool">
+			Sort by
+			<select v-model="sortType">
+				<option value="">Default order</option>
+				<option value="rhl">rating ↓</option>
+				<option value="rlh">rating ↑</option>
+				<option value="phl">number of permissions ↓</option>
+				<option value="plh">number of permissions ↑</option>
+			</select>
+		</label>
 	</div>
 </div>
 
@@ -179,13 +196,15 @@
 	const searchTool = new Vue({
 		el: '#searchTool',
 		data: {
-			keyword: currentQuery.has('q') ? currentQuery.get('q') : "",
+			keyword: currentQuery.get('q'),
+			isSearchButtonEnabled: false,
 			permissionFilter: {
 				items: [],
 			},
 			categoryFilter: {
 				items: [],
-			}
+			},
+			sortType: currentQuery.get('sort') || '', // if currentQuery.get('sort')  is falsy, return empty string.
 		},
 		computed: {
 			queryString: function () {
@@ -196,6 +215,8 @@
 				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.id).join(',');
 				if (excludedCIds)
 					query += "&cids=" + excludedCIds;
+				if (this.sortType)
+					query += "&sort=" + this.sortType;
 				return query;
 			}
 		}
