@@ -9,10 +9,10 @@ from django.http import JsonResponse
 from django.views.decorators.cache import cache_control
 from json import loads as jsonLoads
 from typing import List, Dict, Union
-
-import json
+from urllib.parse import urlparse
 
 # import local packages
+import GooglePlayAdvancedSearch.Errors
 from GooglePlayAdvancedSearch.DBUtils import AppAccessor
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
@@ -47,7 +47,6 @@ def getCategories(request):
 		return response
 
 
-@cache_control(max_age=3600)
 def search(request):
 	keyword = request.GET['q']
 	if 'pids' in request.GET:
@@ -59,26 +58,34 @@ def search(request):
 		excludedCIds = [int(n) for n in request.GET['cids'].split(',')]
 	else:
 		excludedCIds = []
+		
+	try:
+		appInfos = searchGooglePlay(keyword)
 
-	appInfos = searchGooglePlay(keyword)
+		needCompleteInfo = False
+		if len(excludedPIds) or len(excludedCIds):
+			needCompleteInfo = True
+		else:
+			with connection.cursor() as cursor:
+				if len(GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)) == 0 or len(GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)) == 0:
+					needCompleteInfo = True
 
-	needCompleteInfo = False
-	if len(excludedPIds) or len(excludedCIds):
-		needCompleteInfo = True
-	else:
-		with connection.cursor() as cursor:
-			if len(GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)) == 0 or len(GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)) == 0:
-				needCompleteInfo = True
+		if needCompleteInfo:
+			# We have to run scraper
+			appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
+			appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
+			appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
 
-	if needCompleteInfo:
-		# We have to run scraper
-		appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
-		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
-		appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
-
-	response = JsonResponse([dict(a) for a in appInfos], safe=False)
-	return response
-
+		response = JsonResponse([dict(a) for a in appInfos], safe=False)
+		response['Cache-Control'] = "private, max-age=3600"
+		return response
+	except requests.exceptions.SSLError as e:
+		# In getCompleteAppInfo, we throw our own SSLError where we don't have request object.
+		if e.request:
+			url = urlparse(e.request.url)
+			return JsonResponse({'error': f'Searching is aborted because secure connection to https://{url.netloc} is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
+		else:
+			return JsonResponse({'error': f'Searching is aborted because secure connection is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 
 def isExcluded(d: Dict, ids: List[int]):
 	return any(excludedId in d for excludedId in ids)
@@ -92,6 +99,10 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 	matches = re.findall(r'<script.*?>AF_initDataCallback\(\s*{.*?data:function\(\){return\s+(\[.+?\])\s*}\s*}\s*\)\s*;\s*</script>', page.text, flags=re.DOTALL)
 	data = jsonLoads(matches[-1])
 	data = data[0][1]
+
+	if not data:
+		print("We couldn't find anything for your search.")
+		return []
 
 	appInfos = []
 
@@ -173,19 +184,22 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 	# search database second pass
 	# for first-pass non-found apps, pass into scraper
 	appsMissingInDatabase = [k for k, v in app_infos.items() if v is None]
-	os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+
+	code2 = os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+	if hasattr(os, 'WEXITSTATUS') and os.WEXITSTATUS(code2) == GooglePlayAdvancedSearch.Errors.sslErrorCode \
+		or not hasattr(os, 'WEXITSTATUS') and code2 == GooglePlayAdvancedSearch.Errors.sslErrorCode:
+		raise requests.exceptions.SSLError()
 
 	appAccessor = AppAccessor(1)
 	scraper_fail_id = []
-	with connection.cursor() as cursor:
-		for id in appsMissingInDatabase:
-			tmp = appAccessor.getCompleteAppInfo(id)
-			if tmp:
-				app_infos[id] = tmp
-			else:
-				assert id in app_infos
-				app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
-				scraper_fail_id.append(id)
+	for id in appsMissingInDatabase:
+		tmp = appAccessor.getCompleteAppInfo(id)
+		if tmp:
+			app_infos[id] = tmp
+		else:
+			assert id in app_infos
+			app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
+			scraper_fail_id.append(id)
 
 	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
 	print(f'total results: {len(app_ids)}')
