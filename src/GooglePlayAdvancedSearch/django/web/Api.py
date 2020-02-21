@@ -87,6 +87,22 @@ def search(request):
 		else:
 			return JsonResponse({'error': f'Searching is aborted because secure connection is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 
+@cache_control(max_age=3600)
+def patternSearch(request):
+	keyword = request.GET['q']
+	if 'pids' in request.GET:
+		excludedPIds = [int(n) for n in request.GET['pids'].split(',')]
+	else:
+		excludedPIds = []
+
+	appAccessor = AppAccessor(1)
+	appInfosAfter250 = appAccessor.getCompleteAppInfoWithNamePattern(keyword)
+	appInfosAfter250 = [a for a in appInfosAfter250 if isExcluded(a['permissions'], excludedPIds) == False]
+
+	response = JsonResponse([dict(a) for a in appInfosAfter250], safe=False)
+	return response
+
+
 def isExcluded(d: Dict, ids: List[int]):
 	return any(excludedId in d for excludedId in ids)
 
