@@ -67,9 +67,7 @@ def search(request):
 		needCompleteInfo = True
 	else:
 		with connection.cursor() as cursor:
-			permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
-			categories = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
-			if len(permissions) == 0 or len(categories) == 0:
+			if len(GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)) == 0 or len(GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)) == 0:
 				needCompleteInfo = True
 
 	if needCompleteInfo:
