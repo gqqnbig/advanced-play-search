@@ -2,7 +2,7 @@ import os
 import sqlite3
 import sys
 
-from typing import Optional
+from typing import Optional, List
 
 from GooglePlayAdvancedSearch.Models import AppItem
 
@@ -183,6 +183,33 @@ where julianday('now')-julianday(updateDate)>=?'''
 				self.__allCategories = getAllCategories(self.__cursor)
 			except Exception as ex:
 				print(ex, file=sys.stderr)
+
+	def searchApps(self, namePattern: str) -> List[AppItem]:
+		"""
+		Search apps which has specific patterns in their name column.
+
+		Search result is not guaranteed to be complete.
+
+		:param namePattern: the specific patterns (usually search keyword)
+		:return: a list of AppItem or none
+		"""
+
+		appList = []
+
+		self.__cursor.execute("SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern", {"namePattern": '%' + namePattern + '%'})
+		tmp = self.__cursor.fetchall()
+		for app in tmp:
+			appItem = AppItem()
+			appItem['id'] = app[0]
+			appItem['appName'] = app[1]
+			appItem['rating'] = app[2]
+			appItem['num_reviews'] = app[3]
+			appItem['install_fee'] = app[4]
+			appItem['inAppPurchases'] = app[5]
+			appItem['app_icon'] = app[6]
+			appList.append(appItem)
+
+		return appList
 
 	def getCompleteAppInfo(self, id: str) -> Optional[AppItem]:
 		"""
