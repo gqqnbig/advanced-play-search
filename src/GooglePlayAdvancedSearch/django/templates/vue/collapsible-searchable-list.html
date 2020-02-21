@@ -1,0 +1,165 @@
+{% verbatim %}
+
+<script src="/static/js/vue-click-outside.js"></script>
+
+<style>
+	.expandable {
+		position: relative;
+	}
+
+	.expandable .expanded::before {
+		content: "";
+		background-image: url("/static/images/expanded.png");
+		background-repeat: no-repeat;
+		background-size: contain;
+		width: 10px;
+		height: 10px;
+		display: inline-block;
+		margin-right: 0.5em;
+	}
+
+	.expandable .expandable::before {
+		content: "";
+		background-image: url(/static/images/expandable.png);
+		background-repeat: no-repeat;
+		background-size: contain;
+		width: 10px;
+		height: 10px;
+		display: inline-block;
+		margin-right: 0.5em;
+	}
+
+	.expandable ul {
+		background-color: rgba(255, 255, 255, 0.8);
+		padding-left: 0;
+		padding-right: 0.5em;
+		margin-top: 0.5em;
+	}
+
+	.expandable ul > li {
+		list-style: none;
+	}
+
+	.searchableList {
+		position: absolute;
+		border: blue solid 1px;
+		padding-top: 0.5em;
+	}
+
+	.inputContainer {
+		display: flex;
+		align-items: center;
+	}
+	
+	.inputContainer input{
+		flex-grow: 1;
+		margin-left: 0.5em;
+		margin-right: 0.5em;
+	}
+
+	.inputContainer img{
+		width: 20px;
+		height: 20px;
+		margin-right: 0.5em;
+	}
+</style>
+
+<script type="text/x-template" id="collapsible-searchable-list">
+	<!-- According to https://github.com/vuejs/vue/issues/5588 , custom directive doesn't execute functions. Hence I pass in a function definition. -->
+	<div class="expandable" v-cloak v-click-outside="()=>{isExpanded=false}">
+		<!--  v-bind:disabled is the same as :disabled -->
+		<button v-bind:class="{expanded: isExpanded, expandable:!isExpanded}" :disabled="!hasItems"
+				v-on:click="isExpanded=!isExpanded;">{{summary}}
+		</button>
+		<div v-show="isExpanded" class="searchableList">
+			<div class="inputContainer">
+				<input v-model="userInput" class="listFilterBox" type="text" :placeholder="`find ${label} here`" v-on:keyup.esc="userInput=''" title="press esc key to clear the textbox">
+				<img v-if="showHelp" title="Browser extensions listening key events, for example Vimium, may be incompatible with the shortcuts on this web application." src="static/images/question.png">
+			</div>
+			<ul class="itemList">
+				<li v-for="p in matchedItems">
+					<!-- data binding must use single or double quotes. Inside it, you can use tick (`). -->
+					<label> <input type="checkbox" v-model="p.checked"> {{ p.name }} </label>
+				</li>
+			</ul>
+		</div>
+	</div>
+</script>
+
+
+<script>
+	//copied from https://github.com/philc/vimium/issues/2399#issuecomment-304966439
+	function detectVimumC() {
+		return new Promise((resolve) => {
+			fetch("chrome-extension://hfjbmagddngcpeloejdejnfgbamkjaeg/content/vimium-c.js").then(response => response.text()).then(text => {
+				vimiumEnabled = text !== "";
+				resolve(vimiumEnabled)
+			}).catch(() => resolve(false));
+		});
+	}
+
+	function detectVimum() {
+		return new Promise((resolve) => {
+			fetch("chrome-extension://dbepggeogbaibhgnhhndojpepiihcmeb/content_scripts/vimium.css").then(response => response.text()).then(text => {
+				vimiumEnabled = text !== "";
+				resolve(vimiumEnabled)
+			}).catch(() => resolve(false));
+		});
+	}
+
+	Vue.component('collapsible-searchable-list', {
+		template: "#collapsible-searchable-list",
+		props: ['items', 'label'],
+		data: function () {
+			return {
+				userInput: "",
+				isExpanded: false,
+				showHelp: false,
+			};
+		},
+		computed: {
+			hasItems: function () {
+				return this.items && this.items.length > 0;
+			},
+			checkedItemsGrouping: function () {
+				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
+				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
+				return _.groupBy(this.items, p => p.checked);
+			},
+			checkedItems: function () {
+				return this.checkedItemsGrouping[true];
+			},
+			uncheckedItems: function () {
+				return this.checkedItemsGrouping[false];
+			},
+			summary: function () {
+				// `this` 指向 vue 实例
+				if (!this.hasItems)
+					return 'No ' + this.label + ' available';
+
+				if (!this.uncheckedItems)
+					return "Allow all " + this.label;
+				if (this.uncheckedItems && this.uncheckedItems.length <= 2)
+					return 'Disallow ' + this.uncheckedItems.length + ": " + this.uncheckedItems.map(p => p.name).join(', ');
+				if (this.checkedItems && this.checkedItems.length <= 2)
+					return 'Allow ' + this.checkedItems.length + ": " + this.checkedItems.map(p => p.name).join(', ');
+
+				return 'Allow ' + this.checkedItems.length + ' ' + this.label;
+			},
+			matchedItems: function () {
+				if (this.userInput && this.items)
+					return this.items.filter(item => {
+							return item.name.toUpperCase().includes(this.userInput.toUpperCase());
+						}
+					);
+				else
+					return this.items;
+			},
+		},
+		created: function () {
+			detectVimumC().then(isVimEnabled => this.showHelp = this.showHelp || isVimEnabled);
+			detectVimum().then(isVimEnabled => this.showHelp = this.showHelp || isVimEnabled);
+		}
+	});
+</script>
+{% endverbatim %}
