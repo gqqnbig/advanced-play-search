@@ -195,22 +195,19 @@ where julianday('now')-julianday(updateDate)>=?'''
 
 		self.__cursor.execute("SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern and isPartialInfo=0", {"namePattern": '%' + namePattern + '%'})
 		tmp = self.__cursor.fetchall()
-		if tmp is None:
-			return None
-		else:
-			for app in tmp:
-				appItem = AppItem()
-				appItem['id'] = app[0]
-				appItem['appName'] = app[1]
-				appItem['rating'] = app[2]
-				appItem['num_reviews'] = app[3]
-				appItem['install_fee'] = app[4]
-				appItem['inAppPurchases'] = app[5]
-				appItem['app_icon'] = app[6]
-				appItem['permissions'] = self.getAppPermissions(app[0])
-				appList.append(appItem)
+		for app in tmp:
+			appItem = AppItem()
+			appItem['id'] = app[0]
+			appItem['appName'] = app[1]
+			appItem['rating'] = app[2]
+			appItem['num_reviews'] = app[3]
+			appItem['install_fee'] = app[4]
+			appItem['inAppPurchases'] = app[5]
+			appItem['app_icon'] = app[6]
+			appItem['permissions'] = self.getAppPermissions(app[0])
+			appList.append(appItem)
 
-			return appList
+		return appList
 
 	def getCompleteAppInfo(self, id: str) -> Optional[AppItem]:
 		"""
