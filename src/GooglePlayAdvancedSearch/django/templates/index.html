@@ -124,10 +124,10 @@
 			Sort by
 			<select v-model="sortType">
 				<option value="">Default order</option>
-				<option value="rlh">rating ↑</option>
 				<option value="rhl">rating ↓</option>
-				<option value="plh">number of permissions ↑</option>
+				<option value="rlh">rating ↑</option>
 				<option value="phl">number of permissions ↓</option>
+				<option value="plh">number of permissions ↑</option>
 			</select>
 		</label>
 	</div>
@@ -195,7 +195,7 @@
 	const searchTool = new Vue({
 		el: '#searchTool',
 		data: {
-			keyword: currentQuery.has('q') ? currentQuery.get('q') : "",
+			keyword: currentQuery.get('q'),
 			isSearchButtonEnabled: false,
 			permissionFilter: {
 				items: [],
@@ -203,7 +203,7 @@
 			categoryFilter: {
 				items: [],
 			},
-			sortType: ''
+			sortType: currentQuery.get('sort') || '', // if currentQuery.get('sort')  is falsy, return empty string.
 		},
 		computed: {
 			queryString: function () {
