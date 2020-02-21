@@ -195,7 +195,9 @@ where julianday('now')-julianday(updateDate)>=?'''
 			return None
 		else:
 			permissions = self.getAppPermissions(id)
+			categories = self.getAppCategories(id)
 			assert permissions is not None
+			assert categories is not None
 			appItem = AppItem()
 			appItem['id'] = id
 			appItem['appName'] = tmp[0]
@@ -205,6 +207,7 @@ where julianday('now')-julianday(updateDate)>=?'''
 			appItem['inAppPurchases'] = tmp[4]
 			appItem['app_icon'] = tmp[5]
 			appItem['permissions'] = permissions
+			appItem['categories'] = categories
 			return appItem
 
 	def getAppPermissions(self, appId):
@@ -220,3 +223,18 @@ where julianday('now')-julianday(updateDate)>=?'''
 		l = list(self.__allPermissions.items())
 		usedPermissions = {l[i][0]: l[i][1] for i in range(len(row)) if row[i]}
 		return usedPermissions
+
+	def getAppCategories(self, appId):
+		selectCategoriesSql = ','.join([delimiteDBIdentifier('category_' + v) for (k, v) in self.__allCategories.items()])
+
+		self.__cursor.execute(f"SELECT {selectCategoriesSql} FROM App WHERE id=:id", {"id": appId})
+		data = self.__cursor.fetchall()
+		if len(data) == 0:
+			return None
+
+		row = data[0]
+
+		l = list(self.__allCategories.items())
+		usedCategories = {l[i][0]: l[i][1] for i in range(len(row)) if row[i]}
+		return usedCategories
+

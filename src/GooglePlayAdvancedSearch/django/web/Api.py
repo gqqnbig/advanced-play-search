@@ -55,21 +55,26 @@ def search(request):
 	else:
 		excludedPIds = []
 
+	if 'cids' in request.GET:
+		excludedCIds = [int(n) for n in request.GET['cids'].split(',')]
+	else:
+		excludedCIds = []
+
 	appInfos = searchGooglePlay(keyword)
 
 	needCompleteInfo = False
-	if len(excludedPIds):
+	if len(excludedPIds) or len(excludedCIds):
 		needCompleteInfo = True
 	else:
 		with connection.cursor() as cursor:
-			permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
-			if len(permissions) == 0:
+			if len(GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)) == 0 or len(GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)) == 0:
 				needCompleteInfo = True
 
 	if needCompleteInfo:
 		# We have to run scraper
 		appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
 		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
+		appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
 
 	response = JsonResponse([dict(a) for a in appInfos], safe=False)
 	return response

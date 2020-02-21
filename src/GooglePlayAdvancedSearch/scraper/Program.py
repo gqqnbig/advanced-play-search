@@ -60,7 +60,6 @@ class AppInfoSpider(scrapy.Spider):
 			appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
 
 		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
-		print(ariaLabel_icon)
 		appInfo['app_icon'] = ariaLabel_icon
 
 		r = scrapy.FormRequest(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=xdSrCf&hl=en',
@@ -74,7 +73,7 @@ class AppInfoSpider(scrapy.Spider):
 
 	def errback(self, failure):
 		appInfo = failure.request.meta['appInfo']
-		print(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, categories={appInfo["categories"]},'
+		self.logger.info(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, categories={appInfo["categories"]},'
 			  f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
 
 	# print(failure)
@@ -115,10 +114,10 @@ class AppInfoSpider(scrapy.Spider):
 		if len(permissionData) > 3:
 			print('Unknown data in permission block.\npermissionData={}'.format(permissionData), file=sys.stderr)
 
-		print(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
+		self.logger.info(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
 		      f'categories={appInfo["categories"]}, number of reviews={appInfo["num_reviews"]},  install_fee={appInfo["install_fee"]},'
 			  f'app_icon={appInfo["app_icon"]}')
-		print(f'permissions={permissions}')
+		self.logger.info(f'permissions={permissions}')
 		appInfo['permissions'] = permissions
 		yield appInfo
 
