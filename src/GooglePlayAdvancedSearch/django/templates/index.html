@@ -175,10 +175,10 @@
 		computed: {
 			queryString: function () {
 				let query = `q=${encodeURIComponent(this.keyword)}`;
-				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.permission.id).join(',');
+				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.id).join(',');
 				if (excludedPIds)
 					query += "&pids=" + excludedPIds;
-				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.category.id).join(',');
+				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.id).join(',');
 				if (excludedCIds)
 					query += "&cids=" + excludedCIds;
 				return query;
