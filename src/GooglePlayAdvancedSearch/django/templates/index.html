@@ -95,10 +95,10 @@
 <h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 
 {% verbatim %}
-<div id="searchTool">
+<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
 	<div id="searchBox">
 		<input type="text" name="keyword" v-model='keyword'>
-		<a :href=`/search?${queryString}` class="btn btn-primary">Search</a>
+		<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}">Search</a>
 	</div>
 
 	<div class="advancedSearch">
@@ -196,6 +196,7 @@
 		el: '#searchTool',
 		data: {
 			keyword: currentQuery.has('q') ? currentQuery.get('q') : "",
+			isSearchButtonEnabled: false,
 			permissionFilter: {
 				items: [],
 			},
@@ -213,6 +214,8 @@
 				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.id).join(',');
 				if (excludedCIds)
 					query += "&cids=" + excludedCIds;
+				if (this.sortType)
+					query += "&sort=" + this.sortType;
 				return query;
 			}
 		}
