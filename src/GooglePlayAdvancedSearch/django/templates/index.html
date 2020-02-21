@@ -45,6 +45,8 @@
 			margin-left: auto;
 			margin-right: auto;
 			text-align: center;
+			width: 70%;
+			font-size: 3em;
 		}
 
 		.searchingPrompt-text {
@@ -55,6 +57,18 @@
 			font-weight: bold;
 			-webkit-background-clip: text;
 			color: transparent;
+		}
+
+		.searchingPrompt-errorMessage {
+			white-space: pre-wrap;
+		}
+
+		.searchingPrompt-errorIcon::before {
+			content:"😭";
+		}
+
+		.searchingPrompt-errorIcon.security::before {
+			content:"👹";
 		}
 
 
@@ -125,8 +139,8 @@
 		</template>
 		<div class="searchingPrompt" v-else>
 			<template v-if="errorMessage">
-				<div style="font-size: 180px">😭</div>
-				<div class="text-danger">{{ errorMessage }}</div>
+				<div class="searchingPrompt-errorIcon" :class="errorType" style="font-size: 180px"></div>
+				<div class="text-danger searchingPrompt-errorMessage">{{ errorMessage }}</div>
 			</template>
 			<template v-else>
 				<div>
@@ -212,17 +226,24 @@
 			el: "#appsList",
 			data: {
 				apps: undefined,
-				errorMessage: undefined
+				errorMessage: undefined,
+				errorType: '',
 			}
 		});
 
-		setTimeout(() => appsList.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
+		const searchingTimeoutHandler = setTimeout(() => appsList.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
 
 		//When we got permission list and category list, then run the following code.
 		Promise.all([permissionPromise, categoryPromise]).then(function () {
 			fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
-				appsList.apps = data;
-				appsList.errorMessage = undefined;
+				if (data.error) {
+					clearTimeout(searchingTimeoutHandler);
+					appsList.errorMessage = data.error;
+					appsList.errorType = "security";
+				} else {
+					appsList.apps = data;
+					appsList.errorMessage = undefined;
+				}
 			});
 		});
 	{% endif %}

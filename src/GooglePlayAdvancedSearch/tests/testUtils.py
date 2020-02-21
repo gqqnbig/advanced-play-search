@@ -58,4 +58,4 @@ def runScraper(args):
 	mainArgs.extend(args)
 	if 'PYTHONIOENCODING' not in os.environ or os.environ['PYTHONIOENCODING'] != 'UTF8':
 		os.environ['PYTHONIOENCODING'] = 'UTF8'
-	subprocess.run(mainArgs, cwd=os.path.join(getTestFolder(), '../scraper'))
+	return subprocess.run(mainArgs, cwd=os.path.join(getTestFolder(), '../scraper'))

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
 import io
+import logging
+import os
 import re
+
+import OpenSSL
 import scrapy
 import sys
 import urllib.parse as urlParse
@@ -9,7 +13,11 @@ import urllib.parse as urlParse
 from scrapy.crawler import CrawlerProcess
 from json import loads as jsonLoads
 
+from scrapy.exceptions import CloseSpider
+
+
 sys.path.append("../..")
+import GooglePlayAdvancedSearch.Errors
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
@@ -25,8 +33,13 @@ class AppInfoSpider(scrapy.Spider):
 								 'com.freecamchat.liverandomchat', 'com.matchdating.meetsingles34']
 
 	def start_requests(self):
+		if '--bad-ssl-url' in sys.argv:
+			i = sys.argv.index('--bad-ssl-url')
+			yield scrapy.Request(url=sys.argv[i + 1], callback=self.parse, errback=self.detail_errorback)
+			return
+
 		for _url in ['https://play.google.com/store/apps/details?hl=en&id=' + id for id in self.targetAppIds]:
-			yield scrapy.Request(url=_url, callback=self.parse)
+			yield scrapy.Request(url=_url, callback=self.parse, errback=self.detail_errorback)
 
 	def parse(self, response):
 		appInfo = AppItem()
@@ -57,7 +70,10 @@ class AppInfoSpider(scrapy.Spider):
 		if (ariaLabel_fee == "Install"):
 			appInfo['install_fee'] = 0
 		else:
-			appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
+			try:
+				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
+			except:
+				self.log("Unexpected install label: " + ariaLabel_fee, logging.ERROR)
 
 		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
 		appInfo['app_icon'] = ariaLabel_icon
@@ -68,10 +84,10 @@ class AppInfoSpider(scrapy.Spider):
 							   # not use cb_kwargs because it's only passed to callback, no errback.
 							   meta={'appInfo': appInfo},
 							   callback=self.permissions_retrieved,
-							   errback=self.errback)
+							   errback=self.permissions_errback)
 		yield r
 
-	def errback(self, failure):
+	def permissions_errback(self, failure):
 		appInfo = failure.request.meta['appInfo']
 		self.logger.info(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, categories={appInfo["categories"]},'
 			  f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
@@ -121,6 +137,27 @@ class AppInfoSpider(scrapy.Spider):
 		appInfo['permissions'] = permissions
 		yield appInfo
 
+	def detail_errorback(self, failure):
+		"""
+		Scrapy calls process_exception() when a download handler or a process_request() raises an exception.
+
+		check https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#scrapy.downloadermiddlewares.DownloaderMiddleware.process_exception
+		"""
+		global exitCode
+		if any(reason.type is OpenSSL.SSL.Error for reason in failure.value.reasons):
+			message = 'SSL error on ' + failure.request.url
+			if sys.platform == 'win32' and not os.environ.get('SSL_CERT_FILE'):
+				message += '''\nOn Windows, you may have to set environment variable "SSL_CERT_FILE" to the location of root certificates bundle.
+You may find the location by running
+> import certifi
+> certifi.where()'''
+			# https://github.com/pyca/pyopenssl/issues/823#issuecomment-468675241 explains On Windows pyOpenSSL doesn't ship with any trust roots
+			# https://twistedmatrix.com/documents/current/api/twisted.internet.ssl.html#platformTrust read SSL_CERT_FILE environment variable.
+
+			self.logger.error(message)
+			exitCode = GooglePlayAdvancedSearch.Errors.sslErrorCode
+			raise CloseSpider('SSL error on ' + failure.request.url)
+
 
 if '--pytest' in sys.argv and sys.platform == 'win32' and sys.stdout.encoding == 'cp936':
 	# com.sega.sonic1px has unicode characters. Without this fix, if run in pytest, the print statement throws exception.
@@ -134,8 +171,13 @@ process = CrawlerProcess(settings={
 	'ITEM_PIPELINES': {
 		'pipeline.DatabasePipeline': 300,
 		# 'myproject.pipelines.JsonWriterPipeline': 800 #another pipline
-	}
+	},
+	'DOWNLOADER_CLIENTCONTEXTFACTORY': 'scrapy.core.downloader.contextfactory.BrowserLikeContextFactory',
 })
+
+exitCode = 0
 
 process.crawl(AppInfoSpider)
 process.start()  # the script will block here until the crawling is finished
+
+sys.exit(exitCode)
