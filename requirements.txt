@@ -1,9 +1,6 @@
-beautifulsoup4==4.8.1
 Django==3.0.2
-json5==0.8.5
 psutil
 requests==2.22.0
 Scrapy==1.8.0
 Twisted==19.10.0
-urllib3==1.24.3
 pytest
