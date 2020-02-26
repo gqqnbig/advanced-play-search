@@ -7,9 +7,8 @@
          \@@input|"kpsewhich --var-value=HOME" }}\x
 \makeatother
 
-\def\overleafhome{/tmp}% change as appropriate
-\usepackage{indentfirst}
 \usepackage{fontspec}
+\def\overleafhome{/tmp}% change as appropriate
 \ifx\homepath\overleafhome
 \setmonofont{CONSOLA.TTF}[
 BoldFont=CONSOLAB.ttf,
@@ -20,13 +19,25 @@ BoldItalicFont=CONSOLAZ.ttf
 \setmonofont{Consolas}
 \fi
 
+
+\usepackage{indentfirst}
 \usepackage{forest}
-\usetikzlibrary{arrows.meta, angles}
-\forestset{
-  tree angle/.style={
-    tikz={\path () coordinate (A) -- (!u) coordinate (B) -- (!n) coordinate (C) pic [draw] {angle};}
-  }
+\usetikzlibrary{arrows.meta, %提供Stealth[]箭头类型
+angles} %提供angle pic
+	\forestset{
+	tree angle/.style={
+		% !表示开始相对引用。u是父节点，n是下一个兄弟节点。他们都是short-form step。
+		% pic {angle}: draw a small picture of type angle.
+		% angle是来自\usetikzlibrary{angles}。
+		% The angle pic draws an angle between the two lines BA and BC, where A, B, and C are three coordinates.
+		tikz={\path () coordinate (A) -- (!u) 
+			coordinate (B) -- (!n) 
+			coordinate (C) pic [draw, angle radius=#1] {angle};}
+	},
+	tree angle/.default=5mm
 }
+
+\usepackage[section]{placeins}
 
 \usepackage{algorithm}
 \usepackage{algorithmic}
@@ -77,13 +88,13 @@ urlcolor=cyan,           % color of external links
 
 \newcommand{\code}[1]{\texttt{#1}}
 
-\title{CS 188 Project Design Document}
+\title{CS 188 Security Evaluation on Team Random's Project}
 \author{Weikeng Yang\\405346443 \and
 Yingzhe Hu\\505366341 \and
 Qiqi Gu\\604253019 \and
 Dongyao Liang\\705313832 \and
 Shuhua Zhan\\705190671}
-\date{Team name: Random\\[2mm]January 24, 2020}
+\date{Team name: Random\\[2mm]February 28, 2020}
 
 \usepackage[numbers]{natbib}
 \setcitestyle{square}
@@ -94,8 +105,76 @@ Shuhua Zhan\\705190671}
 
 \maketitle
 
+This report evaluates our own project, Google Play Advanced Search.
 
 
+\section{Summary}
+
+
+
+
+
+
+\section{Evaluation Plan}
+
+We plan to evaluate two parts of project Google Play Advanced Search, namely the source code, and the application deployed to Google Cloud, accessible via \url{https://beta.gqqnbig.me/}. We will check the security issues in the source code, and find if the server is properly protected.
+
+\subsection{Evaluate Source Code}
+To evaluate the source code, we first revisit the design document, find any oversights as the professor mentioned our design document misses many potential risks.
+
+When we were developing the project, we were already performing code review, ie. a team member creates pull requests (PR) for his/her changes, and an experienced team member will review the commits in the pull requests, approve the PR or request revisions. However, it is mainly Qiqi and Dongyao who review pull requests. We will ask other team members to read the code in hope that they find out something the PR reviewer missed before.
+
+When we are doing security evaluation code review, candidate point strategies.
+
+We will also check the security vulnerabilities of the dependencies of the project.
+
+
+\subsection{Evaluate Server}
+To evaluate the server, we want to use web security evaluation tools, including port scanners.
+
+
+scan through each possible problem areas (SQL injection attacks, XSS? --no, error handling - return code)
+
+
+
+\section{Dependency Evaluation}
+\subsection{Python}
+The design document states the application is written in Python 3.7, but neither README.md nor the shebang of the executables, eg. in \code{src/\linebreak[0]GooglePlayAdvancedSearch/scraper/Program.py}, specifies it very clearly. The problem is that another version of Python, which we may not test our project with thoughtfully, might run the code, and have some unexpected interactions with our code, producing bugs or security issues. The better way is to write \code{\#!/usr/bin/env python3.7} instead of \code{\#!/usr/bin/env python3}.
+
+As of the shebang itself, it uses \code{/usr/bin/env}, which is supposed to pick the appropriate program to run the script. Using \code{/usr/bin/env} in shebang makes the script more portable, but attackers may inject their programs to \code{/usr/bin/env} and our project becomes the launcher of attackers' program.
+
+\subsection{Python Packages}
+Project Google Play Advanced Search includes a continuous integration workflow script, located in \code{.github/workflows/pythonapp.yml}. The workflow runs on GitHub Action servers, installs dependencies of the project by reading \code{requirements.txt}, and run automated tests. Since the workflow passes, we are pretty sure that \code{requirements.txt} lists every Python packages the application requires. Next, we will check security issues on the Python packages.
+
+\url{https://app.snyk.io} automatically discovers security vulnerabilities on our project. Figure \ref{fig:snyk} shows the security report. SNYK finds only one high severity issue and one medium severity issue. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{snyk.JPG}
+\caption{The screenshot of SNYK analysis. We only have one high severity issue and one medium severity issue.}
+\label{fig:snyk}
+\end{figure}
+
+According to the report, \code{StringAgg(delimiter)} is subject to SQL injection, but our code is not using this function. Other packages used by us don't depend on Django 3.0.2. Therefore we believe we are not susceptible to this issue.
+
+The second Denial of Service vulnerability from Scrapy is irrelevant as well. According to the Scrapy issue\textsuperscript{\cite{scrapy-s3}}, DOS happens when communicating to Amazon S3 server. Since the scraper of Google Play Advanced Search stores scraped data to local database, we are invulnerable to this issue.
+
+
+To increase confidence, we then manually go over the dependencies.
+
+beautifulsoup4 is listed in \code{requirements.txt}, but we find the project is not using it. People are likely to install the application by running \code{pip install -r requirements.txt}. Thus an unnecessary component is installed to the machine. Although we didn't find major issues of beautifulsoup4 by searching the Internet, installing an unnecessary component brings some security risks anyway.
+
+
+
+The website of Google Play Advanced Search uses Django 3.0.2 as seen in \code{requirements.txt}. \cite{django-security-issues} does list a couple of security issues in Django 3.0. 
+
+
+CVE-2019-19844 is about Potential account hijack via password reset form. Our website doesn't have accounts, so we are immune to this attack. CVE-2019-19118 is about Privilege escalation in the Django admin. However, Google Play Advanced Search doesn't use Django admin site.
+
+
+
+
+% https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/web_application_security
 
 \section{The purpose of the software}
 The project is a website searching apps on Google Play. The purpose of the software is to enhance the searching and filtering functions on Google Play so that users are able to filter apps by their permissions, whether they have ads, whether they have in-app purchase, free or paid, etc. Further, our website is able to sort apps by the number of permissions, price, stars, downloads, and sort of metrics to facilitate use case “search free sqlite database app with no ads with only storage read/write permissions, sorted by rating”.
@@ -130,7 +209,7 @@ SQLite3 support is part of python3 standard library.\textsuperscript{\cite{pytho
 For now, our team has scraped 5 elements of information from Google Play Website, which are \code{rating}, \code{inAppPurchases}, \code{containAds}, \code{num\linebreak[4]\_reviews}, \code{install\_fee}, and a list of permissions. \code{rating} indicates the rating score of the apps; \code{inAppPurchases} indicates whether users are required to purchases products or pay fees inside the apps; \code{containAds} returns whether or not the apps have advertisements; \code{num\linebreak[2]\_reviews} returns the review comments from Google Play for the specific searched app; \code{install\_fee} returns the price of the apps and if it’s free, the value would be 0. Permissons are dynamically added to our table as a new column if we have never seen it before because we don't know all permissions an app can possibly have. Value of the permission columns would be 1 or 0, indicating if an app needs that permission.
 
 \subsection{Website}
-The website is built with python package django\textsuperscript{\cite{django}}. Listing \ref{lst:pattern-matching} is django URL pattern matching code that says if the path of the URL is empty, eg. \url{http://localhost:8080/}, the request shall be handled by \code{view.index()}. Once user submits a search request, in the proper request handler, we will use the keyword to search our database, or ask the scraper to update the database from Google Play, then return the result.
+The website is built with python package Django\textsuperscript{\cite{django}}. Listing \ref{lst:pattern-matching} is Django URL pattern matching code that says if the path of the URL is empty, eg. \url{http://localhost:8080/}, the request shall be handled by \code{view.index()}. Once user submits a search request, in the proper request handler, we will use the keyword to search our database, or ask the scraper to update the database from Google Play, then return the result.
 
 \begin{lstlisting}[frame=tb, caption=urls.py, label=lst:pattern-matching]
 urlpatterns = [
@@ -138,7 +217,7 @@ urlpatterns = [
 ]
 \end{lstlisting}
 
-The website doesn't need to modify the database. Ideally it should open the database in read-only mode, but django doesn't support this. Considering the data in our database are not confidential, we are fine with opening the SQLite database with full permission.
+The website doesn't need to modify the database. Ideally it should open the database in read-only mode, but Django doesn't support this. Considering the data in our database are not confidential, we are fine with opening the SQLite database with full permission.
 
 \section{System Model}
 
@@ -230,13 +309,12 @@ In order to mitigate DOS attack, our team have come up with several possible sol
   },
   [DOS Attack
     [Attack internally\\from the server
-        [Gain access \\to the server]
+        [Gain access \\to the server, name=access-to-server]
     ]
     [Send massive requests\\from outside
-        [Attacker gets\\many bots, tree angle]
-        [server firewall\\is down
-            [Gain access \\to the server]
-        ]
+        [Attacker gets\\many bots, tree angle=9mm]
+        [server firewall\\is down]
+            {\draw[->] () to[out=south west, in=south] (access-to-server);} % ()表示当前节点
     ]
     [Sends requests\\causing long execution
         [Find a bug in\\ our application]
@@ -270,14 +348,14 @@ Our website needs to render app data as text instead of as HTML so that even if 
     align=center,
   },
   [Run arbitrary code on our web page
-    [Code injected to database, tree angle
+    [Code injected to database, tree angle=9mm
         [Attacker gains\\direct access\\ to database]
         [The code\\ is from\\ Google Play
             [Attacker bypasses\\Google Play\\security check]
             [Man-in-the-middle\\attack on\\Google Play]
         ]
         [The code is\\from web search\\ interface
-            [Database\\is writable, tree angle]
+            [Database\\is writable, tree angle=12mm]
             [SQL\\paramertization\\failed]
         ]
     ]
@@ -312,10 +390,7 @@ We may not enable HTTP Strict Transport Security because it requires our website
 
 
 \begin{thebibliography}{99}
-	\bibitem{scrapy} \citeWeb{Scrapy | A Fast and Powerful Scraping and Web Crawling Framework}{https://scrapy.org/}{2020-01-21}
-	\bibitem{reactor} \citeWeb{Reactor Overview}{https://twistedmatrix.com/documents/current/core/howto/reactor-basics.html}{2020-01-21}
-    \bibitem{django} \citeWeb{The Web framework for perfectionists with deadlines | Django}{https://www.djangoproject.com}{2020-01-21}
-    \bibitem{python-sqlite} \citeWeb{sqlite3 — Python 3.8.1 documentation}{https://docs.python.org/3/library/sqlite3.html}{2020-01-21}
-    \bibitem{sqliteC++} \citeWeb{An Introduction To The SQLite C/C++ Interface}{https://www.sqlite.org/cintro.html}{2020-01-21} “Parameters may not be used for column or table names.”
+    \bibitem{django-security-issues} \citeWeb{Archive of security issues}{https://docs.djangoproject.com/en/3.0/releases/security/}{2020-02-25}
+    \bibitem{scrapy-s3} \citeWeb{S3FilesStore can use a lot of memory}{https://github.com/scrapy/scrapy/issues/482}{2020-02-25}
 \end{thebibliography}
 \end{document}
