@@ -54,11 +54,8 @@ def search(request):
 	excludedCIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
 
 	try:
-		appInfos = searchGooglePlay(keyword)
-
-		if request.GET.get('sort') != '':
-			appAccessor = AppAccessor(1)
-			appInfos = appAccessor.searchApps(keyword)
+		appAccessor = AppAccessor(1)
+		appInfos = appAccessor.searchApps(keyword)
 
 		needCompleteInfo = determineAppInfoCompleteness(request)
 
@@ -82,7 +79,7 @@ def search(request):
 				appInfos2 = [a for a in appInfos2 if isExcluded(a['categories'], excludedCIds) == False]
 
 
-			appInfoIds = [a['id'] for a in appInfos]
+			appInfoIds = {a['id'] for a in appInfos}
 			appInfos.extend([a for a in appInfos2 if a['id'] not in appInfoIds])
 
 		sortType = request.GET.get('sort')
