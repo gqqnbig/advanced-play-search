@@ -66,14 +66,17 @@ class AppInfoSpider(scrapy.Spider):
 		except:
 			appInfo['num_reviews'] = None
 
-		ariaLabel_fee = parentBox.xpath('following-sibling::*').css('span button[aria-label]::attr(aria-label)').get()
-		if (ariaLabel_fee == "Install"):
+		feeElement = parentBox.xpath('following-sibling::*').css('span button[aria-label]')
+		if feeElement is None:
+			self.logger.error("Install fee is not found.")
+		elif feeElement.css('::attr(data-is-free)').get() == "true":
 			appInfo['install_fee'] = 0
 		else:
 			try:
-				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', ariaLabel_fee)[0])
+				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', feeElement.css('::attr(aria-label)').get())[0])
 			except:
-				self.log("Unexpected install label: " + ariaLabel_fee, logging.ERROR)
+				self.logger.error(f"Unexpected install fee: {feeElement.get()}")
+
 
 		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
 		appInfo['app_icon'] = ariaLabel_icon
