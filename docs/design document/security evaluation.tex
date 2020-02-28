@@ -7,8 +7,8 @@
          \@@input|"kpsewhich --var-value=HOME" }}\x
 \makeatother
 
-\usepackage{fontspec}
 \def\overleafhome{/tmp}% change as appropriate
+\usepackage{fontspec}
 \ifx\homepath\overleafhome
 \setmonofont{CONSOLA.TTF}[
 BoldFont=CONSOLAB.ttf,
@@ -19,7 +19,8 @@ BoldItalicFont=CONSOLAZ.ttf
 \setmonofont{Consolas}
 \fi
 
-
+\usepackage[onehalfspacing]{setspace}
+\parskip=1mm plus 1pt
 \usepackage{indentfirst}
 \usepackage{forest}
 \usetikzlibrary{arrows.meta, %提供Stealth[]箭头类型
@@ -39,6 +40,7 @@ angles} %提供angle pic
 
 \usepackage[section]{placeins}
 
+\usepackage{xcolor}
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{hyperref}
@@ -105,12 +107,10 @@ Shuhua Zhan\\705190671}
 
 \maketitle
 
-This report evaluates our own project, Google Play Advanced Search.
-
-
 \section{Summary}
 
 
+This report evaluates our own project, Google Play Advanced Search.
 
 
 
@@ -130,18 +130,104 @@ We will also check the security vulnerabilities of the dependencies of the proje
 
 
 \subsection{Evaluate Server}
-To evaluate the server, we want to use web security evaluation tools, including port scanners.
+To evaluate the server, we use varies tools:
+
+\subsubsection{Nmap}
+We use Nmap to scan the open ports on our server. Currently we have a public ip \textcolor{green}{35.236.119.106} and domain beta.gqqnbig.me
+
+Running Nmap with -F flag to scan 100 most frequently used ports.
+We find these ports are open:
+\begin{center}
+    \begin{tabular}{l l l}
+        PORT & STATE & SERVICE \\
+        22/tcp & open & ssh\\
+        80/tcp & open & http\\
+        443/tcp & open & https
+    \end{tabular}
+\end{center}
+These are exactly all ports we need to use. We didn't leave any unused port open.
+
+\subsubsection{OWASP ZAP}
+ZAP is a open source project developed by OWASP. It can help us to find the some potential security problems of our web server like SQL injection, XSS and many others.
+We run zap to attack our website and found some Alerts:
+\begin{itemize}
+    \item Risk: \textcolor{orange}{low}. Cross-Domain JavaScript Source File Inclusion. We are using some third-party javascript libraries. They are:
+    \begin{itemize}
+        \item jQuery API:\\ \textcolor{blue}{<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>}
+        \item A CDN for npm - lodash:\\ \textcolor{blue}{<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>}
+        \item A progressive javascript framework - Vue.js:\\ \textcolor{blue}{<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>}
+    \end{itemize}
+    \item Risk: \textcolor{orange}{low}. Incomplete or No Cache-control and Pragma HTTP Header Set
+    \item Risk: \textcolor{orange}{low}. X-Content-Type-Options Header Missing on file \code{static/js/vue-click-outside.js} and \code{static/images/question.png}
+    \item Risk: \textcolor{blue}{Informational}. Information Disclosure - Suspicious Comments
+    \item Risk: \textcolor{blue}{Informational}. Timestamp Disclosure - Unix
+\end{itemize}
+One way to work around the first alert is by deploying the production mode of above third party javascript libraries to reduce the potential threat if we have more time.
+
+%To evaluate the server, we want to use web security evaluation tools, including port scanners.
 
 
-scan through each possible problem areas (SQL injection attacks, XSS? --no, error handling - return code)
+%scan through each possible problem areas (SQL injection attacks, XSS? --no, error handling - return code)
+
+\section{Design Review}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{Context_Diagram.jpeg}
+\caption{Design Diagram}
+\label{fig:design_diagram}
+\end{figure}
+
+Figure \ref{fig:design_diagram} is the design diagram. We evaluate the design again. By looking at the source code at a high level, we conclude the implemented project largely matches the design, with a few exceptions.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{project-structure.png}
+\caption{Project structure. \code{src} is the source code root.}
+\label{fig:project-structure}
+\end{figure}
+
+The implemented project has 3 modules, well organized into a hierarchical namespace, see Figure \ref{fig:project-structure}. \code{src} is the source code root. tests is the additional module but since it's for automated tests, the addition is not a big deal.
+
+The design diagram indicates there is a server component, but actually the django module and the scraper module both run on a server; the SQLite database is on the same server as well. Some functions, for instance \code{src/GooglePlayAdvancedSearch/DBUtils.py} are shared across modules. 
+
+Unlike the design diagram, the implemented website talks to database, and run scraper as a standalone process. Both are found in \linebreak[4]
+\code{GooglePlayAdvancedSearch\linebreak[0].django.web.Api}\footnote{All code are in namespace \code{GooglePlayAdvancedSearch}. Moveing forward, we will remove this prefix for conciseness and only say \code{django.web.Api}.}.
+
+Moreover, the django module has some scraping abilities. It scrapes Google Play search result page, and if the module requires more information, it then calls scraper.
+
+By looking at the design, we hold the threats to the application are: 1) Attackers attacking through the website; 2) Attackers attacking the server; 3) Malicious data injected from Google Play. There are also threats to end users: 4) Attackers may perform man-in-the-middle attack. 5) We have to prevent cross-site attack, and 6) check client side security vulnerabilities, mainly JavaScript.
+
+We assign high priority to 1), 5); medium to 4), 6), low to 2), 3).
+
+%　data flow 
+\begin{figure}[ht]
+\includegraphics[width=\textwidth]{dataFlow.png}
+\caption{Data Flow Diagram}
+\label{fig:dataFlow}
+\end{figure}
+
+Additional, we also check and review the process of data flow. When an user uses our website(Google Play Advanced Search) to search some specific Apps, the data flow will show as the diagram. 1) Django sends the request to Google Play Store based on the user's search keywords and gets the partial information of apps back(Apps ID). 2) Django sends all the apps ID and the filtering information for user to database and try to get corresponding complete information of apps. 3) If Django makes sure that our database have all the information of apps which are searched from Google Play Store, it just return the results to the user directly. 4) Otherwise, Django will record the missing apps ID and pass them to Scraper. 5) Scraper goes to Google Play Store to get complete information of the missing apps and save all the new data in database. 6) Finally, Django grabs all the complete information from database and returns them to user.
+
+Based on the process of data flow, we found that the most likely security issues - trace malicious input. We try to do some fuzz testings. 
+
+\code{requirements.txt} lists the Python packages not developed by us. In addition, we use SQLite database and some client-side JavaScript libraries. Section \ref{dependency-evaluation} evaluates the security of these dependencies.
 
 
-
-\section{Dependency Evaluation}
+\section{External Components Evaluation}
+\label{dependency-evaluation}
 \subsection{Python}
-The design document states the application is written in Python 3.7, but neither README.md nor the shebang of the executables, eg. in \code{src/\linebreak[0]GooglePlayAdvancedSearch/scraper/Program.py}, specifies it very clearly. The problem is that another version of Python, which we may not test our project with thoughtfully, might run the code, and have some unexpected interactions with our code, producing bugs or security issues. The better way is to write \code{\#!/usr/bin/env python3.7} instead of \code{\#!/usr/bin/env python3}.
+The design document states the application is written in Python 3.7, but neither \code{README.md} nor the shebang of the executables, eg. in \code{src/\linebreak[0]GooglePlayAdvancedSearch/scraper/Program.py}, specifies it very clearly. The problem is that another version of Python, which we may not test our project with thoughtfully, might run the code, and have some unexpected interactions with our code, producing bugs or security issues. The better way is to write \code{\#!/usr/bin/env python3.7} instead of \code{\#!/usr/bin/env python3}.
 
 As of the shebang itself, it uses \code{/usr/bin/env}, which is supposed to pick the appropriate program to run the script. Using \code{/usr/bin/env} in shebang makes the script more portable, but attackers may inject their programs to \code{/usr/bin/env} and our project becomes the launcher of attackers' program.
+
+
+\cite{python37-vulnerability} shows 23 vulnerabilities fixed in patches in Python 3.7, and 2 vulnerabilities unfixed. We found a few issues are clearly relevant to us. In CVE-2020-8315, at Python startup, an attacker's DLL might be loaded on Windows 7. Windows 7 is out of extended support on January 14, 2020.\textsuperscript{\cite{windows7}} Hence, we suggest Google Play Advanced Search to drop support on Windows 7. \cite{bpo-30730} is about Environment variables injection in subprocess on Windows. We use subprocess in the tests module, but we don't pass environment variables. The project might be susceptible to bpo-30458\textsuperscript{\cite{bpo-30458}} because the underlying packages use \code{urllib.urlopen(url)}. However, the URL passed into the function are from Google Play. The URL is unlikely to have a malicious form.
+
+\cite{python37-vulnerability} is not a complete list, though. We also checked other sources. CVE-2019-9636\textsuperscript{\cite{CVE-2019-9636}} warns Improper Handling of Unicode Encoding in \code{urllib\linebreak[0].parse\linebreak[0].urlparse}, which is the function we are using. In \code{Api.search()}, an attacker may give us a crafted URL and cause an SSLError. The code catches the exception, and run \code{urlparse(e.request.url)}, where the vulnerability may be exploited.
+
+Other Python 3.7 vulnerabilities are not immediately relevant to our project because we are not using the affected functions. We should check if the dependencies are using them, but due to time constraint, we didn't do.
+
+
 
 \subsection{Python Packages}
 Project Google Play Advanced Search includes a continuous integration workflow script, located in \code{.github/workflows/pythonapp.yml}. The workflow runs on GitHub Action servers, installs dependencies of the project by reading \code{requirements.txt}, and run automated tests. Since the workflow passes, we are pretty sure that \code{requirements.txt} lists every Python packages the application requires. Next, we will check security issues on the Python packages.
@@ -165,31 +251,79 @@ To increase confidence, we then manually go over the dependencies.
 beautifulsoup4 is listed in \code{requirements.txt}, but we find the project is not using it. People are likely to install the application by running \code{pip install -r requirements.txt}. Thus an unnecessary component is installed to the machine. Although we didn't find major issues of beautifulsoup4 by searching the Internet, installing an unnecessary component brings some security risks anyway.
 
 
+\cite{django-security-issues} lists other security issues in Django. CVE-2019-19844 is about Potential account hijack via password reset form. Our website doesn't have accounts, so we are immune to this attack. CVE-2019-19118 is about Privilege escalation in the Django admin. However, Google Play Advanced Search doesn't use Django admin site.
 
-The website of Google Play Advanced Search uses Django 3.0.2 as seen in \code{requirements.txt}. \cite{django-security-issues} does list a couple of security issues in Django 3.0. 
+pyjson5\textsuperscript{\cite{pyjson5}} doesn't have a dedicated security issues page, but we searched the Internet and didn't find any security issues. However, we notice the project doesn't use this dependency, instead, some Python files import json, which is different than pyjson5. The same as beautifulsoup4, we believe installing an unnecessary component brings some security risks.
+
+CVE-2019-18874 is a Double Free issue in psutil that Google Play Advanced Search uses. Double Free is that a program frees the same memory twice, that may lead to memory leak or alter the execution flow.\textsuperscript{\cite{double-free}} Although the bug was fixed in psutil 5.6.7, because \code{requirements.txt} doesn't specify the version of psutil, the project is vulnerable to this issue. But luckily, psutil is only used in the tests module, only developers or testers might be affected.
+
+\cite{requests-security-vulnerabilities} discloses vulnerabilities in Python package requests. There are no known issues in requests 2.22.0.
+
+The project uses Scrapy 1.8.0. Besides the issue mentioned in Figure \ref{fig:snyk}, Scrapy also had XML External Entity flaw.\textsuperscript{\cite{scrapy-xml}} Nevertheless, Scrapy 1.8.0 doesn't have other known security issues.
+
+Twisted is a package required by Scrapy. In spite of that fact that Twisted had some security issues, for instance Man-in-the-Middle vulnerability and Improper Input Validation\textsuperscript{\cite{cve-twisted}, \cite{snyk-twisted}}, Twisted 19.10.0 that Google Play Advanced Search uses doesn't have known security issues.
+
+urllib3 1.24.3 doesn't have known vulnerabilities although \url{https://www.cvedetails.com} and \url{https://snyk.io} shows some in its earlier versions, including Improper Certificate Validation (fixed in 1.24.2) and CRLF injection (fixed in 1.24.3). Again, the source code of Google Play Advanced Search didn't actually import the package.
+
+Finally, the project requires pytest for automated testing. \code{requirements.\linebreak[0]txt} doesn't specify its version either, which is not a good practice. pytest doesn't have known security issues.
 
 
-CVE-2019-19844 is about Potential account hijack via password reset form. Our website doesn't have accounts, so we are immune to this attack. CVE-2019-19118 is about Privilege escalation in the Django admin. However, Google Play Advanced Search doesn't use Django admin site.
+To confirm the project doesn't really need beautifulsoup4, json5, and urllib3, we removed them from \code{requirements.\linebreak[0]txt} and trigger continuous integration. We find urllib3 is a dependency of Twisted, but the other two are not needed. It's good to let Twisted determine the version of urllib3 because the author of Twisted can choose a vulnerability-free version.
 
+\section{Code Review}
+
+code review approach
+top down? bottom up?
+While reviewing our codes, we performed top-down approach where we start with the general framework of the codes and then look deeper into specific functions.
+
+We used Candidate point strategies, searching for \code{StringAgg(delimiter)}, which is subject to SQL injection.
 
 
 
 % https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/web_application_security
 
-\section{The purpose of the software}
-The project is a website searching apps on Google Play. The purpose of the software is to enhance the searching and filtering functions on Google Play so that users are able to filter apps by their permissions, whether they have ads, whether they have in-app purchase, free or paid, etc. Further, our website is able to sort apps by the number of permissions, price, stars, downloads, and sort of metrics to facilitate use case “search free sqlite database app with no ads with only storage read/write permissions, sorted by rating”.
+We are running Django as our framework, so it is good to know about the protection and potential threats provided by Django.
+\begin{itemize}
+    \item Cross site scripting(XSS). Django's template system protects us against the majority of XSS attacks by escaping specific characters that looks dangerous in HTML. For example the string "<script>" will be turned into "\textcolor{blue}{\&lt}script\textcolor{blue}{\&lt}".
+    \item Django provides some CSRF protection by invoking \code{\{\% csrf\_token \%\}} tag into form definition although we don't have any form requests.
+    \item SQL injection protection. Django’s querysets are protected from SQL injection since their queries are constructed using query parameterization. A query’s SQL code is defined separately from the query’s parameters. In additional, we have written some raw queries and we need to make sure they are secure from SQL injection (we will talk about it below)
+    \item Django can be configured to enforce SSL. With enabling SSL, we can use \code{SECURE\_PROXY\_SSL\_HEADER} to check if the incoming content is secure; \code{SECURE\_SSL\_REDIRECT} to redirect all http to https, (we configure a non-https to https redirection on nginx in our production server instead); and \code{SESSION\_COOKIE\_SECURE} to make sure cookies are only sent over http and \code{SESSION\_COOKIE\_SECURE} to make sure cookies are only sent over https.
+\end{itemize}
 
-\section{The architecture of the software}
-In order to gather the app information, we have a web scraper which scrapes app information, including app name, categories, permissions, whether it contains ads, install fees, etc. and saves the data into database. 
 
-To provide the search function, we must implement a web server. The web server renders a search box, where users can type in their keywords. Once they click the search button, the web page will show the list of apps matching the criterion. Figure \ref{fig:search-interface} shows the current web page where we are still adding filtering functions.
+We looked at the SQL injection possibility on the search box. The handler of the request is at \code{django.web.Api.search()}. We notice the user input keyword is passed into two places, namely \code{DBUtils.AppAccessor.\linebreak[0]searchApps()} and \code{django.web.Api.searchGooglePlay()}. Listing \ref{lst:searchApps} is an extract of \code{django.web.Api.searchGooglePlay()}, where a severe denial of service issue exists.
+
+\begin{lstlisting}[frame=tb, caption=DBUtils.AppAccessor.searchApps(), label=lst:searchApps]
+def searchApps(self, namePattern: str) -> List[AppItem]:
+	appList = []
+
+	self.__cursor.execute("SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern", {"namePattern": '%' + namePattern + '%'})
+\end{lstlisting}
+
+Neither the searchApps function or the call sites verifies the length of parameter namePattern. Initially on the website, user has to type something to make the search button enabled, which might be the safe guard against searching for an empty keyword, see Figure \ref{fig:website-gray-buton}. However, if the user deletes the keyword, the search button is still enabled. Therefore user is able to search for an empty keyword, and the SQL statement doesn't limit the return rows. If there are many data in database, all data will be returned, and the execution time might be long. It can potentially become a denial of service.
+
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.8\textwidth]{search-interface.jpg}
-\caption{The web page}
-\label{fig:search-interface}
+\includegraphics[width=\textwidth]{website-gray-button.png}
+\caption{Initially the website has a disabled search button, but user can type something then delete them, enabling searching for empty keyword.}
+\label{fig:website-gray-buton}
 \end{figure}
+
+\subsection{Automated Tests}
+Project Google Play Advanced Search comes with a number of automated tests located in the tests module. These are all functional tests and the badge on the README file on the repository confirms the code passes all tests. However, there are no security tests there.
+
+
+
+
+\section{Future Evaluations}
+Other Python 3.7 vulnerabilities are not immediately relevant to our project because we are not using the affected functions. We should check if the dependencies are using them, but due to time constraint, we didn't do.
+
+
+\section{The purpose of the software}
+The project is a website searching apps on Google Play. The purpose of the software is to enhance the searching and filtering functions on Google Play so that users are able to filter apps by their permissions, whether they have ads, whether they have in-app purchase, free or paid, etc. Further, our website is able to sort apps by the number of permissions, price, stars, downloads, and sort of metrics to facilitate use case “search free sqlite database app with no ads with only storage read/write permissions, sorted by rating”.
+
+
 
 \section{Components}
 \subsection{Web Scraper}
@@ -218,15 +352,6 @@ urlpatterns = [
 \end{lstlisting}
 
 The website doesn't need to modify the database. Ideally it should open the database in read-only mode, but Django doesn't support this. Considering the data in our database are not confidential, we are fine with opening the SQLite database with full permission.
-
-\section{System Model}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{Context_Diagram.jpeg}
-\caption{Design Diagram}
-\label{fig:design_diagram}
-\end{figure}
 
 
 
@@ -266,7 +391,7 @@ Use case:
 
 \section{Hardware and Software}
 \subsection{Hardware}
-We will rent a server from Google Cloud/AWS with reasonable storage and cores to host our application.
+We will rent a server from Google Cloud with reasonable storage and cores to host our application.
 
 \subsection{Software}
 The web scraper and the website are written in Python 3.7, as Python 2 is out of official support. The database is SQLite3 for now. The external python packages are recorded in \code{requirements.txt}, as seen in Listing \ref{lst:packages}.
@@ -384,6 +509,16 @@ In addition, we may enable OCSP Stapling. %补充一下
 
 We may not enable HTTP Strict Transport Security because it requires our website to always have a valid certificate. We don't have enough manpower to maintain it.
 
+\section{Lessons Learned}
+\subsection{When designing the system}
+When designing a software, we should always think of potential security issues beforehand by performing risks analysis. With the tools and principles we have learned in class, one can always get a general idea of the problems that a project will be facing. The secure design principles suggest that we should follow an economy of mechanism, have fail-safe defaults, complete mediation, least privilege, psychological acceptability, compromise recording, defense in depth, design for updating, open design, promote privacy and be reluctant to trust. The most fundamental part is that one should not do extra work on what we don’t need and grant least amount of access as Economy of mechanism and fail-safe defaults suggest. We should default to lack of access. it’s convenient to grant all access without really consider each of them individually but it’s very dangerous to do so since malicious hacker can easily attack the product by installing/ executing malicious stuff. Forgetting to grant access may cause errors but it keeps the software secure. Similar reason for least privilege, give the minimum access and permissions. for example, since our web server interacts with a database, we don’t want the server to have full access of the database in case the server is hacked and we also don’t want users to have access to gain information from database for privacy concerns. For now our database does not store any type of personal information so we should be safe from that but in case we have account access for users, we should always think of this issue beforehand. Also when designing a product, it’s essential to find a balance between security and a better user experience. The key point is that we want our website to be convenient for users and making to too complicated would lead to the loss of customers.
+\subsection{While Secure Coding}
+While coding, always think of major problems areas for security purposes. It’s also important to keep in mind and scan through the major problem areas during the development of the system. Since we ask users for keyword inputs for searching, we were thinking if we would have buffer overflow attack when users inputs are too long. However, as we did some research we found out that the latest version of the 3.3.4 python is safe from buffer overflow with the vulnerability has been patched.
+\subsection{When Evaluating the Security of the System}
+After going through the above process and when it comes to evaluating, we are able to narrow down the scope to specific problem areas based on individual types of the design since different types of projects may have different kinds of security issues. For example, our project does not have problems with encryption and decryption but we have problems of SQL injections etc since we ask users for input keywords. Therefore, for efficient evaluating, we should focus more on the higher potential problems. However, we always need to keep an eye on the generic problems like error handling and checking return code since all programs have a potential risks of making mistakes on these areas. When testing the system, it's also useful to consider edge cases like running on an unprivileged mode and check if it can do work on higher privilege mode. In addition, it's helpful to create a list of a structure of the code to check if it creates any potential bugs such as problems caused by race conditions. 
+Sometimes looking all the problems on our own is not enough and testing tools can be a great help and we can make a good use of them.
+\section{Work Breakdown}
+Shuhua Zhan - responsible for lessons learned section of the report and participated in code review. In the project, participated in element \code{app\_icon}, fixed problem when no results find in google play website and improved the user interface of the website.
 
 
 \newcommand{\citeWeb}[3]{#1, \url{#2}, Retrieved #3.}
@@ -392,5 +527,17 @@ We may not enable HTTP Strict Transport Security because it requires our website
 \begin{thebibliography}{99}
     \bibitem{django-security-issues} \citeWeb{Archive of security issues}{https://docs.djangoproject.com/en/3.0/releases/security/}{2020-02-25}
     \bibitem{scrapy-s3} \citeWeb{S3FilesStore can use a lot of memory}{https://github.com/scrapy/scrapy/issues/482}{2020-02-25}
+    \bibitem{pyjson5} \citeWeb{pyjson5: A Python implementation of the JSON5 data format
+}{https://github.com/dpranke/pyjson5}{2020-02-25}
+    \bibitem{double-free} \citeWeb{Doubly freeing memory}{https://owasp.org/www-community/vulnerabilities/Doubly_freeing_memory}{2020-02-25}
+    \bibitem{requests-security-vulnerabilities} \citeWeb{Vulnerability Disclosure}{https://requests.readthedocs.io/en/master/community/vulnerabilities/}{2020-02-25}
+    \bibitem{scrapy-xml} \citeWeb{Fixed XXE flaw in sitemap reader}{https://github.com/scrapy/scrapy/pull/676}{2020-02-25}
+    \bibitem{snyk-twisted} \citeWeb{twisted vulnerabilities}{https://snyk.io/vuln/pip:twisted}{2020-02-25}
+    \bibitem{cve-twisted} \citeWeb{Twisted Vulnerability Statistics}{https://www.cvedetails.com/product/55543/Twistedmatrix-Twisted.html?vendor_id=16756}{2020-02-25}
+    \bibitem{windows7} \citeWeb{Windows 7 support ended on January 14, 2020}{https://support.microsoft.com/en-us/help/4057281/windows-7-support-ended-on-january-14-2020}{2020-02-26}
+    \bibitem{python37-vulnerability} \citeWeb{Security vulnerabilities - Python Security Vulnerabilities}{https://python-security.readthedocs.io/vulnerabilities.html}{2020-02-26}
+    \bibitem{bpo-30458} \citeWeb{[security][CVE-2019-9740][CVE-2019-9947] HTTP Header Injection (follow-up of CVE-2016-5699)}{https://bugs.python.org/issue30458}{2020-02-26}
+    \bibitem{bpo-30730} \citeWeb{[security] Injecting environment variable in subprocess on Windows}{https://bugs.python.org/issue30730}{2020-02-26}
+    \bibitem{CVE-2019-9636} \citeWeb{CVE-2019-9636}{https://linux.oracle.com/cve/CVE-2019-9636.html}{2020-02-26}
 \end{thebibliography}
 \end{document}
