@@ -20,6 +20,7 @@ BoldItalicFont=CONSOLAZ.ttf
 \fi
 
 \usepackage[onehalfspacing]{setspace}
+\usepackage{subfigure}
 \parskip=1mm plus 1pt
 \usepackage{indentfirst}
 \usepackage{forest}
@@ -109,7 +110,8 @@ Shuhua Zhan\\705190671}
 \begin{document}
 
 \maketitle
-\printindex
+
+\tableofcontents
 
 \section{Summary}
 
@@ -188,18 +190,101 @@ By looking at the design, we hold the threats to the application are: 1) Attacke
 
 We assign high priority to 1), 5); medium to 4), 6), low to 2), 3).
 
-%　data flow 
 \begin{figure}[ht]
 \includegraphics[width=\textwidth]{dataFlow.png}
 \caption{Data Flow Diagram}
 \label{fig:dataFlow}
 \end{figure}
 
-Additional, we also check and review the process of data flow. When an user uses our website(Google Play Advanced Search) to search some specific Apps, the data flow will show as the diagram. 1) Django sends the request to Google Play Store based on the user's search keywords and gets the partial information of apps back(Apps ID). 2) Django sends all the apps ID and the filtering information for user to database and try to get corresponding complete information of apps. 3) If Django makes sure that our database have all the information of apps which are searched from Google Play Store, it just return the results to the user directly. 4) Otherwise, Django will record the missing apps ID and pass them to Scraper. 5) Scraper goes to Google Play Store to get complete information of the missing apps and save all the new data in database. 6) Finally, Django grabs all the complete information from database and returns them to user.
+Additionally, we also reviewed the data flow in the application, see Figure \ref{fig:dataFlow}. When an user searches our website (Google Play Advanced Search) for some specific apps, the keyword and other search criterion the user specifies enter the Django module. 1) Django sends the keyword to database and get a list of matching apps. The app info may be complete or partial. (Partial means the permission and category info are missing) Then Django filters the result based on the filter the user selected. 2) If the filtered result is less than 200, Django sends the keyword to Google Play Store, asking for potentially more results. Google search page returns app partial info encoded in JavaScript format. 3) Django saves the app partial info to database. 4) If our database now have all the information of apps the user needs, Django just returns the results to the user directly. 5) Otherwise, Django will record the missing apps ID and pass them to Scraper. 6) Scraper goes to Google Play Store to get complete information of the missing apps and save all the new data in database. 7) Finally, Django grabs all the complete information from database and returns them to user.
+
+\begin{enumerate}
+    \item  Django sends the keyword to database and get a list of matching apps. The app info may be complete or partial. (Partial means the permission and category info are missing) Then Django filters the result based on the filter the user selected.
+    \item If the filtered result is less than 200, Django sends the keyword to Google Play Store, asking for potentially more results. Google search page returns app partial info encoded in JavaScript format. Django decodes them, and saves them to database.
+    \item If our database now have all the information of apps the user needs, Django just returns the results to the user directly. 
+    \item Otherwise, Django will record the missing apps ID and pass them to Scraper.
+    \item Scraper goes to Google Play Store to get complete information of the missing apps and save all the new data in database.
+    \item Finally, Django grabs all the complete information from database and returns them to user.
+\end{enumerate}
+
+
+
 
 Based on the process of data flow, we found that the most likely security issues - trace malicious input. We try to do some fuzz testings. 
 
 \code{requirements.txt} lists the Python packages not developed by us. In addition, we use SQLite database and some client-side JavaScript libraries. Section \ref{dependency-evaluation} evaluates the security of these dependencies.
+
+
+\subsection{External Components Evaluation}
+\label{dependency-evaluation}
+\subsubsection{Python}
+The design document states the application is written in Python 3.7, but neither \code{README.md} nor the shebang of the executables, eg. in \code{src/\linebreak[0]GooglePlayAdvancedSearch/scraper/Program.py}, specifies it very clearly. The problem is that another version of Python, which we may not test our project with thoughtfully, might run the code, and have some unexpected interactions with our code, producing bugs or security issues. The better way is to write \code{\#!/usr/bin/env python3.7} instead of \code{\#!/usr/bin/env python3}.
+
+As of the shebang itself, it uses \code{/usr/bin/env}, which is supposed to pick the appropriate program to run the script. Using \code{/usr/bin/env} in shebang makes the script more portable, but attackers may inject their programs to \code{/usr/bin/env} and our project becomes the launcher of attackers' program.
+
+
+\cite{python37-vulnerability} shows 23 vulnerabilities fixed in patches in Python 3.7, and 2 vulnerabilities unfixed. We found a few issues are clearly relevant to us. In CVE-2020-8315, at Python startup, an attacker's DLL might be loaded on Windows 7. Windows 7 is out of extended support on January 14, 2020.\textsuperscript{\cite{windows7}} Hence, we suggest Google Play Advanced Search to drop support on Windows 7. \cite{bpo-30730} is about Environment variables injection in subprocess on Windows. We use subprocess in the tests module, but we don't pass environment variables. The project might be susceptible to bpo-30458\textsuperscript{\cite{bpo-30458}} because the underlying packages use \code{urllib.urlopen(url)}. However, the URL passed into the function are from Google Play. The URL is unlikely to have a malicious form.
+
+\cite{python37-vulnerability} is not a complete list, though. We also checked other sources. CVE-2019-9636\textsuperscript{\cite{CVE-2019-9636}} warns Improper Handling of Unicode Encoding in \code{urllib\linebreak[0].parse\linebreak[0].urlparse}, which is the function we are using. In \code{Api.search()}, an attacker may give us a crafted URL and cause an SSLError. The code catches the exception, and run \code{urlparse(e.request.url)}, where the vulnerability may be exploited.
+
+Other Python 3.7 vulnerabilities are not immediately relevant to our project because we are not using the affected functions. We should check if the dependencies are using them, but due to time constraint, we didn't do.
+
+
+
+\subsubsection{Python Packages}
+Project Google Play Advanced Search includes a continuous integration workflow script, located in \code{.github/workflows/pythonapp.yml}. The workflow runs on GitHub Action servers, installs dependencies of the project by reading \code{requirements.txt}, and run automated tests. Since the workflow passes, we are pretty sure that \code{requirements.txt} lists every Python packages the application requires. Next, we will check security issues on the Python packages.
+
+\url{https://app.snyk.io} automatically discovers security vulnerabilities on our project. Figure \ref{fig:snyk} shows the security report. SNYK finds only one high severity issue and one medium severity issue. 
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{snyk.JPG}
+\caption{The screenshot of SNYK analysis. We only have one high severity issue and one medium severity issue.}
+\label{fig:snyk}
+\end{figure}
+
+According to the report, \code{StringAgg(delimiter)} is subject to SQL injection, but our code is not using this function. Other packages used by us don't depend on Django 3.0.2. Therefore we believe we are not susceptible to this issue.
+
+The second Denial of Service vulnerability from Scrapy is irrelevant as well. According to the Scrapy issue\textsuperscript{\cite{scrapy-s3}}, DOS happens when communicating to Amazon S3 server. Since the scraper of Google Play Advanced Search stores scraped data to local database, we are invulnerable to this issue.
+
+
+To increase confidence, we then manually go over the dependencies.
+
+beautifulsoup4 is listed in \code{requirements.txt}, but we find the project is not using it. People are likely to install the application by running \code{pip install -r requirements.txt}. Thus an unnecessary component is installed to the machine. Although we didn't find major issues of beautifulsoup4 by searching the Internet, installing an unnecessary component brings some security risks anyway.
+
+
+\cite{django-security-issues} lists other security issues in Django. CVE-2019-19844 is about Potential account hijack via password reset form. Our website doesn't have accounts, so we are immune to this attack. CVE-2019-19118 is about Privilege escalation in the Django admin. However, Google Play Advanced Search doesn't use Django admin site.
+
+pyjson5\textsuperscript{\cite{pyjson5}} doesn't have a dedicated security issues page, but we searched the Internet and didn't find any security issues. However, we notice the project doesn't use this dependency, instead, some Python files import json, which is different than pyjson5. The same as beautifulsoup4, we believe installing an unnecessary component brings some security risks.
+
+CVE-2019-18874 is a Double Free issue in psutil that Google Play Advanced Search uses. Double Free is that a program frees the same memory twice, that may lead to memory leak or alter the execution flow.\textsuperscript{\cite{double-free}} Although the bug was fixed in psutil 5.6.7, because \code{requirements.txt} doesn't specify the version of psutil, the project is vulnerable to this issue. But luckily, psutil is only used in the tests module, only developers or testers might be affected.
+
+\cite{requests-security-vulnerabilities} discloses vulnerabilities in Python package requests. There are no known issues in requests 2.22.0.
+
+The project uses Scrapy 1.8.0. Besides the issue mentioned in Figure \ref{fig:snyk}, Scrapy also had XML External Entity flaw.\textsuperscript{\cite{scrapy-xml}} Nevertheless, Scrapy 1.8.0 doesn't have other known security issues.
+
+Twisted is a package required by Scrapy. In spite of that fact that Twisted had some security issues, for instance Man-in-the-Middle vulnerability and Improper Input Validation\textsuperscript{\cite{cve-twisted}, \cite{snyk-twisted}}, Twisted 19.10.0 that Google Play Advanced Search uses doesn't have known security issues.
+
+urllib3 1.24.3 doesn't have known vulnerabilities although \url{https://www.cvedetails.com} and \url{https://snyk.io} shows some in its earlier versions, including Improper Certificate Validation (fixed in 1.24.2) and CRLF injection (fixed in 1.24.3). Again, the source code of Google Play Advanced Search didn't actually import the package.
+
+Finally, the project requires pytest for automated testing. \code{requirements.\linebreak[0]txt} doesn't specify its version either, which is not a good practice. pytest doesn't have known security issues.
+
+
+To confirm the project doesn't really need beautifulsoup4, json5, and urllib3, we removed them from \code{requirements.\linebreak[0]txt} and trigger continuous integration. We find urllib3 is a dependency of Twisted, but the other two are not needed. It's good to let Twisted determine the version of urllib3 because the author of Twisted can choose a vulnerability-free version.
+
+\subsubsection{SQLite}
+Google Play Advanced Search stores data in SQLite database. According to the README, the required version is 3.24 or higher. Version 3.24 was released on 2020-06-04, and there are 4 vulnerabilities affecting this version.
+
+CVE-2019-16168 may crash an application because a sqlite\_stat1 sz field. The sqlite\_stat1 table is created by the ANALYZE command. However, Google Play Advanced Search doesn't use the ANALYZE command.
+
+CVE-2019-8457 allows attackers to modify some system files but the attacker can't control which files are modified. Nevertheless, it's better to use a higher version of SQLite.
+
+CVE-2018-20506 can run arbitrary SQL statements. This vulnerability is exploitable only if the application uses virtual table. Since Google Play Advanced Search doesn't use virtual table, it's not affected by this issue.
+
+CVE-2018-20346 is a similar issue to CVE-2018-20506. Since Google Play Advanced Search doesn't use virtual table, it's immune to CVE-2018-20346 as well.
+
+
+
 
 \subsection{Code Review}
 code review approach
@@ -286,7 +371,7 @@ We run zap to attack our website home page and found some Alerts:
 \end{itemize}
 One way to work around the first alert is by deploying the production mode of above third party javascript libraries to reduce the potential threat if we have more time.
 
-Then we use ZAP to attack our search pages \\(eg. https://beta.gqqnbig.me/search?q=youtube&pids=33&cids=55,57) with some permission and category filters.
+Then we use ZAP to attack our search pages \\(eg. \url{ https://beta.gqqnbig.me/search?q=youtube&pids=33&cids=55,57}) with some permission and category filters.
 And we discover more alerts (fig \ref{fig:zap-alerts}).
 
 \begin{figure}[H]
@@ -296,7 +381,46 @@ And we discover more alerts (fig \ref{fig:zap-alerts}).
 \label{fig:zap-alerts}
 \end{figure}
 
-In this case, it has a \textcolor{red}{High} risk alert: \code{Remote File Inclusion}
+In this case, it has a \textcolor{red}{High} risk alert: \code{Remote File Inclusion}. \code{Remote File Include} (RFI) is an attack technique used to exploit "dynamic file include" mechanisms in web applications. When web applications take user input (URL, parameter value, etc.) and pass them into file include commands, the web application might be tricked into including remote files with malicious code.
+
+ZAP suggests a solution: 
+Assume all input is malicious. Use an "accept known good" input validation strategy, i.e., use a whitelist of acceptable inputs that strictly conform to specifications. Reject any input that does not strictly conform to specifications, or transform it into something that does. Do not rely exclusively on looking for malicious or malformed inputs (i.e., do not rely on a blacklist). However, blacklists can be useful for detecting potential attacks or determining which inputs are so malformed that they should be rejected outright.
+When performing input validation, consider all potentially relevant properties, including length, type of input, the full range of acceptable values, missing or extra inputs, syntax, consistency across related fields, and conformance to business rules. As an example of business rule logic, "boat" may be syntactically valid because it only contains alphanumeric characters, but it is not valid if you are expecting colors such as "red" or "blue."
+
+Looking back in our code, we do have this kind of validation. There are at most 3 elements \code{q}(keyword), \code{pid}(permission id) and \code{cid}(category id). Everything else will be ignored and perform a normal search. Keyword will be pass to Google play store, pid and cid will be performing a string comparison with apps pids and cids. Looking at our code, unexpected pid and cid will be ignored since there is no such pid/cid we want to exclude. You can how we handle pid and cid in below figure:
+
+\begin{figure}[H]
+\begin{subfigure}
+\centering
+\includegraphics[width=\textwidth]{pidcidhandle.png}
+\caption{Pid/Cid Input Handling}
+\end{subfigure}
+\begin{subfigure}
+\centering
+\includegraphics[width=\textwidth]{isExcluded.png}
+\caption{Function: isExcluded()}
+\end{subfigure}
+\label{fig:pidcidhandle}
+\end{figure}
+
+\subsection{Data Security}
+We attempted to use Scuba from Imperva to find the vulnerabilities in our database, but soon we realized SQLite has no concept of user accounts, and instead relies on the file system for all database permissions.
+
+To make our database more secure, we have these following setup in our server/machine:
+
+\begin{itemize}
+    \item Only root can change the source code (usually via git pull).
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth, frame]{sourcecodeper.png}
+    \end{figure}
+    \item We setup a user call "\textcolor{green}{django}" and only "\textcolor{green}{django}" can write to our database (in folder \code{data}).
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth, frame]{databaseper.png}
+    \end{figure}
+    \item And run the django server using uwsgi with uid 1003 and gid 1004: \code{nohup uwsgi --uid 1003 --gid 1004 --socket /tmp/GooglePlayAdvancedSearch.sock --module web.wsgi --chmod-socket=666 \&> /tmp/django.log \&}
+\end{itemize}
 
 
 
@@ -322,9 +446,30 @@ Requirement: Beyond learning something about the security of the project, we hop
 \index{Work breakdown}
 Requirement:  Indicate exactly which elements of the report and work required to produce it were performed by each team member. 
 
+Qiqi Gu - responsible for External Components Evaluation.
+
 Shuhua Zhan - responsible for lessons learned section of the report and participated in code review. In the project, participated in element \code{app\_icon}, fixed problem when no results find in google play website and improved the user interface of the website.
 
 \section{Supplementary materials}
+
+
+
+\begin{thebibliography}{99}
+    \bibitem{django-security-issues} \citeWeb{Archive of security issues}{https://docs.djangoproject.com/en/3.0/releases/security/}{2020-02-25}
+    \bibitem{scrapy-s3} \citeWeb{S3FilesStore can use a lot of memory}{https://github.com/scrapy/scrapy/issues/482}{2020-02-25}
+    \bibitem{pyjson5} \citeWeb{pyjson5: A Python implementation of the JSON5 data format
+}{https://github.com/dpranke/pyjson5}{2020-02-25}
+    \bibitem{double-free} \citeWeb{Doubly freeing memory}{https://owasp.org/www-community/vulnerabilities/Doubly_freeing_memory}{2020-02-25}
+    \bibitem{requests-security-vulnerabilities} \citeWeb{Vulnerability Disclosure}{https://requests.readthedocs.io/en/master/community/vulnerabilities/}{2020-02-25}
+    \bibitem{scrapy-xml} \citeWeb{Fixed XXE flaw in sitemap reader}{https://github.com/scrapy/scrapy/pull/676}{2020-02-25}
+    \bibitem{snyk-twisted} \citeWeb{twisted vulnerabilities}{https://snyk.io/vuln/pip:twisted}{2020-02-25}
+    \bibitem{cve-twisted} \citeWeb{Twisted Vulnerability Statistics}{https://www.cvedetails.com/product/55543/Twistedmatrix-Twisted.html?vendor_id=16756}{2020-02-25}
+    \bibitem{windows7} \citeWeb{Windows 7 support ended on January 14, 2020}{https://support.microsoft.com/en-us/help/4057281/windows-7-support-ended-on-january-14-2020}{2020-02-26}
+    \bibitem{python37-vulnerability} \citeWeb{Security vulnerabilities - Python Security Vulnerabilities}{https://python-security.readthedocs.io/vulnerabilities.html}{2020-02-26}
+    \bibitem{bpo-30458} \citeWeb{[security][CVE-2019-9740][CVE-2019-9947] HTTP Header Injection (follow-up of CVE-2016-5699)}{https://bugs.python.org/issue30458}{2020-02-26}
+    \bibitem{bpo-30730} \citeWeb{[security] Injecting environment variable in subprocess on Windows}{https://bugs.python.org/issue30730}{2020-02-26}
+    \bibitem{CVE-2019-9636} \citeWeb{CVE-2019-9636}{https://linux.oracle.com/cve/CVE-2019-9636.html}{2020-02-26}
+\end{thebibliography}
 
 \index{Supplementary materials}
 Requirement: If your analysis produced useful artifacts (such as automated reports, screen shots demonstrating problems, scripts used to test functionality, etc.), include these in appendices, where possible. For things that are not easily embedded in a 

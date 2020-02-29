@@ -110,9 +110,6 @@ Shuhua Zhan\\705190671}
 \section{Summary}
 
 
-This report evaluates our own project, Google Play Advanced Search.
-
-
 
 
 \section{Evaluation Plan}
@@ -212,63 +209,6 @@ Based on the process of data flow, we found that the most likely security issues
 
 \code{requirements.txt} lists the Python packages not developed by us. In addition, we use SQLite database and some client-side JavaScript libraries. Section \ref{dependency-evaluation} evaluates the security of these dependencies.
 
-
-\section{External Components Evaluation}
-\label{dependency-evaluation}
-\subsection{Python}
-The design document states the application is written in Python 3.7, but neither \code{README.md} nor the shebang of the executables, eg. in \code{src/\linebreak[0]GooglePlayAdvancedSearch/scraper/Program.py}, specifies it very clearly. The problem is that another version of Python, which we may not test our project with thoughtfully, might run the code, and have some unexpected interactions with our code, producing bugs or security issues. The better way is to write \code{\#!/usr/bin/env python3.7} instead of \code{\#!/usr/bin/env python3}.
-
-As of the shebang itself, it uses \code{/usr/bin/env}, which is supposed to pick the appropriate program to run the script. Using \code{/usr/bin/env} in shebang makes the script more portable, but attackers may inject their programs to \code{/usr/bin/env} and our project becomes the launcher of attackers' program.
-
-
-\cite{python37-vulnerability} shows 23 vulnerabilities fixed in patches in Python 3.7, and 2 vulnerabilities unfixed. We found a few issues are clearly relevant to us. In CVE-2020-8315, at Python startup, an attacker's DLL might be loaded on Windows 7. Windows 7 is out of extended support on January 14, 2020.\textsuperscript{\cite{windows7}} Hence, we suggest Google Play Advanced Search to drop support on Windows 7. \cite{bpo-30730} is about Environment variables injection in subprocess on Windows. We use subprocess in the tests module, but we don't pass environment variables. The project might be susceptible to bpo-30458\textsuperscript{\cite{bpo-30458}} because the underlying packages use \code{urllib.urlopen(url)}. However, the URL passed into the function are from Google Play. The URL is unlikely to have a malicious form.
-
-\cite{python37-vulnerability} is not a complete list, though. We also checked other sources. CVE-2019-9636\textsuperscript{\cite{CVE-2019-9636}} warns Improper Handling of Unicode Encoding in \code{urllib\linebreak[0].parse\linebreak[0].urlparse}, which is the function we are using. In \code{Api.search()}, an attacker may give us a crafted URL and cause an SSLError. The code catches the exception, and run \code{urlparse(e.request.url)}, where the vulnerability may be exploited.
-
-Other Python 3.7 vulnerabilities are not immediately relevant to our project because we are not using the affected functions. We should check if the dependencies are using them, but due to time constraint, we didn't do.
-
-
-
-\subsection{Python Packages}
-Project Google Play Advanced Search includes a continuous integration workflow script, located in \code{.github/workflows/pythonapp.yml}. The workflow runs on GitHub Action servers, installs dependencies of the project by reading \code{requirements.txt}, and run automated tests. Since the workflow passes, we are pretty sure that \code{requirements.txt} lists every Python packages the application requires. Next, we will check security issues on the Python packages.
-
-\url{https://app.snyk.io} automatically discovers security vulnerabilities on our project. Figure \ref{fig:snyk} shows the security report. SNYK finds only one high severity issue and one medium severity issue. 
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=\textwidth]{snyk.JPG}
-\caption{The screenshot of SNYK analysis. We only have one high severity issue and one medium severity issue.}
-\label{fig:snyk}
-\end{figure}
-
-According to the report, \code{StringAgg(delimiter)} is subject to SQL injection, but our code is not using this function. Other packages used by us don't depend on Django 3.0.2. Therefore we believe we are not susceptible to this issue.
-
-The second Denial of Service vulnerability from Scrapy is irrelevant as well. According to the Scrapy issue\textsuperscript{\cite{scrapy-s3}}, DOS happens when communicating to Amazon S3 server. Since the scraper of Google Play Advanced Search stores scraped data to local database, we are invulnerable to this issue.
-
-
-To increase confidence, we then manually go over the dependencies.
-
-beautifulsoup4 is listed in \code{requirements.txt}, but we find the project is not using it. People are likely to install the application by running \code{pip install -r requirements.txt}. Thus an unnecessary component is installed to the machine. Although we didn't find major issues of beautifulsoup4 by searching the Internet, installing an unnecessary component brings some security risks anyway.
-
-
-\cite{django-security-issues} lists other security issues in Django. CVE-2019-19844 is about Potential account hijack via password reset form. Our website doesn't have accounts, so we are immune to this attack. CVE-2019-19118 is about Privilege escalation in the Django admin. However, Google Play Advanced Search doesn't use Django admin site.
-
-pyjson5\textsuperscript{\cite{pyjson5}} doesn't have a dedicated security issues page, but we searched the Internet and didn't find any security issues. However, we notice the project doesn't use this dependency, instead, some Python files import json, which is different than pyjson5. The same as beautifulsoup4, we believe installing an unnecessary component brings some security risks.
-
-CVE-2019-18874 is a Double Free issue in psutil that Google Play Advanced Search uses. Double Free is that a program frees the same memory twice, that may lead to memory leak or alter the execution flow.\textsuperscript{\cite{double-free}} Although the bug was fixed in psutil 5.6.7, because \code{requirements.txt} doesn't specify the version of psutil, the project is vulnerable to this issue. But luckily, psutil is only used in the tests module, only developers or testers might be affected.
-
-\cite{requests-security-vulnerabilities} discloses vulnerabilities in Python package requests. There are no known issues in requests 2.22.0.
-
-The project uses Scrapy 1.8.0. Besides the issue mentioned in Figure \ref{fig:snyk}, Scrapy also had XML External Entity flaw.\textsuperscript{\cite{scrapy-xml}} Nevertheless, Scrapy 1.8.0 doesn't have other known security issues.
-
-Twisted is a package required by Scrapy. In spite of that fact that Twisted had some security issues, for instance Man-in-the-Middle vulnerability and Improper Input Validation\textsuperscript{\cite{cve-twisted}, \cite{snyk-twisted}}, Twisted 19.10.0 that Google Play Advanced Search uses doesn't have known security issues.
-
-urllib3 1.24.3 doesn't have known vulnerabilities although \url{https://www.cvedetails.com} and \url{https://snyk.io} shows some in its earlier versions, including Improper Certificate Validation (fixed in 1.24.2) and CRLF injection (fixed in 1.24.3). Again, the source code of Google Play Advanced Search didn't actually import the package.
-
-Finally, the project requires pytest for automated testing. \code{requirements.\linebreak[0]txt} doesn't specify its version either, which is not a good practice. pytest doesn't have known security issues.
-
-
-To confirm the project doesn't really need beautifulsoup4, json5, and urllib3, we removed them from \code{requirements.\linebreak[0]txt} and trigger continuous integration. We find urllib3 is a dependency of Twisted, but the other two are not needed. It's good to let Twisted determine the version of urllib3 because the author of Twisted can choose a vulnerability-free version.
 
 \section{Code Review}
 
@@ -524,20 +464,4 @@ Shuhua Zhan - responsible for lessons learned section of the report and particip
 \newcommand{\citeWeb}[3]{#1, \url{#2}, Retrieved #3.}
 
 
-\begin{thebibliography}{99}
-    \bibitem{django-security-issues} \citeWeb{Archive of security issues}{https://docs.djangoproject.com/en/3.0/releases/security/}{2020-02-25}
-    \bibitem{scrapy-s3} \citeWeb{S3FilesStore can use a lot of memory}{https://github.com/scrapy/scrapy/issues/482}{2020-02-25}
-    \bibitem{pyjson5} \citeWeb{pyjson5: A Python implementation of the JSON5 data format
-}{https://github.com/dpranke/pyjson5}{2020-02-25}
-    \bibitem{double-free} \citeWeb{Doubly freeing memory}{https://owasp.org/www-community/vulnerabilities/Doubly_freeing_memory}{2020-02-25}
-    \bibitem{requests-security-vulnerabilities} \citeWeb{Vulnerability Disclosure}{https://requests.readthedocs.io/en/master/community/vulnerabilities/}{2020-02-25}
-    \bibitem{scrapy-xml} \citeWeb{Fixed XXE flaw in sitemap reader}{https://github.com/scrapy/scrapy/pull/676}{2020-02-25}
-    \bibitem{snyk-twisted} \citeWeb{twisted vulnerabilities}{https://snyk.io/vuln/pip:twisted}{2020-02-25}
-    \bibitem{cve-twisted} \citeWeb{Twisted Vulnerability Statistics}{https://www.cvedetails.com/product/55543/Twistedmatrix-Twisted.html?vendor_id=16756}{2020-02-25}
-    \bibitem{windows7} \citeWeb{Windows 7 support ended on January 14, 2020}{https://support.microsoft.com/en-us/help/4057281/windows-7-support-ended-on-january-14-2020}{2020-02-26}
-    \bibitem{python37-vulnerability} \citeWeb{Security vulnerabilities - Python Security Vulnerabilities}{https://python-security.readthedocs.io/vulnerabilities.html}{2020-02-26}
-    \bibitem{bpo-30458} \citeWeb{[security][CVE-2019-9740][CVE-2019-9947] HTTP Header Injection (follow-up of CVE-2016-5699)}{https://bugs.python.org/issue30458}{2020-02-26}
-    \bibitem{bpo-30730} \citeWeb{[security] Injecting environment variable in subprocess on Windows}{https://bugs.python.org/issue30730}{2020-02-26}
-    \bibitem{CVE-2019-9636} \citeWeb{CVE-2019-9636}{https://linux.oracle.com/cve/CVE-2019-9636.html}{2020-02-26}
-\end{thebibliography}
 \end{document}
