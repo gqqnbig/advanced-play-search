@@ -2,6 +2,7 @@ import os
 import re
 import requests
 import sys
+import time
 
 from django.db import connection
 from django.http import HttpResponse
@@ -48,6 +49,8 @@ def getCategories(request):
 
 
 def search(request):
+	startTime = time.time()
+
 	keyword = request.GET['q']
 	excludedPIds = [int(n) for n in request.GET.get('pids', '').split(',') if n != '']
 
@@ -92,7 +95,7 @@ def search(request):
 		elif sortType == 'phl':  # number of permissions low to high
 			appInfos = sorted(appInfos, key=lambda a: len(a['permissions']), reverse=True)
 
-		response = JsonResponse([dict(a) for a in appInfos], safe=False)
+		response = JsonResponse({'executionSeconds': time.time() - startTime, 'apps': [dict(a) for a in appInfos]}, safe=False)
 		response['Cache-Control'] = "private, max-age=3600"
 		return response
 	except requests.exceptions.SSLError as e:

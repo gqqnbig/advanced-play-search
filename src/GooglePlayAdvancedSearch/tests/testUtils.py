@@ -13,6 +13,15 @@ def getTestFolder():
 
 
 def startWebsite(test):
+	try:
+		response = requests.get('http://localhost:8000', verify=True)
+		if test:
+			test('http://localhost:8000')
+		return
+	except requests.exceptions.ConnectionError as e:
+		pass
+
+
 	if sys.platform == 'win32':
 		args = ['python', 'manage.py']
 	else:
@@ -33,7 +42,7 @@ def startWebsite(test):
 			try:
 				response = requests.get('http://localhost:8090', verify=True)
 				if test:
-					test()
+					test('http://localhost:8090')
 				break
 			except requests.exceptions.ConnectionError as e:
 				if waitTime > 10:

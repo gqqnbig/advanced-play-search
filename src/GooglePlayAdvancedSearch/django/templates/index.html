@@ -140,6 +140,7 @@
 	{% verbatim %}
 	<div id="appsList">
 		<template v-if="apps">
+			<div>{{ apps.length }} results ({{ executionSeconds.toFixed(2) }} seconds)</div>
 			<li v-for="app in apps">
 				<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
 				<img :src="app.app_icon">
@@ -250,6 +251,7 @@
 				apps: undefined,
 				errorMessage: undefined,
 				errorType: '',
+				executionSeconds: undefined,
 			}
 		});
 
@@ -263,16 +265,16 @@
 					appsList.errorMessage = data.error;
 					appsList.errorType = "security";
 				}
-				else if (data.length == 0) {
+				else if (data.apps.length === 0) {
 					clearTimeout(searchingTimeoutHandler);
 					appsList.errorMessage = "We couldn't find anything for your search.";
 					appsList.apps = '';
 				}
-				else{
-				appsList.apps = data;
-				appsList.errorMessage = undefined;
+				else {
+					appsList.apps = data.apps;
+					appsList.executionSeconds = data.executionSeconds;
+					appsList.errorMessage = undefined;
 				}
-
 
 
 			});
