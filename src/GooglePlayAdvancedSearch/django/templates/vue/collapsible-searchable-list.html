@@ -86,80 +86,129 @@
 
 
 <script>
-	//copied from https://github.com/philc/vimium/issues/2399#issuecomment-304966439
-	function detectVimumC() {
-		return new Promise((resolve) => {
-			fetch("chrome-extension://hfjbmagddngcpeloejdejnfgbamkjaeg/content/vimium-c.js").then(response => response.text()).then(text => {
-				vimiumEnabled = text !== "";
-				resolve(vimiumEnabled)
-			}).catch(() => resolve(false));
-		});
-	}
+	(() => {
+		/**
+		 * Run conditions in short-circuit manner. If a condition resolves to true, run trueCallback. If all conditions resolve to false, run falseCallback.
+		 * @param trueCallback
+		 * @param falseCallback
+		 * @param reject Optional. If any condition is rejected, call this callback. Neither trueCallback or falseCallback will be called.
+		 * @param conditions
+		 */
+		function promisesOr(trueCallback, falseCallback, ...args) {
+			let conditions;
+			let reject;
+			if (args.length === 0)
+				throw new Error("Expected usage is promisesOr(trueCallback, falseCallback, conditions) or promisesOr(trueCallback, falseCallback, reject, conditions)");
+			else if (args.length === 1) {
+				conditions = args[0];
+			} else {
+				reject = args[0];
+				conditions = args[1]
+			}
 
-	function detectVimum() {
-		return new Promise((resolve) => {
-			fetch("chrome-extension://dbepggeogbaibhgnhhndojpepiihcmeb/content_scripts/vimium.css").then(response => response.text()).then(text => {
-				vimiumEnabled = text !== "";
-				resolve(vimiumEnabled)
-			}).catch(() => resolve(false));
-		});
-	}
-
-	Vue.component('collapsible-searchable-list', {
-		template: "#collapsible-searchable-list",
-		props: ['items', 'label'],
-		data: function () {
-			return {
-				userInput: "",
-				isExpanded: false,
-				showHelp: false,
-			};
-		},
-		computed: {
-			hasItems: function () {
-				return this.items && this.items.length > 0;
-			},
-			checkedItemsGrouping: function () {
-				//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
-				//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
-				return _.groupBy(this.items, p => p.checked);
-			},
-			checkedItems: function () {
-				return this.checkedItemsGrouping[true];
-			},
-			uncheckedItems: function () {
-				return this.checkedItemsGrouping[false];
-			},
-			summary: function () {
-				// `this` 指向 vue 实例
-				if (!this.hasItems)
-					return 'No ' + this.label + ' available';
-
-				if (!this.checkedItems)
-					return "Disallow all " + this.label;
-				if (!this.uncheckedItems)
-					return "Allow all " + this.label;
-				if (this.uncheckedItems && this.uncheckedItems.length <= 2)
-					return 'Disallow ' + this.uncheckedItems.length + ": " + this.uncheckedItems.map(p => p.name).join(', ');
-				if (this.checkedItems && this.checkedItems.length <= 2)
-					return 'Allow ' + this.checkedItems.length + ": " + this.checkedItems.map(p => p.name).join(', ');
-
-				return 'Allow ' + this.checkedItems.length + ' ' + this.label;
-			},
-			matchedItems: function () {
-				if (this.userInput && this.items)
-					return this.items.filter(item => {
-							return item.name.toUpperCase().includes(this.userInput.toUpperCase());
-						}
-					);
-				else
-					return this.items;
-			},
-		},
-		created: function () {
-			detectVimumC().then(isVimEnabled => this.showHelp = this.showHelp || isVimEnabled);
-			detectVimum().then(isVimEnabled => this.showHelp = this.showHelp || isVimEnabled);
+			if (conditions.length === 0)
+				falseCallback();
+			else {
+				conditions.shift()().then(r => {
+					if (r)
+						trueCallback();
+					else
+						promisesOr(trueCallback, falseCallback, reject, conditions);
+				}).catch(reject);
+			}
 		}
-	});
+
+
+		//copied from https://github.com/philc/vimium/issues/2399#issuecomment-304966439
+		function detectVimiumCOnChrome() {
+			return new Promise((resolve) => {
+				fetch("chrome-extension://hfjbmagddngcpeloejdejnfgbamkjaeg/lib/injector.js").then(response => response.text()).then(text => {
+					vimiumEnabled = text !== "";
+					resolve(vimiumEnabled)
+				}).catch(() => resolve(false));
+			});
+		}
+
+		function detectVimiumCOnFirefox() {
+			return new Promise((resolve) => resolve(window.__VimiumC_priv__ != null));
+		}
+
+		function detectVimium() {
+			return new Promise((resolve) => {
+				fetch("chrome-extension://dbepggeogbaibhgnhhndojpepiihcmeb/content_scripts/vimium.css").then(response => response.text()).then(text => {
+					vimiumEnabled = text !== "";
+					resolve(vimiumEnabled)
+				}).catch(() => resolve(false));
+			});
+		}
+
+		Vue.component('collapsible-searchable-list', function (resolve, reject) {
+			let definition = {
+				template: "#collapsible-searchable-list",
+				props: ['items', 'label'],
+				data: function () {
+					return {
+						userInput: "",
+						isExpanded: false,
+						showHelp: false,
+					};
+				},
+				computed: {
+					hasItems: function () {
+						return this.items && this.items.length > 0;
+					},
+					checkedItemsGrouping: function () {
+						//I like groupBy because I can use checkedPermissions[true], checkedPermissions[false] to access it.
+						//Another way is to use partition, then you access it by checkedPermissions[0], checkedPermissions[1].
+						return _.groupBy(this.items, p => p.checked);
+					},
+					checkedItems: function () {
+						return this.checkedItemsGrouping[true];
+					},
+					uncheckedItems: function () {
+						return this.checkedItemsGrouping[false];
+					},
+					summary: function () {
+						// `this` refer to this vue element
+						if (!this.hasItems)
+							return 'No ' + this.label + ' available';
+
+						if (!this.checkedItems)
+							return "Disallow all " + this.label;
+						if (!this.uncheckedItems)
+							return "Allow all " + this.label;
+						if (this.uncheckedItems && this.uncheckedItems.length <= 2)
+							return 'Disallow ' + this.uncheckedItems.length + ": " + this.uncheckedItems.map(p => p.name).join(', ');
+						if (this.checkedItems && this.checkedItems.length <= 2)
+							return 'Allow ' + this.checkedItems.length + ": " + this.checkedItems.map(p => p.name).join(', ');
+
+						return 'Allow ' + this.checkedItems.length + ' ' + this.label;
+					},
+					matchedItems: function () {
+						if (this.userInput && this.items)
+							return this.items.filter(item => {
+									return item.name.toUpperCase().includes(this.userInput.toUpperCase());
+								}
+							);
+						else
+							return this.items;
+					},
+				},
+			};
+
+			promisesOr(() => {
+					definition.created = function () {
+						this.showHelp = true;
+					};
+					resolve(definition);
+				}, () => {
+					definition.created = function () {
+						this.showHelp = false;
+					};
+					resolve(definition);
+				},
+				reason => reject(reason), [detectVimiumCOnChrome, detectVimium, detectVimiumCOnFirefox]);
+		});
+	})();
 </script>
 {% endverbatim %}
