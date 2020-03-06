@@ -7,10 +7,7 @@
 
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- bootstrap <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
-  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
 
 	{% if debug %}
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -173,7 +170,7 @@
 			<ul class="appList">
 				<li v-for="app in apps">
 					<div class="box">
-						<img :src="app.app_icon" width="96px">
+						<img :src="app.app_icon">
 						<div><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a></div>
 						<div>
 						<ul>
