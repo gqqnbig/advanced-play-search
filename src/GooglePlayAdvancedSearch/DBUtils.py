@@ -7,6 +7,8 @@ from typing import Optional, List
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
+MAX_SELECT = 300
+
 def getAppCountInDatabase(cursor):
 	try:
 		cursor.execute('select count(*) from app')
@@ -196,7 +198,7 @@ where julianday('now')-julianday(updateDate)>=?'''
 
 		appList = []
 
-		self.__cursor.execute("SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern", {"namePattern": '%' + namePattern + '%'})
+		self.__cursor.execute("SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern Limit "+ str(MAX_SELECT), {"namePattern": '%' + namePattern + '%'})
 		tmp = self.__cursor.fetchall()
 		for app in tmp:
 			appItem = AppItem()

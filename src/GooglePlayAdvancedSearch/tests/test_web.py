@@ -7,8 +7,8 @@ import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 testFolder = os.path.dirname(os.path.abspath(__file__))
 
 
-def callback_testResponse():
-	response = requests.get('http://localhost:8090', verify=True)
+def callback_testResponse(websiteUrl):
+	response = requests.get(websiteUrl, verify=True)
 	if response.status_code != 200:
 		pytest.fail(str(response.status_code) + ' ' + response.reason)
 
