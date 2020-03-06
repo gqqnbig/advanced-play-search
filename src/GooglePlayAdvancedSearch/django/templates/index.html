@@ -138,7 +138,7 @@
 
 {% if isSearch %}
 	{% verbatim %}
-	<div id="appsList">
+	<div id="searchResult">
 		<template v-if="apps">
 			<div>{{ apps.length }} results ({{ executionSeconds.toFixed(2) }} seconds)</div>
 			<li v-for="app in apps">
@@ -245,8 +245,8 @@
 	});
 
 	{% if isSearch %}
-		const appsList = new Vue({
-			el: "#appsList",
+		const searchResult = new Vue({
+			el: "#searchResult",
 			data: {
 				apps: undefined,
 				errorMessage: undefined,
@@ -255,25 +255,25 @@
 			}
 		});
 
-		const searchingTimeoutHandler = setTimeout(() => appsList.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
+		const searchingTimeoutHandler = setTimeout(() => searchResult.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
 
 		//When we got permission list and category list, then run the following code.
 		Promise.all([permissionPromise, categoryPromise]).then(function () {
 			fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
 				if (data.error) {
 					clearTimeout(searchingTimeoutHandler);
-					appsList.errorMessage = data.error;
-					appsList.errorType = "security";
+					searchResult.errorMessage = data.error;
+					searchResult.errorType = "security";
 				}
 				else if (data.apps.length === 0) {
 					clearTimeout(searchingTimeoutHandler);
-					appsList.errorMessage = "We couldn't find anything for your search.";
-					appsList.apps = '';
+					searchResult.errorMessage = "We couldn't find anything for your search.";
+					searchResult.apps = '';
 				}
 				else {
-					appsList.apps = data.apps;
-					appsList.executionSeconds = data.executionSeconds;
-					appsList.errorMessage = undefined;
+					searchResult.apps = data.apps;
+					searchResult.executionSeconds = data.executionSeconds;
+					searchResult.errorMessage = undefined;
 				}
 
 
