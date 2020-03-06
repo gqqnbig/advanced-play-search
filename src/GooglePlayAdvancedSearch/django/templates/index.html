@@ -113,6 +113,10 @@
 			padding: 0;
 			list-style-type: none;
 		}
+
+		.appName {
+			font-weight: bold;
+		}
 	</style>
 </head>
 <body>
@@ -171,15 +175,14 @@
 				<li v-for="app in apps">
 					<div class="box">
 						<img :src="app.app_icon">
-						<div><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a></div>
+						<div class="appName"><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a></div>
 						<div>
-						<ul>
-							<li>rating: {{ app.rating }}</li>
-							<li>num_reviews: {{ app.num_reviews }}</li>
-							<li>install_fee: ${{ app.install_fee }}</li>
-							<li>inAppPurchases: {{ app.inAppPurchases }}</li>
-						</ul>
-				</div>
+							<div><strong>rating:</strong> {{ app.rating }}</div>
+							<div><strong>num_reviews:</strong> {{ app.num_reviews }}</div>
+							<div><strong>install_fee:</strong> ${{ app.install_fee }}</div>
+							<div><strong>inAppPurchases:</strong> {{ app.inAppPurchases }}</div>
+						</div>
+					</div>
 				</li>
 			</ul>
 		</template>
