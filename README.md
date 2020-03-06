@@ -2,6 +2,10 @@
 
 ![](https://github.com/cs188-software-design-security-w20/project-random/workflows/Python%20application/badge.svg)
 
+The application is available at https://beta.gqqnbig.me/, hosted on Google Cloud. We do not report DDOS attacks to us to Google, but Google may already have detected it.
+
+Can't run the application? Check how [the application runs on GitHub Action Server](/.github/workflows/pythonapp.yml).
+
 ## Install
 Run `pip install -r requirements.txt` to install the dependencies. If you see conflicts, like "something has requirements xxx but you'll have xxx", you will need to update your pip.
 
