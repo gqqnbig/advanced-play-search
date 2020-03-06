@@ -7,6 +7,7 @@
 
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+
 	{% if debug %}
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	{% else %}
@@ -90,12 +91,18 @@
 		}
 
 		.box {
-			width: 180px;
+			width: 12em;
+			box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 			margin: 1em;
 		}
 
 		.box img {
 			width: 100%;
+		}
+
+		h1 {
+			font-size: 360%;
+			text-shadow: 3px 1.5px grey;
 		}
 
 		.appList {
@@ -109,43 +116,44 @@
 </head>
 <body>
 
-<h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
-
 {% verbatim %}
-<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
-	<div id="searchBox">
-		<input type="text" name="keyword" v-model='keyword'>
-		<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}">Search</a>
-	</div>
+<div class="jumbotron">
+	<h1 class="text-center"><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
+	<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
+		<div id="searchBox" class="text-center">
+			<input type="text" style="width:20em;" placeholder="Search..." name="keyword" v-model='keyword'>
+			<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}">Search</a>
+		</div>
 
-	<div class="advancedSearch">
-		<label class="advancedSearch-sortingTool">
-			Sort by
-			<select v-model="sortType">
-				<option value="">Default order</option>
-				<option value="rhl">rating ↓</option>
-				<option value="rlh">rating ↑</option>
-				<option value="phl">number of permissions ↓</option>
-				<option value="plh">number of permissions ↑</option>
-			</select>
-		</label>
-		<div class="advancedSearch-filters">
-			<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
-			<label class="filter"><input type="checkbox" checked>Free install</label>
-			<label class="filter"><input type="checkbox" checked>Allow ads</label>
-
-			<div class="filter">
-				Rating >
-				<select style="width: 3em">
-					<option>0</option>
-					<option>1</option>
-					<option>2</option>
-					<option>3</option>
-					<option>4</option>
+		<div class="advancedSearch">
+			<label class="advancedSearch-sortingTool">
+				Sort by
+				<select v-model="sortType">
+					<option value="">Default order</option>
+					<option value="rhl">rating ↓</option>
+					<option value="rlh">rating ↑</option>
+					<option value="phl">number of permissions ↓</option>
+					<option value="plh">number of permissions ↑</option>
 				</select>
+			</label>
+			<div class="advancedSearch-filters">
+				<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
+				<label class="filter"><input type="checkbox" checked>Free install</label>
+				<label class="filter"><input type="checkbox" checked>Allow ads</label>
+
+				<div class="filter">
+					Rating >
+					<select style="width: 3em">
+						<option>0</option>
+						<option>1</option>
+						<option>2</option>
+						<option>3</option>
+						<option>4</option>
+					</select>
+				</div>
+				<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
+				<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
 			</div>
-			<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
-			<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
 		</div>
 	</div>
 </div>
