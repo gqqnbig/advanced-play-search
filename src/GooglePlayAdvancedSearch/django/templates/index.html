@@ -5,6 +5,10 @@
 	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
 	{% if debug %}
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	{% else %}
@@ -13,11 +17,9 @@
 	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
 	<style>
 		.advancedSearch-filters {
-			flex-grow: 1;
-		}
-
-		.advancedSearch-filters .filter {
-			display: inline-block;
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
 		}
 
 		.advancedSearch-filters .filter:not(:last-child) {
@@ -30,7 +32,8 @@
 		}
 
 		.advancedSearch-sortingTool {
-			flex-shrink: 0;
+			float: right;
+			margin-top: 1px;
 		}
 
 		.permissionFilter .itemList {
@@ -42,7 +45,6 @@
 		}
 
 		.advancedSearch {
-			display: flex;
 			margin: 1em 0;
 		}
 
@@ -88,48 +90,72 @@
 				background-position: 0% 50%;
 			}
 		}
+
+		.box {
+			width: 12em;
+			box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+			margin: 1em;
+		}
+
+		.box img {
+			width: 100%;
+		}
+
+		h1 {
+			font-size: 360%;
+			text-shadow: 3px 1.5px grey;
+		}
+
+		.appList {
+			display: flex;
+			flex-flow: wrap;
+			/*justify-content: space-around; not use this because the last line doesn't look nice. */
+			padding: 0;
+			list-style-type: none;
+		}
 	</style>
 </head>
 <body>
 
-<h1><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
-
 {% verbatim %}
-<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
-	<div id="searchBox">
-		<input type="text" name="keyword" v-model='keyword'>
-		<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}">Search</a>
-	</div>
-
-	<div class="advancedSearch">
-		<div class="advancedSearch-filters">
-			<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
-			<label class="filter"><input type="checkbox" checked>Free install</label>
-			<label class="filter"><input type="checkbox" checked>Allow ads</label>
-
-			<div class="filter">
-				Rating >
-				<select style="width: 3em">
-					<option>0</option>
-					<option>1</option>
-					<option>2</option>
-					<option>3</option>
-					<option>4</option>
-				</select>
-			</div>
-			<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
-			<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
+<div class="jumbotron">
+	<h1 class="text-center"><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
+	<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
+		<div id="searchBox" class="text-center">
+			<input type="text" style="width:20em;" placeholder="Search..." name="keyword" v-model='keyword'>
+			<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}">Search</a>
 		</div>
-		<label class="advancedSearch-sortingTool">
-			Sort by
-			<select v-model="sortType">
-				<option value="">Default order</option>
-				<option value="rhl">rating ↓</option>
-				<option value="rlh">rating ↑</option>
-				<option value="phl">number of permissions ↓</option>
-				<option value="plh">number of permissions ↑</option>
-			</select>
-		</label>
+
+		<div class="advancedSearch">
+			<label class="advancedSearch-sortingTool">
+				Sort by
+				<select v-model="sortType">
+					<option value="">Default order</option>
+					<option value="rhl">rating ↓</option>
+					<option value="rlh">rating ↑</option>
+					<option value="phl">number of permissions ↓</option>
+					<option value="plh">number of permissions ↑</option>
+				</select>
+			</label>
+			<div class="advancedSearch-filters">
+				<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
+				<label class="filter"><input type="checkbox" checked>Free install</label>
+				<label class="filter"><input type="checkbox" checked>Allow ads</label>
+
+				<div class="filter">
+					Rating >
+					<select style="width: 3em">
+						<option>0</option>
+						<option>1</option>
+						<option>2</option>
+						<option>3</option>
+						<option>4</option>
+					</select>
+				</div>
+				<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
+				<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -138,23 +164,24 @@
 
 {% if isSearch %}
 	{% verbatim %}
-	<div id="appsList">
+	<div id="searchResult">
 		<template v-if="apps">
 			<div>{{ apps.length }} results ({{ executionSeconds.toFixed(2) }} seconds)</div>
-			<li v-for="app in apps">
-				<a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a>
-				<img :src="app.app_icon">
-				<br>
-				<button type="button" class="collapsible">+</button>
-				<div>
-					<ul>
-						<li>rating: {{ app.rating }}</li>
-						<li>num_reviews: {{ app.num_reviews }}</li>
-						<li>install_fee: ${{ app.install_fee }}</li>
-						<li>inAppPurchases: {{ app.inAppPurchases }}</li>
-					</ul>
+			<ul class="appList">
+				<li v-for="app in apps">
+					<div class="box">
+						<img :src="app.app_icon">
+						<div><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.appName }}</a></div>
+						<div>
+						<ul>
+							<li>rating: {{ app.rating }}</li>
+							<li>num_reviews: {{ app.num_reviews }}</li>
+							<li>install_fee: ${{ app.install_fee }}</li>
+							<li>inAppPurchases: {{ app.inAppPurchases }}</li>
+						</ul>
 				</div>
-			</li>
+				</li>
+			</ul>
 		</template>
 		<div class="searchingPrompt" v-else>
 			<template v-if="errorMessage">
@@ -245,8 +272,8 @@
 	});
 
 	{% if isSearch %}
-		const appsList = new Vue({
-			el: "#appsList",
+		const searchResult = new Vue({
+			el: "#searchResult",
 			data: {
 				apps: undefined,
 				errorMessage: undefined,
@@ -255,25 +282,25 @@
 			}
 		});
 
-		const searchingTimeoutHandler = setTimeout(() => appsList.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
+		const searchingTimeoutHandler = setTimeout(() => searchResult.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
 
 		//When we got permission list and category list, then run the following code.
 		Promise.all([permissionPromise, categoryPromise]).then(function () {
 			fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
 				if (data.error) {
 					clearTimeout(searchingTimeoutHandler);
-					appsList.errorMessage = data.error;
-					appsList.errorType = "security";
+					searchResult.errorMessage = data.error;
+					searchResult.errorType = "security";
 				}
 				else if (data.apps.length === 0) {
 					clearTimeout(searchingTimeoutHandler);
-					appsList.errorMessage = "We couldn't find anything for your search.";
-					appsList.apps = '';
+					searchResult.errorMessage = "We couldn't find anything for your search.";
+					searchResult.apps = '';
 				}
 				else {
-					appsList.apps = data.apps;
-					appsList.executionSeconds = data.executionSeconds;
-					appsList.errorMessage = undefined;
+					searchResult.apps = data.apps;
+					searchResult.executionSeconds = data.executionSeconds;
+					searchResult.errorMessage = undefined;
 				}
 
 
