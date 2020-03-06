@@ -15,11 +15,9 @@
 	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
 	<style>
 		.advancedSearch-filters {
-			flex-grow: 1;
-		}
-
-		.advancedSearch-filters .filter {
-			display: inline-block;
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
 		}
 
 		.advancedSearch-filters .filter:not(:last-child) {
@@ -32,7 +30,8 @@
 		}
 
 		.advancedSearch-sortingTool {
-			flex-shrink: 0;
+			float: right;
+			margin-top: 1px;
 		}
 
 		.permissionFilter .itemList {
@@ -44,7 +43,6 @@
 		}
 
 		.advancedSearch {
-			display: flex;
 			margin: 1em 0;
 		}
 
@@ -121,6 +119,16 @@
 	</div>
 
 	<div class="advancedSearch">
+		<label class="advancedSearch-sortingTool">
+			Sort by
+			<select v-model="sortType">
+				<option value="">Default order</option>
+				<option value="rhl">rating ↓</option>
+				<option value="rlh">rating ↑</option>
+				<option value="phl">number of permissions ↓</option>
+				<option value="plh">number of permissions ↑</option>
+			</select>
+		</label>
 		<div class="advancedSearch-filters">
 			<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
 			<label class="filter"><input type="checkbox" checked>Free install</label>
@@ -139,16 +147,6 @@
 			<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
 			<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
 		</div>
-		<label class="advancedSearch-sortingTool">
-			Sort by
-			<select v-model="sortType">
-				<option value="">Default order</option>
-				<option value="rhl">rating ↓</option>
-				<option value="rlh">rating ↑</option>
-				<option value="phl">number of permissions ↓</option>
-				<option value="plh">number of permissions ↑</option>
-			</select>
-		</label>
 	</div>
 </div>
 
