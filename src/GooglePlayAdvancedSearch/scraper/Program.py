@@ -75,7 +75,7 @@ class AppInfoSpider(scrapy.Spider):
 			try:
 				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', feeElement.css('::attr(aria-label)').get())[0])
 			except:
-				self.logger.error(f"Unexpected install fee: {feeElement.get()}")
+				self.logger.error(f"Unexpected install fee. parentBox: {parentBox.get()}")
 
 
 		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
