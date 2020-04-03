@@ -163,53 +163,54 @@
 
 {% endverbatim %}
 
-
-{% if isSearch %}
-	{% verbatim %}
-	<div id="searchResult">
-		<template v-if="apps">
-			<div>{{ apps.length }} results ({{ executionSeconds.toFixed(2) }} seconds)</div>
-			<ul class="appList">
-				<li v-for="app in apps">
-					<div class="box">
-						<img :src="app.app_icon">
-						<div><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
-						<ul>
-							<li>rating: {{ app.rating }}</li>
-							<li>num_reviews: {{ app.num_reviews }}</li>
-							<li>install_fee: ${{ app.install_fee }}</li>
-							<li>inAppPurchases: {{ app.inAppPurchases }}</li>
-						</ul>
+<div style="padding: 0 1em">
+	{% if isSearch %}
+		{% verbatim %}
+		<div id="searchResult">
+			<template v-if="apps">
+				<div>{{ apps.length }} results ({{ executionSeconds.toFixed(2) }} seconds)</div>
+				<ul class="appList">
+					<li v-for="app in apps">
+						<div class="box">
+							<img :src="app.app_icon">
+							<div><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
+							<ul>
+								<li>rating: {{ app.rating }}</li>
+								<li>num_reviews: {{ app.num_reviews }}</li>
+								<li>install_fee: ${{ app.install_fee }}</li>
+								<li>inAppPurchases: {{ app.inAppPurchases }}</li>
+							</ul>
+						</div>
+					</li>
+				</ul>
+			</template>
+			<div class="searchingPrompt" v-else>
+				<template v-if="errorMessage">
+					<div class="searchingPrompt-errorIcon" :class="errorType" style="font-size: 180px"></div>
+					<div class="text-danger searchingPrompt-errorMessage">{{ errorMessage }}</div>
+				</template>
+				<template v-else>
+					<div>
+						{% endverbatim %}
+						{% include 'cssLoader/spinner.html' %}
+						{% verbatim %}
 					</div>
-				</li>
-			</ul>
-		</template>
-		<div class="searchingPrompt" v-else>
-			<template v-if="errorMessage">
-				<div class="searchingPrompt-errorIcon" :class="errorType" style="font-size: 180px"></div>
-				<div class="text-danger searchingPrompt-errorMessage">{{ errorMessage }}</div>
-			</template>
-			<template v-else>
-				<div>
-					{% endverbatim %}
-					{% include 'cssLoader/spinner.html' %}
-					{% verbatim %}
-				</div>
-				<div class="searchingPrompt-text">
-					Searching...
-				</div>
-			</template>
+					<div class="searchingPrompt-text">
+						Searching...
+					</div>
+				</template>
+			</div>
 		</div>
-	</div>
-	{% endverbatim %}
-{% endif %}
+		{% endverbatim %}
+	{% endif %}
 
-<p>We have recorded <span id="appCount"></span> apps, and the number is increasing!</p>
-<script>
-	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.ok ? response.text() : "").then(text => {
-		document.getElementById("appCount").innerText = text;
-	});
-</script>
+	<p>We have recorded <span id="appCount"></span> apps, and the number is increasing!</p>
+	<script>
+		fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.ok ? response.text() : "").then(text => {
+			document.getElementById("appCount").innerText = text;
+		});
+	</script>
+</div>
 
 {% if ShowRecentSearch %}
 	<style>
