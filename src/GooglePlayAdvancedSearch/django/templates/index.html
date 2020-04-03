@@ -207,17 +207,24 @@
 	<p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
 </div>
 
-<footer>
-	<div id="authors">
-		<script>
-			fetch("static/authors.html").then(r => {
-				if (r.status !== 200)
-					return Promise.reject(r);
-				return r.text();
-			}).then(html => {
-				document.getElementById("authors").innerHTML = html;
-			});
-		</script>
+<footer style="text-align: center">
+	<div>
+		<div>
+			<a href="https://github.com/Rickyoung221">Rickyoung221</a>,
+			<a href="https://gqqnbig.me">QQ喵</a>,
+			<a href="https://github.com/peanutboo">书画喵</a>,
+			<a href="https://github.com/dliang-lbl">Dongyao Liang</a> ,
+			<a href="https://github.com/terranzmczmx">Yuchen Hu</a>
+			@ 2020 <a href="http://www.ucla.edu">UCLA</a>
+		</div>
+	</div>
+	<div id="versionInfo">
+		Google Play Advanced Search 1.0
+	</div>
+	<div>
+		相关链接：
+		<a href="https://gqqnbig.me">我的博客（主站）</a>、
+		<a href="https://github.com/gqqnbig/advanced-play-search">本应用程序的源代码</a>
 	</div>
 </footer>
 
