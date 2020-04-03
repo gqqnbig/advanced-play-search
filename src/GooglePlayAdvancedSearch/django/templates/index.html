@@ -1,3 +1,6 @@
+{% load include_maybe %}
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -312,6 +315,8 @@
 	{% endif %}
 
 </script>
+
+{% include_maybe "dynamic/footer.html"  %}
 </body>
 </html>
 
