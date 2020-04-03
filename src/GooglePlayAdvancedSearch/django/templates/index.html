@@ -203,13 +203,19 @@
 
 <p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
 
-<marquee> TEAM RANDOM: <br>
-	Weikeng Yang <br>
-	Qiqi Gu <br>
-	Shuhua Zhan <br>
-	Dongyao Liang <br>
-	Yuchen Hu <br>
-</marquee>
+<footer>
+	<div id="authors">
+		<script>
+			fetch("static/authors.html").then(r => {
+				if (r.status !== 200)
+					return Promise.reject(r);
+				return r.text();
+			}).then(html => {
+				document.getElementById("authors").innerHTML = html;
+			});
+		</script>
+	</div>
+</footer>
 
 {% include "vue/collapsible-searchable-list.html" %}
 
