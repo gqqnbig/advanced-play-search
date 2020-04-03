@@ -28,6 +28,7 @@ make sure to `conda activate cs188` first as root
 
 
 ## System Requirements
+The project is best to run by Python 3.7. Ubuntu 19 comes with Python 3.7. If you are using other systems, eg. Ubuntu 16, whose repositories don't have Python 3.7, refrain from installing Python 3.7 because the official repositories not having Python 3.7 is for a reason. It's very likely that you are unable to install other dependencies, for instance sqlite 3.24+, django 3, etc.
 
 Browsers supporting URLSearchParams, Chrome >=49, Edge>=17, Firefix>=29.
 
