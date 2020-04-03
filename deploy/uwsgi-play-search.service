@@ -1,0 +1,14 @@
+[Unit]
+Description=run uwsgi service for play-search
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=0
+User=www-data
+ExecStart=uwsgi --socket /var/www/play-search/mysite.sock --chmod-socket=666 --chdir /var/www/play-search/src/GooglePlayAdvancedSearch/django --module web.wsgi --enable-threads
+# --daemonize /var/log/play-search/log
+
+[Install]
+WantedBy=multi-user.target
