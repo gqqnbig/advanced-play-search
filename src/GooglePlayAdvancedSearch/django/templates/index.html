@@ -282,6 +282,7 @@
 
 		const searchingTimeoutHandler = setTimeout(() => searchResult.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
 
+		const startSearchTime = performance.now();
 		//When we got permission list and category list, then run the following code.
 		Promise.all([permissionPromise, categoryPromise]).then(function () {
 			fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
@@ -297,11 +298,9 @@
 				}
 				else {
 					searchResult.apps = data.apps;
-					searchResult.executionSeconds = data.executionSeconds;
+					searchResult.executionSeconds = (performance.now() - startSearchTime) / 1000;
 					searchResult.errorMessage = undefined;
 				}
-
-
 			});
 		});
 	{% endif %}
