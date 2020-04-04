@@ -217,8 +217,15 @@
 			@ 2020 <a href="http://www.ucla.edu">UCLA</a>
 		</div>
 	</div>
-	<div id="versionInfo">
-		Google Play Advanced Search 1.0
+	<div>
+		Google Play Advanced Search
+		<span id="versionInfo">
+			<script>
+				fetch('/Api/Version').then(r => r.text()).then(data => {
+					document.getElementById('versionInfo').innerText = data;
+				});
+			</script>
+		</span>
 	</div>
 	<div>
 		相关链接：
@@ -228,6 +235,13 @@
 </footer>
 
 {% include "vue/collapsible-searchable-list.html" %}
+
+<script>
+	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.text()).then(text => {
+			document.getElementById("appCount").innerText = text;
+		}
+	);
+</script>
 
 <script>
 	const currentQuery = new URLSearchParams(location.search);
@@ -263,11 +277,6 @@
 			}
 		}
 	});
-
-	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.text()).then(text => {
-			document.getElementById("appCount").innerText = text;
-		}
-	);
 
 	const permissionPromise = fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
 		res = Object.entries(data).map(p => {

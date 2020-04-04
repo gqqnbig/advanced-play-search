@@ -1,5 +1,7 @@
 import os
 import re
+import subprocess
+
 import requests
 import sys
 
@@ -241,3 +243,13 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 
 	assert None not in app_infos.values(), "Every app id returned from Google should have an app detail."
 	return list(app_infos.values())
+
+
+def version(request):
+	try:
+		branch = subprocess.check_output(['git', 'describe','--dirty'], cwd=os.path.dirname(os.path.abspath(__file__)))
+		branch = branch.decode("utf-8").strip()
+	except:
+		branch = None
+
+	return HttpResponse(branch)
