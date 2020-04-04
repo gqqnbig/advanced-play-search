@@ -154,7 +154,7 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 				continue
 
 			appInfo = AppItem()
-			appInfo['appName'] = app[2]
+			appInfo['name'] = app[2]
 			appInfo['id'] = appId
 			appInfo['rating'] = app[6][0][2][1][1]
 			appInfo['app_icon'] = app[1][1][0][3][2]

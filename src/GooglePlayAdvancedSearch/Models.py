@@ -2,7 +2,7 @@ from scrapy import Item, Field
 
 
 class AppItem(Item):
-	appName = Field()
+	name = Field()
 	id = Field()
 	rating = Field()
 	inAppPurchases = Field()
