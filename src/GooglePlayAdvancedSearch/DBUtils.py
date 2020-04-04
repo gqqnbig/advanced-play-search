@@ -136,7 +136,7 @@ updateDate=excluded.updateDate
 {''.join([',' + x + '=excluded.' + x for x in valuesToInsert])}
 {clearCategoriesSql}
 {clearPermissionsSql}
-where julianday('now')-julianday(updateDate)>=?'''
+where julianday('now')-?>=julianday(updateDate)'''
 		self.__cursor.execute(sql, (
 			item['id'],
 			item['name'],
@@ -188,7 +188,7 @@ where julianday('now')-julianday(updateDate)>=?'''
 
 	def searchApps(self, namePattern: str) -> List[AppItem]:
 		"""
-		Search apps which has specific patterns in their name column.
+		Search fresh apps which has specific patterns in their name column.
 
 		Search result is not guaranteed to be complete.
 
@@ -198,7 +198,8 @@ where julianday('now')-julianday(updateDate)>=?'''
 
 		appList = []
 
-		self.__cursor.execute("SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern Limit "+ str(MAX_SELECT), {"namePattern": '%' + namePattern + '%'})
+		self.__cursor.execute(f"SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern and updateDate>=date('now','-{self.__freshDays} days') Limit " + str(MAX_SELECT),
+							  {"namePattern": '%' + namePattern + '%'})
 		tmp = self.__cursor.fetchall()
 		for app in tmp:
 			appItem = AppItem()
@@ -218,7 +219,8 @@ where julianday('now')-julianday(updateDate)>=?'''
 		Find app id in database. If found, return the data, otherwise return null.
 		"""
 
-		self.__cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE id=:id and isPartialInfo=0", {"id": id})
+		self.__cursor.execute(f"SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE id=:id and isPartialInfo=0 and updateDate>=date('now','-{self.__freshDays} days')",
+							  {"id": id})
 		tmp = self.__cursor.fetchone()
 		if tmp is None:
 			return None
@@ -240,6 +242,9 @@ where julianday('now')-julianday(updateDate)>=?'''
 			return appItem
 
 	def getAppPermissions(self, appId):
+		if len(self.__allPermissions) == 0:
+			return []
+
 		selectPermissionsSql = ','.join([delimiteDBIdentifier('permission_' + v) for (k, v) in self.__allPermissions.items()])
 
 		self.__cursor.execute(f"SELECT {selectPermissionsSql} FROM App WHERE id=:id", {"id": appId})
@@ -254,6 +259,9 @@ where julianday('now')-julianday(updateDate)>=?'''
 		return usedPermissions
 
 	def getAppCategories(self, appId):
+		if len(self.__allCategories) == 0:
+			return []
+
 		selectCategoriesSql = ','.join([delimiteDBIdentifier('category_' + v) for (k, v) in self.__allCategories.items()])
 
 		self.__cursor.execute(f"SELECT {selectCategoriesSql} FROM App WHERE id=:id", {"id": appId})
@@ -266,4 +274,3 @@ where julianday('now')-julianday(updateDate)>=?'''
 		l = list(self.__allCategories.items())
 		usedCategories = {l[i][0]: l[i][1] for i in range(len(row)) if row[i]}
 		return usedCategories
-
