@@ -47,7 +47,8 @@ git clone  --no-checkout --depth 1 https://github.com/gqqnbig/advanced-play-sear
 git sparse-checkout init --cone
 git sparse-checkout add src
 git sparse-checkout add deploy
-
+git remote set-branches origin 'dev'
+git fetch --all
 
 ln -s /var/www/play-search/deploy/systemd/system/play-search-staleAppRemover.service /etc/systemd/system/play-search-staleAppRemover.service
 
