@@ -241,6 +241,9 @@ where julianday('now')-?>=julianday(updateDate)'''
 			return appItem
 
 	def getAppPermissions(self, appId):
+		if len(self.__allPermissions) == 0:
+			return []
+
 		selectPermissionsSql = ','.join([delimiteDBIdentifier('permission_' + v) for (k, v) in self.__allPermissions.items()])
 
 		self.__cursor.execute(f"SELECT {selectPermissionsSql} FROM App WHERE id=:id", {"id": appId})
@@ -255,6 +258,9 @@ where julianday('now')-?>=julianday(updateDate)'''
 		return usedPermissions
 
 	def getAppCategories(self, appId):
+		if len(self.__allCategories) == 0:
+			return []
+
 		selectCategoriesSql = ','.join([delimiteDBIdentifier('category_' + v) for (k, v) in self.__allCategories.items()])
 
 		self.__cursor.execute(f"SELECT {selectCategoriesSql} FROM App WHERE id=:id", {"id": appId})
