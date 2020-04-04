@@ -1,6 +1,8 @@
 import os
 import sqlite3
 
+import pytest
+
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
 from GooglePlayAdvancedSearch.DBUtils import AppAccessor
@@ -22,16 +24,25 @@ def test_getCompleteAppInfoPartial():
 
 
 def test_getCompleteAppInfoStale():
+	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+	if os.path.exists(dbFilePath):
+		try:
+			os.remove(dbFilePath)
+		except PermissionError as e:
+			pytest.skip(str(e))
+
 	app = AppItem()
 	app['name'] = 'test app'
 	app['id'] = 'testid'
 	app['rating'] = 1
 	app['install_fee'] = 0
 	app['app_icon'] = ''
-	app['inAppPurchases']=True
-	app['containsAds']=False
-	app['num_reviews']=1000
+	app['inAppPurchases'] = True
+	app['containsAds'] = False
+	app['num_reviews'] = 1000
 	app['install_fee'] = 0
+	app['permissions'] = []
+	app['categories'] = []
 
 	appAccessor = AppAccessor(10)
 	appAccessor.insertOrUpdateApp(app, 0)
