@@ -15,6 +15,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: check dev status
+      run: |
+        # if dev exists, make sure master is ancestor of dev
+        if git show-ref --verify --quiet refs/remotes/origin/dev; then
+            git merge-base --is-ancestor origin/master origin/dev
+        fi
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
