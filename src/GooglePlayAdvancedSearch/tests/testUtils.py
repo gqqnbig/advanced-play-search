@@ -21,12 +21,11 @@ def startWebsite(test):
 	except requests.exceptions.ConnectionError as e:
 		pass
 
-
 	if sys.platform == 'win32':
 		args = ['python', 'manage.py']
 	else:
 		args = ['./manage.py']
-	args.extend(['runserver', '8090'])
+	args.extend(['runserver', '--noreload', '8090'])
 
 	if 'PYTHONIOENCODING' not in os.environ or os.environ['PYTHONIOENCODING'] != 'UTF8':
 		os.environ['PYTHONIOENCODING'] = 'UTF8'
