@@ -1,6 +1,8 @@
 import os
 import sqlite3
+import urllib
 
+import pytest
 import requests
 
 import GooglePlayAdvancedSearch.DBUtils
@@ -78,6 +80,39 @@ def callback_searchResultUpperBound(websiteUrl):
 		cursor.execute('delete from App where id like :id', {'id': 'GooglePlayAdvancedSearch.testApp%'})
 
 
+def callback_notReadingStaleInfo(websiteUrl):
+	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+
+	lastException = None
+	tryCount = 0
+	while tryCount < 2:
+		tryCount += 1
+		try:
+			connection = sqlite3.connect(dbFilePath)
+			cursor = connection.cursor()
+			cursor.execute('select id, name from App where rating>1 limit 1')
+			app = cursor.fetchone()
+			if app is None:
+				raise FileExistsError('cannot find an app with rating 1 for testing purpose.')
+
+			cursor.execute("update App set updateDate=2000-01-01, rating=1 where id=:id", {'id': app[0]})
+			connection.commit()
+			response = requests.get(websiteUrl + '/Api/Search?q=' + urllib.parse.quote(app[1]))
+			data = response.json()
+
+			newApp = next(a for a in data['apps'] if a['id'] == app[0])
+			assert newApp['rating'] > 1, "Search API is reading stale data."
+			return
+		except FileExistsError as e:
+			lastException = e
+		except sqlite3.OperationalError as e:
+			# maybe the database is empty. We need to load something
+			lastException = e
+
+		requests.get(websiteUrl + '/Api/Search?q=facebook')
+	pytest.skip(str(lastException))
+
+
 def test_searchPermissionFilter():
 	testUtils.startWebsite(callback_searchPermissionFilter)
 
@@ -88,6 +123,10 @@ def test_searchCategoryFilter():
 
 def test_searchResultUpperBound():
 	testUtils.startWebsite(callback_searchResultUpperBound)
+
+
+def test_notReadingStaleInfo():
+	testUtils.startWebsite(callback_notReadingStaleInfo)
 
 
 if __name__ == "__main__":
