@@ -8,7 +8,7 @@ import sys
 from django.db import connection
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.views.decorators.cache import cache_control
+from django.views.decorators.cache import cache_control, cache_page
 from json import loads as jsonLoads
 from typing import List, Dict, Union
 from urllib.parse import urlparse
@@ -250,6 +250,7 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 	return list(app_infos.values())
 
 
+@cache_page(60 * 60)
 def version(request):
 	try:
 		branch = subprocess.check_output(['git', 'describe','--dirty'], cwd=os.path.dirname(os.path.abspath(__file__)))
