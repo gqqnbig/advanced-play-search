@@ -188,7 +188,7 @@ where julianday('now')-?>=julianday(updateDate)'''
 
 	def searchApps(self, namePattern: str) -> List[AppItem]:
 		"""
-		Search apps which has specific patterns in their name column.
+		Search fresh apps which has specific patterns in their name column.
 
 		Search result is not guaranteed to be complete.
 
@@ -198,7 +198,8 @@ where julianday('now')-?>=julianday(updateDate)'''
 
 		appList = []
 
-		self.__cursor.execute("SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern Limit "+ str(MAX_SELECT), {"namePattern": '%' + namePattern + '%'})
+		self.__cursor.execute(f"SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern and updateDate>=date('now','-{self.__freshDays} days') Limit " + str(MAX_SELECT),
+							  {"namePattern": '%' + namePattern + '%'})
 		tmp = self.__cursor.fetchall()
 		for app in tmp:
 			appItem = AppItem()
@@ -273,4 +274,3 @@ where julianday('now')-?>=julianday(updateDate)'''
 		l = list(self.__allCategories.items())
 		usedCategories = {l[i][0]: l[i][1] for i in range(len(row)) if row[i]}
 		return usedCategories
-

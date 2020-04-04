@@ -101,7 +101,7 @@ def callback_notReadingStaleInfo(websiteUrl):
 			data = response.json()
 
 			newApp = next(a for a in data['apps'] if a['id'] == app[0])
-			assert newApp['rating'] > 1, "Search API is reading stale data."
+			assert newApp['rating'] > 1, f"The rating of {app[1]} should be > 1 because the old rating was added on 2000-01-01."
 			return
 		except FileExistsError as e:
 			lastException = e
@@ -130,5 +130,4 @@ def test_notReadingStaleInfo():
 
 
 if __name__ == "__main__":
-	test_searchPermissionFilter()
-	test_searchCategoryFilter()
+	test_notReadingStaleInfo()
