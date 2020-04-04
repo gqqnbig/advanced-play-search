@@ -240,7 +240,7 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 
 	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
 	print(f'total results: {len(app_ids)}')
-	print("There were %d ids not in our database. %d are now added" % (len(appsMissingInDatabase), len(appsMissingInDatabase) - len(scraper_fail_id)))
+	print("There were %d ids not in our database or stale. %d are now added" % (len(appsMissingInDatabase), len(appsMissingInDatabase) - len(scraper_fail_id)))
 
 	assert None not in app_infos.values(), "Every app id returned from Google should have an app detail."
 	return list(app_infos.values())

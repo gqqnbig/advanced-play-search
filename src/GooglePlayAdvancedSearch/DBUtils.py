@@ -136,7 +136,7 @@ updateDate=excluded.updateDate
 {''.join([',' + x + '=excluded.' + x for x in valuesToInsert])}
 {clearCategoriesSql}
 {clearPermissionsSql}
-where julianday('now')-julianday(updateDate)>=?'''
+where julianday('now')-?>=julianday(updateDate)'''
 		self.__cursor.execute(sql, (
 			item['id'],
 			item['name'],
@@ -218,7 +218,8 @@ where julianday('now')-julianday(updateDate)>=?'''
 		Find app id in database. If found, return the data, otherwise return null.
 		"""
 
-		self.__cursor.execute("SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE id=:id and isPartialInfo=0", {"id": id})
+		self.__cursor.execute(f"SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE id=:id and isPartialInfo=0 and updateDate>=date('now','-{self.__freshDays} days')",
+							  {"id": id})
 		tmp = self.__cursor.fetchone()
 		if tmp is None:
 			return None
