@@ -172,14 +172,13 @@
 					<div class="box">
 						<img :src="app.app_icon">
 						<div><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
-						<div>
 						<ul>
 							<li>rating: {{ app.rating }}</li>
 							<li>num_reviews: {{ app.num_reviews }}</li>
 							<li>install_fee: ${{ app.install_fee }}</li>
 							<li>inAppPurchases: {{ app.inAppPurchases }}</li>
 						</ul>
-				</div>
+					</div>
 				</li>
 			</ul>
 		</template>
