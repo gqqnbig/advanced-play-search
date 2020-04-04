@@ -46,7 +46,7 @@ class AppInfoSpider(scrapy.Spider):
 		appInfo['id'] = urlParse.parse_qs(urlParse.urlparse(response.url).query)['id'][0]
 
 		h1 = response.css("h1[itemprop=name]")
-		appInfo['appName'] = h1.css("*::text").get()
+		appInfo['name'] = h1.css("*::text").get()
 
 		parentBox = h1.xpath('../..')
 		c1 = parentBox.css("a[itemprop=genre]")
@@ -92,7 +92,7 @@ class AppInfoSpider(scrapy.Spider):
 
 	def permissions_errback(self, failure):
 		appInfo = failure.request.meta['appInfo']
-		self.logger.info(f'appName={appInfo.appName},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, categories={appInfo["categories"]},'
+		self.logger.info(f'name={appInfo.name},  rating={appInfo.rating}, inAppPurchases={appInfo.inAppPurchases}, categories={appInfo["categories"]},'
 			  f'containsAds={appInfo.containsAds}, number of reviews={appInfo["num_reviews"]}, permissions=Not available')
 
 	# print(failure)
@@ -133,7 +133,7 @@ class AppInfoSpider(scrapy.Spider):
 		if len(permissionData) > 3:
 			print('Unknown data in permission block.\npermissionData={}'.format(permissionData), file=sys.stderr)
 
-		self.logger.info(f'appName={appInfo["appName"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
+		self.logger.info(f'name={appInfo["name"]},  rating={appInfo["rating"]}, inAppPurchases={appInfo["inAppPurchases"]}, containsAds={appInfo["containsAds"]}, '
 		      f'categories={appInfo["categories"]}, number of reviews={appInfo["num_reviews"]},  install_fee={appInfo["install_fee"]},'
 			  f'app_icon={appInfo["app_icon"]}')
 		self.logger.info(f'permissions={permissions}')

@@ -60,7 +60,7 @@ def callback_searchResultUpperBound(websiteUrl):
 		for i in range(insertedCount):
 			app = AppItem()
 			app['id'] = 'GooglePlayAdvancedSearch.testApp' + str(i)
-			app['appName'] = 'matched keyword'
+			app['name'] = 'matched keyword'
 			app['rating'] = 0
 			app['install_fee'] = 0
 			app['app_icon'] = ''

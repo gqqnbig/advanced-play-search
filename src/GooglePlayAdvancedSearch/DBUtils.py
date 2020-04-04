@@ -139,7 +139,7 @@ updateDate=excluded.updateDate
 where julianday('now')-julianday(updateDate)>=?'''
 		self.__cursor.execute(sql, (
 			item['id'],
-			item['appName'],
+			item['name'],
 			item['rating'],
 			item['install_fee'],
 			item['app_icon'],
@@ -203,7 +203,7 @@ where julianday('now')-julianday(updateDate)>=?'''
 		for app in tmp:
 			appItem = AppItem()
 			appItem['id'] = app[0]
-			appItem['appName'] = app[1]
+			appItem['name'] = app[1]
 			appItem['rating'] = app[2]
 			appItem['num_reviews'] = app[3]
 			appItem['install_fee'] = app[4]
@@ -229,7 +229,7 @@ where julianday('now')-julianday(updateDate)>=?'''
 			assert categories is not None
 			appItem = AppItem()
 			appItem['id'] = id
-			appItem['appName'] = tmp[0]
+			appItem['name'] = tmp[0]
 			appItem['rating'] = tmp[1]
 			appItem['num_reviews'] = tmp[2]
 			appItem['install_fee'] = tmp[3]
