@@ -1,4 +1,4 @@
-# CS 188 Project - Google Play Advanced Search
+# Google Play Advanced Search
 
 ![](https://github.com/cs188-software-design-security-w20/project-random/workflows/Python%20application/badge.svg)
 
@@ -33,11 +33,20 @@ The project is best to run by Python 3.7. Ubuntu 19 comes with Python 3.7. If yo
 Browsers supporting URLSearchParams, Chrome >=49, Edge>=17, Firefix>=29.
 
 sqlite 3.24+. Check your version with 
-```
+```python
 import sqlite3
 sqlite3.sqlite_version
 ```
 You may follow **install sqlite 3.31** section in [.github/workflows/pythonapp.yml](.github/workflows/pythonapp.yml).
+
+## Deploy
+
+Make use of the sparse checkout feature since Git 2.25.
+```bash
+git clone  --no-checkout --depth 1 https://github.com/gqqnbig/advanced-play-search.git
+git sparse-checkout init --cone
+git sparse-checkout set src
+```
 
 ## Related Projects
 https://github.com/facundoolano/google-play-scraper/ It's a Node.js scraper to get data from Google Play. It's a Nodejs library and provides some RESTful API support. This project helped us understand some Google Play behavior.
