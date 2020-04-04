@@ -22,10 +22,11 @@ from . import Api
 
 
 urlpatterns = [
-    path(r'',view.index, name='homepage'),
-    path(r'search', view.keyword_search, name='keyword_search'),
-    path(r'Api/AppCount', Api.getAppCount, name='Api/AppCount'),
-    url(r'^Api/Permissions', Api.getPermissions, name='Api/Permissions'),
-    url(r'^Api/Categories', Api.getCategories, name='Api/Categories'),
-    url(r'^Api/Search', Api.search, name='Api/Search'),
+	path(r'', view.index, name='homepage'),
+	path(r'search', view.keyword_search, name='keyword_search'),
+	path(r'Api/AppCount', Api.getAppCount, name='Api/AppCount'),
+	url(r'^Api/Permissions', Api.getPermissions, name='Api/Permissions'),
+	url(r'^Api/Categories', Api.getCategories, name='Api/Categories'),
+	url(r'^Api/Search', Api.search, name='Api/Search'),
+	url(r'Api/Version', Api.version)
 ]
