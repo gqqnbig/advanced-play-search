@@ -219,7 +219,7 @@ where julianday('now')-?>=julianday(updateDate)'''
 		Find app id in database. If found, return the data, otherwise return null.
 		"""
 
-		self.__cursor.execute(f"SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE id=:id and isPartialInfo=0 and updateDate>=date('now','-{self.__freshDays} days')",
+		self.__cursor.execute(f"SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon,containsAds FROM App WHERE id=:id and isPartialInfo=0 and updateDate>=date('now','-{self.__freshDays} days')",
 							  {"id": id})
 		tmp = self.__cursor.fetchone()
 		if tmp is None:
@@ -237,6 +237,7 @@ where julianday('now')-?>=julianday(updateDate)'''
 			appItem['install_fee'] = tmp[3]
 			appItem['inAppPurchases'] = tmp[4]
 			appItem['app_icon'] = tmp[5]
+			appItem['containsAds'] = tmp[6]
 			appItem['permissions'] = permissions
 			appItem['categories'] = categories
 			return appItem
