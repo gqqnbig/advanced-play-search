@@ -10,7 +10,6 @@ from json import loads as jsonLoads
 # import local packages
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
 import GooglePlayAdvancedSearch.DBUtils
-from GooglePlayAdvancedSearch.Models import AppItem
 
 
 def index(request):
