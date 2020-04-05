@@ -64,6 +64,7 @@ def getClientIP(request) -> str:
 	return ip
 
 
+@cache_page(60 * 5)
 def search(request: django.http.HttpRequest):
 	keyword = request.GET['q']
 
@@ -138,6 +139,10 @@ def filterApps(appInfos, excludedCategoryIds, excludedPermissionIds, request):
 		appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCategoryIds) == False]
 	if request.GET.get('free') == 'true':
 		appInfos = [a for a in appInfos if a['install_fee'] == 0]
+	if request.GET.get('ap') == 'false':
+		appInfos = [a for a in appInfos if a['inAppPurchases'] == 0]
+	if request.GET.get('ad') == 'false':
+		appInfos = [a for a in appInfos if a['containsAds'] == 0]
 	return appInfos
 
 

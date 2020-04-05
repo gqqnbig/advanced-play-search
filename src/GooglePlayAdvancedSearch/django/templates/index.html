@@ -115,6 +115,10 @@
 			padding: 0;
 			list-style-type: none;
 		}
+
+		.good {
+			color:green;
+		}
 	</style>
 	{% if isSearch %}
 		<style>
@@ -205,10 +209,11 @@
 							<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
 							<div class="app-line2">
 								<div class="rating" :style=`width:${app.rating*16}px` :title="'Rating '+ app.rating.toFixed(1) "></div>
-								<div class="installFee">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
+								<div class="installFee" :class="{good:!app.install_fee&&!app.inAppPurchases}">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
 							</div>
-							<div :title="formatPermissions(app.permissions)">
-								{{ Object.keys(app.permissions).length }} permissions
+							<div>
+								<span :title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
+								<span :class="{good:!app.containsAds}">{{ app.containsAds?"has":"no" }} ads</span>
 							</div>
 							<ul>
 								<li>num_reviews: {{ app.num_reviews }}</li>
@@ -236,7 +241,7 @@
 		</div>
 		{% endverbatim %}
 		<ul>
-			<li><b>True free</b> means the app is free to install and doesn't have in-app purchase.</li>
+			<li><b class="good">True free</b> means the app is free to install and doesn't have in-app purchase.</li>
 			<li><b>Free</b> means the app is free to install and but has in-app purchase.</li>
 			<li><b>$x.x</b> means there is a install fee, but no in-app purchase.</li>
 			<li><b>$x.x+</b> means there is a install fee and in-app purchase.</li>
@@ -340,9 +345,9 @@
 				items: [],
 			},
 			sortType: currentQuery.get('sort') || '', // if currentQuery.get('sort')  is falsy, return empty string.
-			allowInAppPurchase: true,
-			freeInstall: false,
-			allowAds: true,
+			allowInAppPurchase: !currentQuery.get('ap'),
+			freeInstall: currentQuery.get('free') ||false,
+			allowAds: !currentQuery.get('ad'),
 		},
 		computed: {
 			queryString: function () {
