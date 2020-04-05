@@ -195,4 +195,6 @@ def version(request):
 	except:
 		branch = None
 
-	return HttpResponse(branch)
+	response = HttpResponse(branch)
+	response['Cache-Control'] = "public, max-age=3600"
+	return response
