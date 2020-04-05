@@ -63,4 +63,6 @@ rm /etc/systemd/system/play-search-staleAppRemover.service
 ## Related Projects
 https://github.com/facundoolano/google-play-scraper/ It's a Node.js scraper to get data from Google Play. It's a Nodejs library and provides some RESTful API support. This project helped us understand some Google Play behavior.
 
+https://www.appbrain.com
 
+https://playsearch.kaki87.net/ from https://android.stackexchange.com/a/202695/97993
