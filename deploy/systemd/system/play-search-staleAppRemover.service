@@ -1,0 +1,6 @@
+[Unit]
+Description=run play search stale app remover
+
+[Service]
+User=www-data
+ExecStart=/var/www/play-search/src/GooglePlayAdvancedSearch/maintenance/staleAppRemover.py
