@@ -169,9 +169,9 @@
 				</select>
 			</label>
 			<div class="advancedSearch-filters">
-				<label class="filter"><input type="checkbox" checked>Allow in-app purchase</label>
-				<label class="filter"><input type="checkbox" checked>Free install</label>
-				<label class="filter"><input type="checkbox" checked>Allow ads</label>
+				<label class="filter"><input type="checkbox" v-model="allowInAppPurchase">Allow in-app purchase</label>
+				<label class="filter"><input type="checkbox" v-model="freeInstall">Free install</label>
+				<label class="filter"><input type="checkbox" v-model="allowAds">Allow ads</label>
 
 				<div class="filter">
 					Rating >
@@ -332,6 +332,9 @@
 				items: [],
 			},
 			sortType: currentQuery.get('sort') || '', // if currentQuery.get('sort')  is falsy, return empty string.
+			allowInAppPurchase: false,
+			freeInstall: false,
+			allowAds: false,
 		},
 		computed: {
 			queryString: function () {
@@ -344,6 +347,12 @@
 					query += "&cids=" + excludedCIds;
 				if (this.sortType)
 					query += "&sort=" + this.sortType;
+				if (!this.allowInAppPurchase)
+					query += "&ap=false";
+				if (!this.allowAds)
+					query += "&ad=false";
+				if (this.freeInstall)
+					query += "&free=true";
 				return query;
 			}
 		}
@@ -364,8 +373,9 @@
 		res.sort((x, y) => x.name.localeCompare(y.name));
 		searchTool.categoryFilter.items = res;
 	});
-
-	{% if isSearch %}
+</script>
+{% if isSearch %}
+	<script>
 		const searchResult = new Vue({
 			el: "#searchResult",
 			data: {
@@ -399,9 +409,8 @@
 				}
 			});
 		});
-	{% endif %}
-
-</script>
+	</script>
+{% endif %}
 
 {% include_maybe "dynamic/footer.html" %}
 </body>
