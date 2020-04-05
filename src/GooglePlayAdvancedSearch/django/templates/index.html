@@ -177,7 +177,7 @@
 				<label class="filter"><input type="checkbox" v-model="freeInstall">Free install</label>
 				<label class="filter"><input type="checkbox" v-model="allowAds">Allow ads</label>
 
-				<div class="filter">
+				<label class="filter">
 					Rating >
 					<select style="width: 3em">
 						<option>0</option>
@@ -186,7 +186,7 @@
 						<option>3</option>
 						<option>4</option>
 					</select>
-				</div>
+				</label>
 				<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
 				<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
 			</div>
@@ -212,7 +212,7 @@
 								<div class="installFee" :class="{good:!app.install_fee&&!app.inAppPurchases}">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
 							</div>
 							<div>
-								<span :title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
+								<span v-if="app.permissions" :title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
 								<span :class="{good:!app.containsAds}">{{ app.containsAds?"has":"no" }} ads</span>
 							</div>
 							<ul>

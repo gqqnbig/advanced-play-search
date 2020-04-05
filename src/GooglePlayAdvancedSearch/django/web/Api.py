@@ -100,7 +100,8 @@ CREATE TABLE Search (
 		appInfos = filterApps(appInfos, excludedCIds, excludedPIds, request)
 
 		# If we cannot find 200 matches from our database, we try to find more matches from Google.
-		if len(appInfos) < 200:
+		if len(appInfos) < 200 and cache.get('searchkey-' + keyword) is None:
+			cache.set('searchkey-' + keyword, '', timeout=60 * 5)  # do not search the same keyword in 5 minutes
 			appInfos2 = apiHelper.searchGooglePlay(keyword)
 			if needCompleteInfo:
 				appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
