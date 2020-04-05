@@ -207,6 +207,9 @@
 								<div class="rating" :style=`width:${app.rating*16}px` :title="'Rating '+ app.rating.toFixed(1) "></div>
 								<div class="installFee">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
 							</div>
+							<div :title="formatPermissions(app.permissions)">
+								{{ Object.keys(app.permissions).length }} permissions
+							</div>
 							<ul>
 								<li>num_reviews: {{ app.num_reviews }}</li>
 							</ul>
@@ -395,6 +398,9 @@
 						return "$" + installFee + (allowInAppPurchase ? "+" : "");
 					else
 						return (allowInAppPurchase ? "" : "True ") + "free";
+				},
+				formatPermissions(permissions) {
+					return Object.values(permissions).join('\n');
 				}
 			}
 		});
