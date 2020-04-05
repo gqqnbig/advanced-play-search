@@ -36,7 +36,7 @@ def getPermissions(request):
 
 		# json doesn't allow integer keys. Remember to handle that in the html.
 		response = JsonResponse(permissions, safe=False)
-		response['Cache-Control'] = "private, max-age=" + str(len(permissions) * len(permissions))
+		response['Cache-Control'] = "public, max-age=" + str(len(permissions) * len(permissions))
 		return response
 
 
@@ -44,7 +44,7 @@ def getCategories(request):
 	with connection.cursor() as cursor:
 		categories = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
 		response = JsonResponse(categories, safe=False)
-		response['Cache-Control'] = "private, max-age=" + str(len(categories) * len(categories))
+		response['Cache-Control'] = "public, max-age=" + str(len(categories) * len(categories))
 		return response
 
 
@@ -96,7 +96,7 @@ def search(request):
 			appInfos = sorted(appInfos, key=lambda a: len(a['permissions']), reverse=True)
 
 		response = JsonResponse({'executionSeconds': time.time() - startTime, 'apps': [dict(a) for a in appInfos]}, safe=False)
-		response['Cache-Control'] = "private, max-age=3600"
+		response['Cache-Control'] = "public, max-age=3600"
 		return response
 	except requests.exceptions.SSLError as e:
 		# In getCompleteAppInfo, we throw our own SSLError where we don't have request object.
