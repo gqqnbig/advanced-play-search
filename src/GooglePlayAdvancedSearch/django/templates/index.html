@@ -118,9 +118,13 @@
 	</style>
 	{% if isSearch %}
 		<style>
-			.rating {
+			.app-line2 {
+				line-height: 16px;
 				font-size: 16px;
-				height: 16px;
+				display: flex;
+			}
+
+			.rating {
 				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>');
 				background-size: contain;
 			}
@@ -132,6 +136,12 @@
 				display: block;
 				height: 100%;
 				background-size: contain;
+			}
+
+
+			.installFee {
+				flex: 50%;
+				text-align: right;
 			}
 		</style>
 	{% endif %}
@@ -191,12 +201,14 @@
 				<ul class="appList">
 					<li v-for="app in apps">
 						<div class="box">
-							<img :src="app.app_icon">
-							<div><a :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
-							<div class="rating" :style="'width:' + app.rating * 16 + 'px'" :title="'Rating '+ app.rating.toFixed(1) "></div>
+							<a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`><img :src="app.app_icon"></a>
+							<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
+							<div class="app-line2">
+								<div class="rating" :style=`width:${app.rating*16}px` :title="'Rating '+ app.rating.toFixed(1) "></div>
+								<div class="installFee">{{ app.install_fee==0?"Free":("$"+app.install_fee) }}</div>
+							</div>
 							<ul>
 								<li>num_reviews: {{ app.num_reviews }}</li>
-								<li>install_fee: ${{ app.install_fee }}</li>
 								<li>inAppPurchases: {{ app.inAppPurchases }}</li>
 							</ul>
 						</div>
