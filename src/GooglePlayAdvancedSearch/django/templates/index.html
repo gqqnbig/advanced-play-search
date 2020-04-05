@@ -205,11 +205,10 @@
 							<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
 							<div class="app-line2">
 								<div class="rating" :style=`width:${app.rating*16}px` :title="'Rating '+ app.rating.toFixed(1) "></div>
-								<div class="installFee">{{ app.install_fee==0?"Free":("$"+app.install_fee) }}</div>
+								<div class="installFee">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
 							</div>
 							<ul>
 								<li>num_reviews: {{ app.num_reviews }}</li>
-								<li>inAppPurchases: {{ app.inAppPurchases }}</li>
 							</ul>
 						</div>
 					</li>
@@ -233,6 +232,12 @@
 			</div>
 		</div>
 		{% endverbatim %}
+		<ul>
+			<li><b>True free</b> means the app is free to install and doesn't have in-app purchase.</li>
+			<li><b>Free</b> means the app is free to install and but has in-app purchase.</li>
+			<li><b>$x.x</b> means there is a install fee, but no in-app purchase.</li>
+			<li><b>$x.x+</b> means there is a install fee and in-app purchase.</li>
+		</ul>
 	{% endif %}
 
 	<p>We have recorded <span id="appCount"></span> apps, and the number is increasing!</p>
@@ -332,9 +337,9 @@
 				items: [],
 			},
 			sortType: currentQuery.get('sort') || '', // if currentQuery.get('sort')  is falsy, return empty string.
-			allowInAppPurchase: false,
+			allowInAppPurchase: true,
 			freeInstall: false,
-			allowAds: false,
+			allowAds: true,
 		},
 		computed: {
 			queryString: function () {
@@ -383,6 +388,14 @@
 				errorMessage: undefined,
 				errorType: '',
 				executionSeconds: undefined,
+			},
+			methods: {
+				getPriceText(installFee, allowInAppPurchase) {
+					if (installFee > 0)
+						return "$" + installFee + (allowInAppPurchase ? "+" : "");
+					else
+						return (allowInAppPurchase ? "" : "True ") + "free";
+				}
 			}
 		});
 
