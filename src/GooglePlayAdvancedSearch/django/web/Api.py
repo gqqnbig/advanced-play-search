@@ -195,27 +195,27 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 	# search database second pass
 	# for first-pass non-found apps, pass into scraper
 	appsMissingInDatabase = [k for k, v in app_infos.items() if v is None]
+	if len(appsMissingInDatabase) > 0:
+		code2 = os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+		if hasattr(os, 'WEXITSTATUS') and os.WEXITSTATUS(code2) == GooglePlayAdvancedSearch.Errors.sslErrorCode \
+				or not hasattr(os, 'WEXITSTATUS') and code2 == GooglePlayAdvancedSearch.Errors.sslErrorCode:
+			raise requests.exceptions.SSLError()
 
-	code2 = os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
-	if hasattr(os, 'WEXITSTATUS') and os.WEXITSTATUS(code2) == GooglePlayAdvancedSearch.Errors.sslErrorCode \
-		or not hasattr(os, 'WEXITSTATUS') and code2 == GooglePlayAdvancedSearch.Errors.sslErrorCode:
-		raise requests.exceptions.SSLError()
+		appAccessor = AppAccessor(1)
+		scraper_fail_id = []
+		for id in appsMissingInDatabase:
+			tmp = appAccessor.getCompleteAppInfo(id)
+			if tmp:
+				app_infos[id] = tmp
+			else:
+				assert id in app_infos
+				app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
+				scraper_fail_id.append(id)
 
-	appAccessor = AppAccessor(1)
-	scraper_fail_id = []
-	for id in appsMissingInDatabase:
-		tmp = appAccessor.getCompleteAppInfo(id)
-		if tmp:
-			app_infos[id] = tmp
-		else:
-			assert id in app_infos
-			app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
-			scraper_fail_id.append(id)
+		print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
+		print("There were %d ids not in our database or stale. %d are now added" % (len(appsMissingInDatabase), len(appsMissingInDatabase) - len(scraper_fail_id)))
 
-	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
 	print(f'total results: {len(app_ids)}')
-	print("There were %d ids not in our database or stale. %d are now added" % (len(appsMissingInDatabase), len(appsMissingInDatabase) - len(scraper_fail_id)))
-
 	assert None not in app_infos.values(), "Every app id returned from Google should have an app detail."
 	return list(app_infos.values())
 
