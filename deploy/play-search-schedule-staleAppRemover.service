@@ -1,0 +1,10 @@
+[Unit]
+Description=Runs staleAppRemover every day
+
+[Timer]
+# 每天凌晨两点执行，具体请参考 https://www.freedesktop.org/software/systemd/man/systemd.timer.html。
+OnCalendar=*-*-* 02:00:00
+Unit=play-search-staleAppRemover.service
+
+[Install]
+WantedBy=multi-user.target
