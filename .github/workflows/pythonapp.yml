@@ -15,6 +15,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: check python executable
+      run: |
+          for f in $(find . -name "*.py")
+          do
+              if [[ $(head -1 $f) == "#!"* ]]; then
+                  if [[ -x $f ]]; then
+                      echo "$f is executable."
+                  else
+                      echo "$f is executable, but doesn't have x bit."
+                      exit 1
+                  fi
+              fi
+          done
+
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
