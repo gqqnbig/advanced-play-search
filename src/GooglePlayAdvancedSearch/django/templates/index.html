@@ -24,18 +24,39 @@
 			flex-wrap: wrap;
 		}
 
-		.advancedSearch-filters .filter:not(:last-child) {
-			padding-right: 1em;
-			border-right: 2px darkgreen dotted;
+
+		@media (max-width: 40em) {
+			.advancedSearch {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.advancedSearch-sortingTool {
+				order: 2;
+			}
+
+			.filter {
+				width: 100%;
+				display: block;
+				margin-bottom: 0.5rem;
+			}
 		}
 
-		.advancedSearch-filters .filter:not(:first-child) {
-			padding-left: 1em;
-		}
+		@media (min-width: 40.001em) {
+			.advancedSearch-sortingTool {
+				float: right;
+				margin-top: 1px;
+			}
 
-		.advancedSearch-sortingTool {
-			float: right;
-			margin-top: 1px;
+
+			.advancedSearch-filters .filter:not(:last-child) {
+				padding-right: 1em;
+				border-right: 2px darkgreen dotted;
+			}
+
+			.advancedSearch-filters .filter:not(:first-child) {
+				padding-left: 1em;
+			}
 		}
 
 		.permissionFilter .itemList {
@@ -93,15 +114,6 @@
 			}
 		}
 
-		.box {
-			width: 12em;
-			box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-			margin: 1em;
-		}
-
-		.box img {
-			width: 100%;
-		}
 
 		h1 {
 			font-size: 360%;
@@ -122,13 +134,42 @@
 	</style>
 	{% if isSearch %}
 		<style>
-			.app-line2 {
-				line-height: 16px;
+			.box {
+				box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+				margin: 1em 0;
 				font-size: 16px;
-				display: flex;
 			}
 
+
+			.box img {
+				width: 100%;
+				max-width: 196px;
+			}
+
+			@media (min-width: 40.001em) {
+				.box {
+					width: 12em;
+					margin: 1em;
+				}
+
+				.rating {
+					float: left;
+    				margin-top: 4px;
+				}
+
+				.installFee {
+					text-align: right;
+				}
+			}
+
+			.app-icon {
+				display: block; /* use to fix the height of <a> */
+			}
+
+
+
 			.rating {
+				height: 16px;
 				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>');
 				background-size: contain;
 			}
@@ -143,9 +184,22 @@
 			}
 
 
-			.installFee {
-				flex: 50%;
-				text-align: right;
+			@media (max-width: 40em) {
+				.box {
+					display: grid;
+					grid-template-columns: auto auto;
+					grid-template-rows: repeat(5, auto);
+					width: 100%;
+				}
+
+				.app-icon {
+					grid-row-start: 1;
+					grid-row-end: 6;
+				}
+
+				.app-line3 {
+					clear:both;
+				}
 			}
 		</style>
 	{% endif %}
@@ -158,7 +212,7 @@
 	<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
 		<div id="searchBox" class="text-center">
 			<input type="text" style="width:20em;" placeholder="Search..." name="keyword" v-model='keyword'>
-			<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}">Search</a>
+			<a :href=`/search?${queryString}` class="btn btn-primary" :class="{disabled: !isSearchButtonEnabled}" style="margin: 1em 0.5em;">Search</a>
 		</div>
 
 		<div class="advancedSearch">
@@ -203,22 +257,18 @@
 			<template v-if="apps">
 				<div>{{ apps.length }} results ({{ executionSeconds.toFixed(2) }} seconds)</div>
 				<ul class="appList">
-					<li v-for="app in apps">
-						<div class="box">
-							<a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`><img :src="app.app_icon"></a>
-							<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
-							<div class="app-line2">
-								<div class="rating" :style=`width:${app.rating*16}px` :title="'Rating '+ app.rating.toFixed(1) "></div>
-								<div class="installFee" :class="{good:!app.install_fee&&!app.inAppPurchases}">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
-							</div>
-							<div>
-								<span v-if="app.permissions" :title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
-								<span :class="{good:!app.containsAds}">{{ app.containsAds?"has":"no" }} ads</span>
-							</div>
-							<ul>
-								<li>num_reviews: {{ app.num_reviews }}</li>
-							</ul>
+					<li v-for="app in apps" class="box">
+						<a class="app-icon" target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`><img :src="app.app_icon"></a>
+						<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
+						<div class="rating" :style=`width:${app.rating*16}px` :title="'Rating '+ app.rating.toFixed(1) "></div>
+						<div class="installFee" :class="{good:!app.install_fee&&!app.inAppPurchases}">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
+						<div class="app-line3">
+							<span v-if="app.permissions" :title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
+							<span :class="{good:!app.containsAds}">{{ app.containsAds?"has":"no" }} ads</span>
 						</div>
+						<ul>
+							<li>num_reviews: {{ app.num_reviews }}</li>
+						</ul>
 					</li>
 				</ul>
 			</template>
