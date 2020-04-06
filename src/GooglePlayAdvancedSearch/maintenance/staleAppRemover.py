@@ -2,7 +2,6 @@
 import os
 import sqlite3
 
-import GooglePlayAdvancedSearch.DBUtils
 
 # def clearUpBooleanColumns(cursor, columnNames):
 # 	for pid, permission in permissions:
