@@ -1,8 +1,8 @@
 # Google Play Advanced Search
 
-![](https://github.com/cs188-software-design-security-w20/project-random/workflows/Python%20application/badge.svg)
+![](https://github.com/gqqnbig/advanced-play-search/workflows/Python%20application/badge.svg)
 
-The application is available at https://beta.gqqnbig.me/, hosted on Google Cloud. We do not report DDOS attacks to us to Google, but Google may already have detected it.
+The application is available at http://play.gqqnbig.me/.
 
 Can't run the application? Check how [the application runs on GitHub Action Server](/.github/workflows/pythonapp.yml).
 
