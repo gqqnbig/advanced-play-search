@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+import django
 import requests
 import sys
 
@@ -48,8 +49,40 @@ def getCategories(request):
 		return response
 
 
-def search(request):
+def logSearch(cursor, keyword, request):
+	cursor.execute('insert into Search(keyword, url, ip) values(:keyword, :url,:ip)', {'keyword': keyword, 'url': request.GET.urlencode(), 'ip': getClientIP(request)})
+
+
+def getClientIP(request):
+	x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+	if x_forwarded_for:
+		ip = x_forwarded_for.split(',')[-1].strip()
+	else:
+		ip = request.META.get('REMOTE_ADDR')
+	return ip
+
+
+def search(request: django.http.HttpRequest):
 	keyword = request.GET['q']
+
+
+	with connection.cursor() as cursor:
+		try:
+			logSearch(cursor,keyword,request)
+		except django.db.utils.OperationalError as e:
+			cursor.execute('''
+CREATE TABLE Search (
+	keyword	TEXT NOT NULL,
+	url	TEXT NOT NULL,
+	ip TEXT NOT NULL,
+	date	TEXT NOT NULL DEFAULT (datetime('now'))
+)''')
+			try:
+				logSearch(cursor,keyword,request)
+			except Exception as e:
+				print(str(e))
+
+
 	excludedPIds = [int(n) for n in request.GET.get('pids', '').split(',') if n != '']
 
 	excludedCIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
