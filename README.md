@@ -47,7 +47,17 @@ git clone  --no-checkout --depth 1 https://github.com/gqqnbig/advanced-play-sear
 git sparse-checkout init --cone
 git sparse-checkout add src
 git sparse-checkout add deploy
+
+
+ln -s /var/www/play-search/deploy/systemd/system/play-search-staleAppRemover.service /etc/systemd/system/play-search-staleAppRemover.service
+
 ```
+
+## Uninstall
+```
+rm /etc/systemd/system/play-search-staleAppRemover.service
+```
+
 
 ## Related Projects
 https://github.com/facundoolano/google-play-scraper/ It's a Node.js scraper to get data from Google Play. It's a Nodejs library and provides some RESTful API support. This project helped us understand some Google Play behavior.
