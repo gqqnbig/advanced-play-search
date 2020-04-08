@@ -1,3 +1,4 @@
+import datetime
 import os
 import subprocess
 
@@ -11,6 +12,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_control, cache_page
 from django.conf import settings
+from types import SimpleNamespace
 from typing import List, Dict
 from urllib.parse import urlparse
 
@@ -64,10 +66,33 @@ def getClientIP(request) -> str:
 	return ip
 
 
+def limitRate(ip):
+	"""
+	No more than 3 times every 30 seconds.
+	"""
+	d = cache.get('RateControl-' + ip)
+	if d:
+		# No more than 3 times every 30 seconds.
+		if d.count >= 3 and d.count / (datetime.datetime.now() - d.time).total_seconds() > 0.1:
+			return True
+		else:
+			d.count += 1
+			cache.set('RateControl-' + ip, d, timeout=60)
+	else:
+		d = SimpleNamespace()
+		d.count = 1
+		d.time = datetime.datetime.now()
+		cache.set('RateControl-' + ip, d, timeout=60)
+	return False
+
+
 @cache_page(60 * 5)
 def search(request: django.http.HttpRequest):
-	keyword = request.GET['q']
+	# If the user loads Google Analysis, let Nginx handle rating limit.
+	if not request.COOKIES.get('_gaload') and limitRate(getClientIP(request)):
+		return JsonResponse({'error': 'Rate limit reached. Wait 60 seconds.'})
 
+	keyword = request.GET['q']
 	with connection.cursor() as cursor:
 		try:
 			logSearch(cursor, keyword, request)
