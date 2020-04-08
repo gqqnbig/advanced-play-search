@@ -221,7 +221,7 @@
 		Google Play Advanced Search
 		<span id="versionInfo">
 			<script>
-				fetch('/Api/Version').then(r => r.text()).then(data => {
+				fetch('/Api/Version').then(r => r.ok ? r.text() : "").then(data => {
 					document.getElementById('versionInfo').innerText = data;
 				});
 			</script>
