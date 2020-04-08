@@ -256,7 +256,7 @@ def recentSearches(request: django.http.HttpRequest):
 	try:
 		if not json:
 			with connection.cursor() as cursor:
-				cursor.execute('select keyword, query, date, ip from Search order by date limit 10')
+				cursor.execute('select keyword, query, date, ip from Search order by date desc limit 10')
 				data = cursor.fetchall()
 				json = [buildRecentSearchResult(item, showIp) for item in data]
 	except django.db.utils.OperationalError as e:

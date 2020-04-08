@@ -113,6 +113,25 @@ def callback_notReadingStaleInfo(websiteUrl):
 	pytest.skip(str(lastException))
 
 
+def callback_recentSearches(websiteUrl):
+	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+	connection = sqlite3.connect(dbFilePath)
+	cursor = connection.cursor()
+
+	try:
+		cursor.execute("insert into Search(keyword, query, ip ,date) values('recentSearches-test1', '', 'pytest', datetime('now'))")
+		for _ in range(10):
+			cursor.execute("insert into Search(keyword, query, ip ,date) values('recentSearches-test2', '', 'pytest', '2010-01-01')")
+		connection.commit()
+
+		response = requests.get(websiteUrl + '/Api/RecentSearches')
+		data = response.json()
+		assert data[0]['keyword'] == 'recentSearches-test1', "Most recent search is recentSearches-test1, but the API does not return it."
+	finally:
+		cursor.execute("delete from Search where ip='pytest'")
+		connection.commit()
+
+
 def test_searchPermissionFilter():
 	testUtils.startWebsite(callback_searchPermissionFilter)
 
@@ -129,5 +148,9 @@ def test_notReadingStaleInfo():
 	testUtils.startWebsite(callback_notReadingStaleInfo)
 
 
+def test_recentSearches():
+	testUtils.startWebsite(callback_recentSearches)
+
+
 if __name__ == "__main__":
-	test_notReadingStaleInfo()
+	test_recentSearches()
