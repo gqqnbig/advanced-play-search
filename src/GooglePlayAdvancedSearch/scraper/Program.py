@@ -147,7 +147,7 @@ class AppInfoSpider(scrapy.Spider):
 		check https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#scrapy.downloadermiddlewares.DownloaderMiddleware.process_exception
 		"""
 		global exitCode
-		if any(reason.type is OpenSSL.SSL.Error for reason in failure.value.reasons):
+		if hasattr(failure.value,'reasons') and any(reason.type is OpenSSL.SSL.Error for reason in failure.value.reasons):
 			message = 'SSL error on ' + failure.request.url
 			if sys.platform == 'win32' and not os.environ.get('SSL_CERT_FILE'):
 				message += '''\nOn Windows, you may have to set environment variable "SSL_CERT_FILE" to the location of root certificates bundle.
