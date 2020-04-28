@@ -249,9 +249,12 @@ def recentSearches(request: django.http.HttpRequest):
 			showIp = True
 
 	isSensitive = showIp
-	json = []
-	if isSensitive == False:
-		json = cache.get('recentSearches', [])
+
+	if showIp:
+		json = None
+	else:
+		# If we don't need to show IP, we can try to retrieve it from cache.
+		json = cache.get('recentSearches')
 
 	try:
 		if not json:
@@ -261,6 +264,10 @@ def recentSearches(request: django.http.HttpRequest):
 				json = [buildRecentSearchResult(item, showIp) for item in data]
 	except django.db.utils.OperationalError as e:
 		print(str(e))
+
+	# In case json is None, change it to empty list. In this way, cache knows there is an object, and we don't have handle situation of None.
+	if json is None:
+		json = []
 
 	if isSensitive == False:
 		cache.set('recentSearches', json, 60)  # 60 seconds
