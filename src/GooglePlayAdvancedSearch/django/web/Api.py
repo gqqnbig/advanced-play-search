@@ -1,14 +1,14 @@
 import os
-import re
+import subprocess
+
 import requests
 import sys
 
 from django.db import connection
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.views.decorators.cache import cache_control
-from json import loads as jsonLoads
-from typing import List, Dict, Union
+from django.views.decorators.cache import cache_control, cache_page
+from typing import List, Dict
 from urllib.parse import urlparse
 
 # import local packages
@@ -17,6 +17,7 @@ from GooglePlayAdvancedSearch.DBUtils import AppAccessor
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
 import GooglePlayAdvancedSearch.DBUtils
+import GooglePlayAdvancedSearch.django.web.apiHelper as apiHelper
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
@@ -70,7 +71,7 @@ def search(request):
 
 		# If we cannot find 200 matches from our database, we try to find more matches from Google.
 		if len(appInfos) < 200:
-			appInfos2 = searchGooglePlay(keyword)
+			appInfos2 = apiHelper.searchGooglePlay(keyword)
 			if needCompleteInfo:
 				appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
 			if len(excludedPIds):
@@ -123,63 +124,6 @@ def determineAppInfoCompleteness(request):
 
 def isExcluded(d: Dict, ids: List[int]):
 	return any(excludedId in d for excludedId in ids)
-
-
-def searchGooglePlay(keyword) -> List[AppItem]:
-	url = 'https://play.google.com/store/search?q=%s&c=apps' % keyword
-	page = requests.get(url, verify=True)
-
-	# "key: 'ds:3'" is not reliable.
-	matches = re.findall(r'<script.*?>AF_initDataCallback\(\s*{.*?data:function\(\){return\s+(\[.+?\])\s*}\s*}\s*\)\s*;\s*</script>', page.text, flags=re.DOTALL)
-	data = jsonLoads(matches[-1])
-	data = data[0][1]
-
-	if not data:
-		print("We couldn't find anything for your search.")
-		return []
-
-	appInfos = []
-
-	appSaver = GooglePlayAdvancedSearch.DBUtils.AppAccessor(1)
-	while True:
-		appsData = data[0][0][0]
-		print(f'Load {len(appsData)} apps.')
-		for app in appsData:
-			appId = app[12][0]
-			if any(a['id'] == appId for a in appInfos):
-				print(f'Duplicate app id {appId}.')
-				continue
-
-			appInfo = AppItem()
-			appInfo['name'] = app[2]
-			appInfo['id'] = appId
-			appInfo['rating'] = app[6][0][2][1][1]
-			appInfo['app_icon'] = app[1][1][0][3][2]
-			if app[7]:
-				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', app[7][0][3][2][1][0][2])[0])
-			else:
-				appInfo['install_fee'] = 0
-			print(appInfo['id'])
-
-			appSaver.insertOrUpdateApp(appInfo)
-
-			appInfos.append(appInfo)
-
-		if data[0][0][-2]:
-			pageToken = data[0][0][-2][1]
-		else:
-			break
-
-		print('continue searching')
-		response = requests.post(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=qnKhOb&hl=en',
-								 headers={"Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"},
-								 data={'f.req': r'[[["qnKhOb","[[null,[[10,[10,50]],true,null,[96,27,4,8,57,30,110,79,11,16,49,1,3,9,12,104,55,56,51,10,34,31,77],[null,null,null,[[[[7,31],[[1,52,43,112,92,58,69,31,19,96]]]]]]],null,\"'
-												+ pageToken
-												+ r'\"]]",null,"generic"]]]'},
-								 verify=True)
-		package = jsonLoads(response.text[response.text.index('\n') + 1:])
-		data = jsonLoads(package[0][2])
-	return appInfos
 
 
 def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
@@ -241,3 +185,16 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 
 	assert None not in app_infos.values(), "Every app id returned from Google should have an app detail."
 	return list(app_infos.values())
+
+
+@cache_page(60 * 60)
+def version(request):
+	try:
+		branch = subprocess.check_output(['git', 'describe','--dirty'], cwd=os.path.dirname(os.path.abspath(__file__)))
+		branch = branch.decode("utf-8").strip()
+	except:
+		branch = None
+
+	response = HttpResponse(branch)
+	response['Cache-Control'] = "public, max-age=3600"
+	return response

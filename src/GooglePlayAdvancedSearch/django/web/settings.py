@@ -29,8 +29,9 @@ INTERNAL_IPS = ["127.0.0.1"]
 # Application definition
 
 CACHES = {
-	# disable cache
-	'default': {}
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
 }
 
 INSTALLED_APPS = [
