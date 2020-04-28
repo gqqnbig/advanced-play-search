@@ -41,6 +41,11 @@ def callback_testApiErrorNotLeaking(websiteUrl):
 		# driver.save_screenshot('test_ApiErrorNotLeaking.png')
 		assert '&lt;/html&gt;' not in driver.page_source, 'Even if API returns 500 error code, the home page should not show the raw response.'
 
+		driver.get(websiteUrl+'/search?q=')
+		time.sleep(2)
+		assert '&lt;/html&gt;' not in driver.page_source, 'Even if API returns 500 error code, the search page should not show the raw response.'
+
+
 
 def test_ApiErrorNotLeaking():
 	apiFilePath= os.path.join(testFolder, '../django/web/Api.py')
