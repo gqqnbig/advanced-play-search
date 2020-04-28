@@ -62,7 +62,7 @@ jobs:
         options = Options()
         options.headless = True
         with Firefox(options=options) as driver:
-        	driver.get('https://www.google.com')
+            driver.get('https://www.google.com')
             print(driver.page_source[:100])
 
         HEREDOC
