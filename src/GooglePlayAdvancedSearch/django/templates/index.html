@@ -204,7 +204,12 @@
 	{% endverbatim %}
 {% endif %}
 
-<p>We have recorded <span id="appCount"></span> apps, and it's increasing!</p>
+<p>We have recorded <span id="appCount"></span> apps, and the number is increasing!</p>
+<script>
+	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.ok ? response.text() : "").then(text => {
+		document.getElementById("appCount").innerText = text;
+	});
+</script>
 
 <footer style="text-align: center">
 	<div>
@@ -221,7 +226,7 @@
 		Google Play Advanced Search
 		<span id="versionInfo">
 			<script>
-				fetch('/Api/Version').then(r => r.text()).then(data => {
+				fetch('/Api/Version').then(r => r.ok ? r.text() : "").then(data => {
 					document.getElementById('versionInfo').innerText = data;
 				});
 			</script>
@@ -235,13 +240,6 @@
 </footer>
 
 {% include "vue/collapsible-searchable-list.html" %}
-
-<script>
-	fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.text()).then(text => {
-			document.getElementById("appCount").innerText = text;
-		}
-	);
-</script>
 
 <script>
 	const currentQuery = new URLSearchParams(location.search);

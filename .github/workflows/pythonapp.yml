@@ -45,7 +45,27 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: install Firefox and Selenium
+      run: |
+        sudo apt list -a firefox
+        # try lowest version of Firefox because its size is small, reduce download time.
+        sudo apt-get -y install 'firefox=74.0*' ||
+        sudo apt-get -y install 'firefox=75.0*' ||
+        sudo apt-get -y install firefox
+        # v0.26.0 requires Firefox>=60
+        wget -qO- https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz | tar xvz
+        sudo mv geckodriver /usr/local/bin
+        python <<HEREDOC
+        from selenium.webdriver import Firefox
+        from selenium.webdriver.firefox.options import Options
 
+        options = Options()
+        options.headless = True
+        with Firefox(options=options) as driver:
+            driver.get('https://www.google.com')
+            print(driver.page_source[:100])
+
+        HEREDOC
     - name: install sqlite 3.31
       run: |
           curl -O  https://www.sqlite.org/2020/sqlite-autoconf-3310100.tar.gz
@@ -58,6 +78,5 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pip install pytest
         export LD_LIBRARY_PATH="/usr/local/lib"
         pytest --rootdir=src/GooglePlayAdvancedSearch/tests --tb=short
