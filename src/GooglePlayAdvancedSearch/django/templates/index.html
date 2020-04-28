@@ -154,7 +154,6 @@
 </head>
 <body>
 
-{% verbatim %}
 <div class="jumbotron">
 	<h1 class="text-center"><a href="/" style="text-decoration: none;">Google Play Advanced Search</a></h1>
 	<div id="searchTool" v-on:change="isSearchButtonEnabled=true">
@@ -194,10 +193,9 @@
 			</div>
 		</div>
 	</div>
-	<script src="static/js/initilize-search-tool.js"></script>
+	{% include "vue/collapsible-searchable-list.html" %}
+	<script src="/static/js/initilize-search-tool.js"></script>
 </div>
-
-{% endverbatim %}
 
 <div style="padding: 0 1em">
 	{% if isSearch %}
@@ -313,7 +311,7 @@
 			<li><b>$x.x</b> means there is a install fee, but no in-app purchase.</li>
 			<li><b>$x.x+</b> means there is a install fee and in-app purchase.</li>
 		</ul>
-		<script src="static/js/search-result.js"></script>
+		<script src="/static/js/search-result.js"></script>
 	{% endif %}
 
 	<p>We have recorded <span id="appCount"></span> apps, and the number is increasing!</p>
@@ -395,7 +393,6 @@
 	</div>
 </footer>
 
-{% include "vue/collapsible-searchable-list.html" %}
 
 {% include_maybe "dynamic/footer.html" %}
 </body>
