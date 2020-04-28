@@ -17,6 +17,8 @@ def index(request):
 	with connection.cursor() as cursor:
 		context['categories'] = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
 		context['permissions'] = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
+
+	context['ShowRecentSearch'] = True
 	return render(request, 'index.html', context)
 
 

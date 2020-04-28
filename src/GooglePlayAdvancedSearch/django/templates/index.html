@@ -211,6 +211,47 @@
 	});
 </script>
 
+{% if ShowRecentSearch %}
+	<style>
+		#recentSearches {
+			display: flex;
+			flex-wrap: wrap;
+			margin-left: 0;
+			padding: 0;
+			list-style-type: none;
+		}
+
+		#recentSearches>li {
+			margin-right: 2em;
+		}
+
+		#recentSearches > li a:empty:before {
+			content: "(Show Top Apps)"
+		}
+	</style>
+	<div class="alert alert-primary">
+		<p>This application is experimental. In order to track how people are using it, help developers improve it, and prevent misuse, the application will track recent searches.</p>
+		<ul id="recentSearches">
+			<li v-for="item in searches">
+				[[ new Date(item.date +" UTC").toLocaleString() ]]: <a :href=`/search?${item.query}`>[[ item.keyword ]]</a>
+			</li>
+		</ul>
+		<script>
+			new Vue({
+				el: "#recentSearches",
+				delimiters: ["[[", "]]"],
+				data: {
+					searches: undefined
+				},
+				mounted: function () {
+					const v = this;
+					fetch('{% url 'Api/RecentSearches' %}').then(r => r.json()).then(data => v.searches = data);
+				}
+			})
+		</script>
+	</div>
+{% endif %}
+
 <footer style="text-align: center">
 	<div>
 		<div>

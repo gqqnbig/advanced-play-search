@@ -1,13 +1,16 @@
 import os
 import subprocess
 
+import django
 import requests
 import sys
 
+from django.core.cache import cache
 from django.db import connection
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_control, cache_page
+from django.conf import settings
 from typing import List, Dict
 from urllib.parse import urlparse
 
@@ -48,8 +51,38 @@ def getCategories(request):
 		return response
 
 
-def search(request):
+def logSearch(cursor, keyword, request):
+	cursor.execute('insert into Search(keyword, query, ip) values(:keyword, :query,:ip)', {'keyword': keyword, 'query': request.GET.urlencode(), 'ip': getClientIP(request)})
+
+
+def getClientIP(request) -> str:
+	x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+	if x_forwarded_for:
+		ip = x_forwarded_for.split(',')[-1].strip()
+	else:
+		ip = request.META.get('REMOTE_ADDR')
+	return ip
+
+
+def search(request: django.http.HttpRequest):
 	keyword = request.GET['q']
+
+	with connection.cursor() as cursor:
+		try:
+			logSearch(cursor, keyword, request)
+		except django.db.utils.OperationalError as e:
+			cursor.execute('''
+CREATE TABLE Search (
+	keyword	TEXT NOT NULL,
+	query	TEXT NOT NULL,
+	ip TEXT NOT NULL,
+	date	TEXT NOT NULL DEFAULT (datetime('now'))
+)''')
+			try:
+				logSearch(cursor, keyword, request)
+			except Exception as e:
+				print(str(e))
+
 	excludedPIds = [int(n) for n in request.GET.get('pids', '').split(',') if n != '']
 
 	excludedCIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
@@ -190,11 +223,57 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 @cache_page(60 * 60)
 def version(request):
 	try:
-		branch = subprocess.check_output(['git', 'describe','--dirty'], cwd=os.path.dirname(os.path.abspath(__file__)))
+		branch = subprocess.check_output(['git', 'describe', '--dirty'], cwd=os.path.dirname(os.path.abspath(__file__)))
 		branch = branch.decode("utf-8").strip()
 	except:
 		branch = None
 
 	response = HttpResponse(branch)
 	response['Cache-Control'] = "public, max-age=3600"
+	return response
+
+
+def buildRecentSearchResult(item, showIp):
+	d = {'keyword': item[0], 'query': item[1], 'date': item[2]}
+	if showIp:
+		d['ip'] = item[3]
+	return d
+
+
+def recentSearches(request: django.http.HttpRequest):
+	ip = getClientIP(request)
+
+	showIp = False
+	if any((k for k in request.GET.keys() if k.lower() == "ShowIP".lower())):
+		if ip == "127.0.0.1" or (hasattr(settings, 'ADMIN_IP') and settings.ADMIN_IP is not None and ip.startswith(settings.ADMIN_IP)):
+			showIp = True
+
+	isSensitive = showIp
+
+	if showIp:
+		json = None
+	else:
+		# If we don't need to show IP, we can try to retrieve it from cache.
+		json = cache.get('recentSearches')
+
+	try:
+		if not json:
+			with connection.cursor() as cursor:
+				cursor.execute('select keyword, query, date, ip from Search order by date desc limit 10')
+				data = cursor.fetchall()
+				json = [buildRecentSearchResult(item, showIp) for item in data]
+	except django.db.utils.OperationalError as e:
+		print(str(e))
+
+	# In case json is None, change it to empty list. In this way, cache knows there is an object, and we don't have handle situation of None.
+	if json is None:
+		json = []
+
+	if isSensitive == False:
+		cache.set('recentSearches', json, 60)  # 60 seconds
+
+	response = JsonResponse(json, safe=False, json_dumps_params=({'indent': '\t'} if isSensitive else None))
+
+	if isSensitive:
+		response['Cache-Control'] = "no-store"
 	return response

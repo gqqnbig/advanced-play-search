@@ -28,5 +28,6 @@ urlpatterns = [
 	url(r'^Api/Permissions', Api.getPermissions, name='Api/Permissions'),
 	url(r'^Api/Categories', Api.getCategories, name='Api/Categories'),
 	url(r'^Api/Search', Api.search, name='Api/Search'),
-	url(r'Api/Version', Api.version)
+	url(r'Api/Version', Api.version),
+	path(r'Api/RecentSearches',Api.recentSearches, name='Api/RecentSearches'),
 ]
