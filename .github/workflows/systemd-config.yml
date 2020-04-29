@@ -1,0 +1,41 @@
+name: systemd configurations
+
+on:
+  pull_request:
+    branches:
+    - master
+  push:
+    branches:
+    - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        path: play
+    - name: Checkout systemd
+      uses: actions/checkout@v2
+        with:
+          path: systemd
+          repository: systemd/systemd
+          ref: v245
+    - name: Build systemd
+      run: |
+        cd ${GITHUB_WORKSPACE}/systemd
+        sudo apt-get install --yes libc-bin libcap-dev libmount-dev pkg-config gperf python3 ninja-build
+
+        sudo apt-get install --yes python3 python3-pip python3-setuptools python3-wheel ninja-build m4
+        sudo pip3 install meson
+        meson build/ && ninja -C build
+    - name: Prepare dependencies
+      run: |
+        sudo pip3 install uwsgi
+
+    - name: Verify service files
+      run: |
+        cd ${GITHUB_WORKSPACE}/systemd/build
+        ./systemd-analyze --user verify ${GITHUB_WORKSPACE}/play/deploy/systemd/system/uwsgi-play-search.service
+
+
