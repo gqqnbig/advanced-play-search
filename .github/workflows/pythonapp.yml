@@ -77,6 +77,22 @@ jobs:
           sudo LD_RUN_PATH=/usr/local/lib ./configure
 
     - name: Test with pytest
+      # By default, bash runs with `-e` option.
+      # Bash supports all of the single-character shell options documented in the description of the set builtin command,
+      # thus -e means fail fast.
+      # In this step, pytest may fail. In this case, we continue to run the next command, and check if we need to upload artifacts.
+      shell: bash {0}
       run: |
         export LD_LIBRARY_PATH="/usr/local/lib"
         pytest --rootdir=src/GooglePlayAdvancedSearch/tests --tb=short
+        if [[ -d screenshots ]]; then
+          echo "::set-env name=upload::true"
+        fi
+    - name: Upload artifacts
+      if: ${{ env.upload=='true' }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: screenshots
+        path: screenshots/
+
+
