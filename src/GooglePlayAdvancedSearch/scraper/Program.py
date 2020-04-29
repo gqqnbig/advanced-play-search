@@ -4,6 +4,7 @@ import io
 import logging
 import os
 import re
+import time
 
 import OpenSSL
 import scrapy
@@ -21,6 +22,35 @@ import GooglePlayAdvancedSearch.Errors
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
+def getPageWithSelenium(url, screenshotFileName=None, selector='html'):
+	'''
+
+	:return: true if the screenshot is taken; false otherwise
+	'''
+
+	try:
+		import selenium.webdriver
+		import selenium.common
+	except:
+		return False
+
+	options = selenium.webdriver.firefox.options.Options()
+	options.headless = True
+	with selenium.webdriver.Firefox(options=options) as driver:
+		driver.get(url)
+		time.sleep(2)
+		if screenshotFileName is not None:
+			try:
+				element = driver.find_element_by_css_selector(selector)
+			except selenium.common.exceptions.NoSuchElementException as e:
+				print(f'Unable to find element by css selector {selector}. Take viewport screenshot instead.\n{str(e)}')
+				element = driver
+
+			element.screenshot(screenshotFileName)
+			print('screenshot is written: ' + os.path.realpath(screenshotFileName))
+		return True
+
+
 class AppInfoSpider(scrapy.Spider):
 	name = "brickset_spider"
 
@@ -31,6 +61,11 @@ class AppInfoSpider(scrapy.Spider):
 		except:
 			self.targetAppIds = ['com.mojang.minecraftpe', 'com.sega.sonic1px', 'com.tencent.mm',
 								 'com.freecamchat.liverandomchat', 'com.matchdating.meetsingles34']
+
+		if '--selenium=no' in sys.argv:
+			self.__seleniumAvailable = False
+		else:
+			self.__seleniumAvailable = None
 
 	def start_requests(self):
 		if '--bad-ssl-url' in sys.argv:
@@ -75,8 +110,11 @@ class AppInfoSpider(scrapy.Spider):
 			try:
 				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', feeElement.css('::attr(aria-label)').get())[0])
 			except:
-				self.logger.error(f"Unexpected install fee. parentBox: {parentBox.get()}")
-
+				self.logger.error(f"Unexpected install fee. feeElement: {feeElement.get()}")
+				if self.__seleniumAvailable != False:
+					baseDir = os.path.dirname(os.path.abspath(__file__)) + '../../../../screenshots/'
+					os.makedirs(baseDir, exist_ok=True)
+					self.__seleniumAvailable = getPageWithSelenium(response.url, baseDir + appInfo['id'] + '.png', 'c-wiz[data-view-instance-id]')
 
 		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
 		appInfo['app_icon'] = ariaLabel_icon
