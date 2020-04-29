@@ -12,30 +12,44 @@ jobs:
   build:
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.1.0
       with:
         path: play
+    - name: Restore systemd binary
+      id: restore-systemd-binary
+      uses: actions/cache@9ceee97d994dd3474c5f24cf7c8dbe82667565cb
+      with:
+        # env context is very different than the environment variables defined in a bash.
+        path: systemd/build
+        key: systemd-v245-1
     - name: Checkout systemd
-      uses: actions/checkout@v2
-        with:
-          path: systemd
-          repository: systemd/systemd
-          ref: v245
+      if: steps.restore-systemd-binary.outputs.cache-hit != 'true'
+      uses: actions/checkout@v2.1.0
+      with:
+#        # systemd is a public repository, I don't need to give any token.
+#        token: ''
+        path: systemd
+        repository: systemd/systemd
+        ref: v245
     - name: Build systemd
+      if: steps.restore-systemd-binary.outputs.cache-hit != 'true'
       run: |
-        cd ${GITHUB_WORKSPACE}/systemd
-        sudo apt-get install --yes libc-bin libcap-dev libmount-dev pkg-config gperf python3 ninja-build
+        cd systemd
+        sudo apt-get install --yes libc-bin libcap-dev libmount-dev pkg-config gperf python3 ninja-build m4
 
-        sudo apt-get install --yes python3 python3-pip python3-setuptools python3-wheel ninja-build m4
-        sudo pip3 install meson
+        sudo apt-get install --yes python3 python3-pip python3-setuptools python3-wheel
+        sudo -H pip3 install meson
         meson build/ && ninja -C build
     - name: Prepare dependencies
       run: |
-        sudo pip3 install uwsgi
-
+        sudo apt-get install --yes build-essential python3 python3-dev python3-pip
+        #other dependencies missing in GitHub servers
+        sudo apt-get install --yes python3-setuptools
+        sudo -H pip3 install uwsgi
+        uwsgi --version
     - name: Verify service files
       run: |
-        cd ${GITHUB_WORKSPACE}/systemd/build
-        ./systemd-analyze --user verify ${GITHUB_WORKSPACE}/play/deploy/systemd/system/uwsgi-play-search.service
+        cd systemd/build
+        ./systemd-analyze verify ${GITHUB_WORKSPACE}/play/deploy/systemd/system/uwsgi-play-search.service
 
 
