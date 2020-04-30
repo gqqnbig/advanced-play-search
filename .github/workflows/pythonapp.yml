@@ -85,8 +85,14 @@ jobs:
     - name: Install sqlite 3.3.1
       run: |
           cd sqlite-build
-          sudo make install
-
+          # The following commands are extracted from `make install`
+          sudo ./libtool --mode=install /usr/bin/install -c sqlite3 '/usr/local/bin'
+          sudo ./libtool --mode=install /usr/bin/install -c libsqlite3.la '/usr/local/lib'
+          export LD_LIBRARY_PATH="/usr/local/lib"
+          python3 <<heredoc
+          import sqlite3
+          print(sqlite3.sqlite_version)
+          heredoc
     - name: Test with pytest
       # By default, bash runs with `-e` option.
       # Bash supports all of the single-character shell options documented in the description of the set builtin command,
