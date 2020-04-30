@@ -66,7 +66,14 @@ jobs:
             print(driver.page_source[:100])
 
         HEREDOC
-    - name: install sqlite 3.31
+    - name: Restore sqlite 3.31
+      id: restore-sqlite-binary
+      uses: actions/cache@9ceee97d994dd3474c5f24cf7c8dbe82667565cb
+      with:
+        path: sqlite-build
+        key: sqlite-3.31
+    - name: Build sqlite 3.31
+      if: steps.restore-sqlite-binary.outputs.cache-hit != 'true'
       run: |
           # refer to https://stackoverflow.com/q/55674176/746461
           wget -qO- https://www.sqlite.org/2020/sqlite-autoconf-3310100.tar.gz | tar xvz
@@ -74,6 +81,10 @@ jobs:
           cd sqlite-build
           ../sqlite-autoconf-3310100/configure
           make
+
+    - name: Install sqlite 3.3.1
+      run: |
+          cd sqlite-build
           sudo make install
 
     - name: Test with pytest
