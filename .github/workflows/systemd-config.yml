@@ -50,6 +50,17 @@ jobs:
     - name: Verify service files
       run: |
         cd systemd/build
-        ./systemd-analyze verify ${GITHUB_WORKSPACE}/play/deploy/systemd/system/uwsgi-play-search.service
+        # cannot use option `--user` because it throws error "Failed to initialize manager: No such device or address"
+        hasError=
+        for f in ${GITHUB_WORKSPACE}/play/deploy/systemd/system/*
+        do
+          echo $f
+          output=$(./systemd-analyze verify $f 2>&1| grep $f)
+          echo "$output"
+          if [[ $output ]]; then
+            hasError=true
+          fi
+        done
+        test -z $hasError
 
 
