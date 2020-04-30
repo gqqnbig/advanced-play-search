@@ -1,0 +1,68 @@
+name: systemd configurations
+
+on:
+  pull_request:
+    branches:
+    - master
+  push:
+    branches:
+    - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2.1.0
+      with:
+        path: play
+    - name: Restore systemd binary
+      id: restore-systemd-binary
+      uses: actions/cache@9ceee97d994dd3474c5f24cf7c8dbe82667565cb
+      with:
+        # env context is very different than the environment variables defined in a bash.
+        path: systemd/build
+        key: systemd-v245-1
+    - name: Checkout systemd
+      if: steps.restore-systemd-binary.outputs.cache-hit != 'true'
+      uses: actions/checkout@v2.1.0
+      with:
+#        # systemd is a public repository, I don't need to give any token.
+#        token: ''
+        path: systemd
+        repository: systemd/systemd
+        ref: v245
+    - name: Build systemd
+      if: steps.restore-systemd-binary.outputs.cache-hit != 'true'
+      run: |
+        cd systemd
+        sudo apt-get install --yes libc-bin libcap-dev libmount-dev pkg-config gperf python3 ninja-build m4
+
+        sudo apt-get install --yes python3 python3-pip python3-setuptools python3-wheel
+        sudo -H pip3 install meson
+        meson build/ && ninja -C build
+    - name: Prepare dependencies
+      run: |
+        sudo apt-get install --yes build-essential python3 python3-dev python3-pip
+        #other dependencies missing in GitHub servers
+        sudo apt-get install --yes python3-setuptools
+        sudo -H pip3 install uwsgi
+        uwsgi --version
+    - name: Verify service files
+      # 只能去掉-e选项。因为脚本中有$(./systemd-analyze verify $f 2>&1| grep $f)，
+      # systemd-analyze的退出码可能是1。即使这句话包在${}里，-e还是会强制结束脚本。
+      shell: bash {0}
+      run: |
+        cd systemd/build
+        # cannot use option `--user` because it throws error "Failed to initialize manager: No such device or address"
+        hasError=
+        for f in ${GITHUB_WORKSPACE}/play/deploy/systemd/system/*
+        do
+          output=$(./systemd-analyze verify $f 2>&1| grep $f)
+          echo "$output"
+          if [[ $output ]]; then
+            hasError=true
+          fi
+        done
+        test -z $hasError
+
+
