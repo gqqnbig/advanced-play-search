@@ -21,7 +21,7 @@ jobs:
       with:
         # env context is very different than the environment variables defined in a bash.
         path: systemd/build
-        key: systemd-v245-1
+        key: systemd-v245
     - name: Checkout systemd
       if: steps.restore-systemd-binary.outputs.cache-hit != 'true'
       uses: actions/checkout@v2.1.0
