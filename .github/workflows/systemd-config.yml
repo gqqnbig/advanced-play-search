@@ -48,13 +48,15 @@ jobs:
         sudo -H pip3 install uwsgi
         uwsgi --version
     - name: Verify service files
+      # 只能去掉-e选项。因为脚本中有$(./systemd-analyze verify $f 2>&1| grep $f)，
+      # systemd-analyze的退出码可能是1。即使这句话包在${}里，-e还是会强制结束脚本。
+      shell: bash {0}
       run: |
         cd systemd/build
         # cannot use option `--user` because it throws error "Failed to initialize manager: No such device or address"
         hasError=
         for f in ${GITHUB_WORKSPACE}/play/deploy/systemd/system/*
         do
-          echo $f
           output=$(./systemd-analyze verify $f 2>&1| grep $f)
           echo "$output"
           if [[ $output ]]; then
