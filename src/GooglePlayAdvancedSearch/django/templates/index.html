@@ -34,6 +34,7 @@
 		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
 	{% endif %}
 	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
+	<script src="/static/js/vue-mobile-title.js"></script>
 	<style>
 		.advancedSearch-filters {
 			display: flex;
@@ -149,6 +150,20 @@
 
 		.good {
 			color: green;
+		}
+
+		@media (hover: none) {
+			/*On mobile device, clicking an element with title shows the emulated title. */
+			[title]:focus:after {
+				content: attr(title);
+				display: block;
+				position: absolute;
+				background-color: rgba(255, 255, 255, 0.9);
+				border: 1px black solid;
+				box-shadow: 12px 3px #6f6d6dc7;
+    			white-space: pre;
+    			padding: 5px;
+			}
 		}
 	</style>
 
@@ -276,10 +291,10 @@
 					<li v-for="app in apps" class="box">
 						<a class="app-icon" target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`><img :src="app.app_icon"></a>
 						<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
-						<div class="rating" :style=`width:${app.rating*16}px` :title="'Rating '+ app.rating.toFixed(1) "></div>
+						<div class="rating" :style=`width:${app.rating*16}px` v-mobile-title="'Rating '+ app.rating.toFixed(1)"></div>
 						<div class="installFee" :class="{good:!app.install_fee&&!app.inAppPurchases}">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
 						<div class="app-line3">
-							<span v-if="app.permissions" :title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
+							<span v-if="app.permissions" v-mobile-title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
 							<span :class="{good:!app.containsAds}">{{ app.containsAds?"has":"no" }} ads</span>
 						</div>
 						<ul>
