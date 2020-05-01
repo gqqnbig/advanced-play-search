@@ -84,10 +84,12 @@ jobs:
       shell: bash {0}
       run: |
         export LD_LIBRARY_PATH="/usr/local/lib"
-        pytest --rootdir=src/GooglePlayAdvancedSearch/tests --tb=short
-        if [[ -d screenshots ]]; then
+        if pytest --rootdir=src/GooglePlayAdvancedSearch/tests --tb=short; then
+          exit
+        elif [[ -d screenshots ]]; then
           echo "::set-env name=upload::true"
         fi
+        exit 1
     - name: Upload artifacts
       if: ${{ env.upload=='true' }}
       uses: actions/upload-artifact@v2
