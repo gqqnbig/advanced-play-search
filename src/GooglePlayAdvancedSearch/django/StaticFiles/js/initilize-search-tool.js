@@ -6,7 +6,7 @@ const excludedCIds = currentQuery.has('cids') ? currentQuery.get('cids').split('
 const searchTool = new Vue({
 	el: '#searchTool',
 	data: {
-		keyword: currentQuery.get('q'),
+		keyword: currentQuery.get('q') || '',
 		isSearchButtonEnabled: false,
 		permissionFilter: {
 			items: [],
