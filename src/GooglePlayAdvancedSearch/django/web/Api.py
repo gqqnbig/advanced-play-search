@@ -64,6 +64,7 @@ def getClientIP(request) -> str:
 	return ip
 
 
+@cache_page(60 * 5)
 def search(request: django.http.HttpRequest):
 	keyword = request.GET['q']
 
@@ -96,22 +97,16 @@ CREATE TABLE Search (
 		if needCompleteInfo:
 			appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
 
-		if len(excludedPIds):
-			appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
-		if len(excludedCIds):
-			appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
-
+		appInfos = filterApps(appInfos, excludedCIds, excludedPIds, request)
 
 		# If we cannot find 200 matches from our database, we try to find more matches from Google.
-		if len(appInfos) < 200:
+		if len(appInfos) < 200 and cache.get('searchkey-' + keyword) is None:
+			cache.set('searchkey-' + keyword, '', timeout=60 * 5)  # do not search the same keyword in 5 minutes
 			appInfos2 = apiHelper.searchGooglePlay(keyword)
 			if needCompleteInfo:
 				appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
-			if len(excludedPIds):
-				appInfos2 = [a for a in appInfos2 if isExcluded(a['permissions'], excludedPIds) == False]
-			if len(excludedCIds):
-				appInfos2 = [a for a in appInfos2 if isExcluded(a['categories'], excludedCIds) == False]
 
+			appInfos2 = filterApps(appInfos2, excludedCIds, excludedPIds, request)
 
 			appInfoIds = {a['id'] for a in appInfos}
 			appInfos.extend([a for a in appInfos2 if a['id'] not in appInfoIds])
@@ -138,9 +133,23 @@ CREATE TABLE Search (
 			return JsonResponse({'error': f'Searching is aborted because secure connection is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 
 
+def filterApps(appInfos, excludedCategoryIds, excludedPermissionIds, request):
+	if len(excludedPermissionIds):
+		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPermissionIds) == False]
+	if len(excludedCategoryIds):
+		appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCategoryIds) == False]
+	if request.GET.get('free') == 'true':
+		appInfos = [a for a in appInfos if a['install_fee'] == 0]
+	if request.GET.get('ap') == 'false':
+		appInfos = [a for a in appInfos if a['inAppPurchases'] == 0]
+	if request.GET.get('ad') == 'false':
+		appInfos = [a for a in appInfos if a['containsAds'] == 0]
+	return appInfos
+
+
 def determineAppInfoCompleteness(request):
 	"""
-	If user filter by permissions or sort by the number of permission, we must return the complete app information.
+	If users filter by permissions or sort by the number of permission, we must return the complete app information.
 	"""
 	if request.GET.get('pids'):
 		return True
@@ -148,12 +157,17 @@ def determineAppInfoCompleteness(request):
 		return True
 	if request.GET.get('sort') == 'phl' or request.GET.get('sort') == 'plh':
 		return True
-	else:
-		with connection.cursor() as cursor:
-			permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
-			if len(permissions) == 0:
-				return True
+	if request.GET.get('ap') == 'false':
+		return True
+	if request.GET.get('ad') == 'false':
+		return True
+
+	with connection.cursor() as cursor:
+		permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
+		if len(permissions) == 0:
+			return True
 	return False
+
 
 def isExcluded(d: Dict, ids: List[int]):
 	return any(excludedId in d for excludedId in ids)
