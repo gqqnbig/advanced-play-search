@@ -66,16 +66,33 @@ jobs:
             print(driver.page_source[:100])
 
         HEREDOC
-    - name: install sqlite 3.31
+    - name: Restore sqlite 3.31
+      id: restore-sqlite-binary
+      uses: actions/cache@9ceee97d994dd3474c5f24cf7c8dbe82667565cb
+      with:
+        path: sqlite-build
+        key: sqlite-3.31
+    - name: Build sqlite 3.31
+      if: steps.restore-sqlite-binary.outputs.cache-hit != 'true'
       run: |
-          curl -O  https://www.sqlite.org/2020/sqlite-autoconf-3310100.tar.gz
-          tar xvfz sqlite-autoconf-3310100.tar.gz
-          cd sqlite-autoconf-3310100/
-          ./configure
+          # refer to https://stackoverflow.com/q/55674176/746461
+          wget -qO- https://www.sqlite.org/2020/sqlite-autoconf-3310100.tar.gz | tar xvz
+          mkdir sqlite-build
+          cd sqlite-build
+          ../sqlite-autoconf-3310100/configure
           make
-          sudo make install
-          sudo LD_RUN_PATH=/usr/local/lib ./configure
 
+    - name: Install sqlite 3.3.1
+      run: |
+          cd sqlite-build
+          # The following commands are extracted from `make install`
+          sudo ./libtool --mode=install /usr/bin/install -c sqlite3 '/usr/local/bin'
+          sudo ./libtool --mode=install /usr/bin/install -c libsqlite3.la '/usr/local/lib'
+          export LD_LIBRARY_PATH="/usr/local/lib"
+          python3 <<heredoc
+          import sqlite3
+          print(sqlite3.sqlite_version)
+          heredoc
     - name: Test with pytest
       # By default, bash runs with `-e` option.
       # Bash supports all of the single-character shell options documented in the description of the set builtin command,
@@ -84,10 +101,12 @@ jobs:
       shell: bash {0}
       run: |
         export LD_LIBRARY_PATH="/usr/local/lib"
-        pytest --rootdir=src/GooglePlayAdvancedSearch/tests --tb=short
-        if [[ -d screenshots ]]; then
+        if pytest --rootdir=src/GooglePlayAdvancedSearch/tests --tb=short; then
+          exit
+        elif [[ -d screenshots ]]; then
           echo "::set-env name=upload::true"
         fi
+        exit 1
     - name: Upload artifacts
       if: ${{ env.upload=='true' }}
       uses: actions/upload-artifact@v2
