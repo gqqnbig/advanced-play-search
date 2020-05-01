@@ -129,80 +129,10 @@
 		}
 
 		.good {
-			color:green;
+			color: green;
 		}
 	</style>
-	{% if isSearch %}
-		<style>
-			.box {
-				box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-				margin: 1em 0;
-				font-size: 16px;
-			}
 
-
-			.box img {
-				width: 100%;
-				max-width: 196px;
-			}
-
-			@media (min-width: 40.001em) {
-				.box {
-					width: 12em;
-					margin: 1em;
-				}
-
-				.rating {
-					float: left;
-    				margin-top: 4px;
-				}
-
-				.installFee {
-					text-align: right;
-				}
-			}
-
-			.app-icon {
-				display: block; /* use to fix the height of <a> */
-			}
-
-
-
-			.rating {
-				height: 16px;
-				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>');
-				background-size: contain;
-			}
-
-			.rating::before {
-				content: "";
-				width: 80px;
-				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"  stroke="black" fill="none"/></svg>');
-				display: block;
-				height: 100%;
-				background-size: contain;
-			}
-
-
-			@media (max-width: 40em) {
-				.box {
-					display: grid;
-					grid-template-columns: auto auto;
-					grid-template-rows: repeat(5, auto);
-					width: 100%;
-				}
-
-				.app-icon {
-					grid-row-start: 1;
-					grid-row-end: 6;
-				}
-
-				.app-line3 {
-					clear:both;
-				}
-			}
-		</style>
-	{% endif %}
 </head>
 <body>
 
@@ -252,6 +182,74 @@
 
 <div style="padding: 0 1em">
 	{% if isSearch %}
+		<style>
+			.box {
+				box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+				margin: 1em 0;
+				font-size: 16px;
+			}
+
+
+			.box img {
+				width: 100%;
+				max-width: 196px;
+			}
+
+			@media (min-width: 40.001em) {
+				.box {
+					width: 12em;
+					margin: 1em;
+				}
+
+				.rating {
+					float: left;
+    				margin-top: 4px;
+				}
+
+				.installFee {
+					text-align: right;
+				}
+			}
+
+			.app-icon {
+				display: block; /* use to fix the height of <a> */
+			}
+
+
+			.rating {
+				height: 16px;
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>');
+				background-size: contain;
+			}
+
+			.rating::before {
+				content: "";
+				width: 80px;
+				background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"  stroke="black" fill="none"/></svg>');
+				display: block;
+				height: 100%;
+				background-size: contain;
+			}
+
+
+			@media (max-width: 40em) {
+				.box {
+					display: grid;
+					grid-template-columns: auto auto;
+					grid-template-rows: repeat(5, auto);
+					width: 100%;
+				}
+
+				.app-icon {
+					grid-row-start: 1;
+					grid-row-end: 6;
+				}
+
+				.app-line3 {
+					clear: both;
+				}
+			}
+		</style>
 		{% verbatim %}
 		<div id="searchResult">
 			<template v-if="apps">
