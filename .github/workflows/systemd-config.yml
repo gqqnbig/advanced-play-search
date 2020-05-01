@@ -7,6 +7,11 @@ on:
   push:
     branches:
     - dev
+    paths:
+      # If any of the following file changes, this workflow will run.
+      # GitHub Actions doesn't only evaluate changed files on the top-most commit, but uses two-dot or three-dot Git diff commands.
+      - 'deploy/systemd/system/**'
+      - '.github/workflows/systemd-config.yml'
 
 jobs:
   build:
