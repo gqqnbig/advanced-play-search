@@ -1,4 +1,4 @@
-{% load include_maybe %}
+{% load try_include %}
 
 
 <!DOCTYPE html>
@@ -150,7 +150,7 @@
 		}
 	</style>
 
-	{% include_maybe "dynamic/header.html" %}
+	{% try_include "dynamic/header.html" %}
 </head>
 <body>
 
@@ -394,7 +394,7 @@
 </footer>
 
 
-{% include_maybe "dynamic/footer.html" %}
+{% try_include "dynamic/footer.html" %}
 </body>
 </html>
 

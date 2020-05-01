@@ -4,8 +4,8 @@ from django.template.defaulttags import CommentNode
 register = template.Library()
 
 
-@register.tag('include_maybe')
-def do_include_maybe(parser, token):
+@register.tag('try_include')
+def do_try_include(parser, token):
     "Source: http://stackoverflow.com/a/18951166/15690"
     bits = token.split_contents()
     if len(bits) < 2:
