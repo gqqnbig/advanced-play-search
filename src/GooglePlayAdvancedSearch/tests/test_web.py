@@ -31,6 +31,14 @@ def test_websiteEmptyStart(dbFilePath):
 
 
 
+def test_localization(websiteUrl):
+	response = requests.get(websiteUrl,headers={'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-HK;q=0.6'})
+	assert '高级搜索' in response.text
+
+	response = requests.get(websiteUrl)
+	assert '高级搜索' not in response.text
+
+
 # Allow the file to be run by itself, not in the pytest environment.
 # It's for easy development.
 if __name__ == "__main__":

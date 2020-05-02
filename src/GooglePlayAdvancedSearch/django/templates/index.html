@@ -35,6 +35,8 @@
 	{% endif %}
 	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
 	<script src="/static/js/vue-mobile-title.js"></script>
+	<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
+
 	<style>
 		.advancedSearch-filters {
 			display: flex;
@@ -206,8 +208,8 @@
 						<option>4</option>
 					</select>
 				</label>
-				<collapsible-searchable-list class="filter permissionFilter" label="permissions" :items="permissionFilter.items"></collapsible-searchable-list>
-				<collapsible-searchable-list class="filter categoryFilter" label="categories" :items="categoryFilter.items"></collapsible-searchable-list>
+				<collapsible-searchable-list class="filter permissionFilter" label="{% trans 'permissions' %}" :items="permissionFilter.items"></collapsible-searchable-list>
+				<collapsible-searchable-list class="filter categoryFilter" label="{% trans 'categories' %}" :items="categoryFilter.items"></collapsible-searchable-list>
 			</div>
 		</div>
 	</div>
@@ -331,7 +333,7 @@
 		<script src="/static/js/search-result.js"></script>
 	{% endif %}
 
-	<p>We have recorded <span id="appCount"></span> apps, and the number is increasing!</p>
+	<p>{% trans "We have recorded <span id='appCount'></span> apps, and the number is increasing!" %}</p>
 	<script>
 		fetch('{% url 'Api/AppCount' %}'{% if refetchAppCount %}, {cache: "no-cache"} {% endif %}).then(response => response.ok ? response.text() : "").then(text => {
 			document.getElementById("appCount").innerText = text;

@@ -180,18 +180,18 @@
 					summary: function () {
 						// `this` refer to this vue element
 						if (!this.hasItems)
-							return 'No ' + this.label + ' available';
+							return interpolate(gettext('No %s available'), [this.label]);
 
 						if (!this.checkedItems)
-							return "Disallow all " + this.label;
+							return interpolate(gettext("Disallow all %s"), [this.label]);
 						if (!this.uncheckedItems)
-							return "Allow all " + this.label;
+							return interpolate(gettext("Allow all %s"), [this.label]);
 						if (this.uncheckedItems && this.uncheckedItems.length <= 2)
-							return 'Disallow ' + this.uncheckedItems.length + ": " + this.uncheckedItems.map(p => p.name).join(', ');
+							return interpolate(gettext('Disallow %s: %s'), [this.uncheckedItems.length, this.uncheckedItems.map(p => p.name).join(', ')]);
 						if (this.checkedItems && this.checkedItems.length <= 2)
-							return 'Allow ' + this.checkedItems.length + ": " + this.checkedItems.map(p => p.name).join(', ');
+							return interpolate(gettext('Allow %s: %s'), [this.checkedItems.length, this.checkedItems.map(p => p.name).join(', ')]);
 
-						return 'Allow ' + this.checkedItems.length + ' ' + this.label;
+						return interpolate(gettext('Allow %s %s'), [this.checkedItems.length, this.label]);
 					},
 					matchedItems: function () {
 						if (this.userInput && this.items)
