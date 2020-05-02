@@ -19,9 +19,8 @@ def callback_testResponse(websiteUrl):
 		pytest.fail(str(response.status_code) + ' ' + response.reason)
 
 
-def test_websiteEmptyStart():
+def test_websiteEmptyStart(dbFilePath):
 	try:
-		dbFilePath = os.path.join(testFolder, '../../data/db.sqlite3')
 		if os.path.exists(dbFilePath):
 			os.remove(dbFilePath)
 	except Exception as e:

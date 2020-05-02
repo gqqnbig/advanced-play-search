@@ -23,8 +23,7 @@ def test_getCompleteAppInfoPartial():
 	assert appAccessor.getCompleteAppInfo('testid') is None, "Database only has partial info."
 
 
-def test_getCompleteAppInfoStale():
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+def test_getCompleteAppInfoStale(dbFilePath):
 	if os.path.exists(dbFilePath):
 		try:
 			os.remove(dbFilePath)
@@ -59,8 +58,7 @@ def test_getCompleteAppInfoStale():
 		cursor.execute("delete from app where id='testid'")
 
 
-def test_searchAppsStale():
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+def test_searchAppsStale(dbFilePath):
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
 
