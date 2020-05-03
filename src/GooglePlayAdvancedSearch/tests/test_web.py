@@ -39,6 +39,14 @@ def test_localization(websiteUrl):
 	assert '高级搜索' not in response.text
 
 
+def test_djangoTagNotLeaking(websiteUrl):
+	response = requests.get(websiteUrl)
+	assert '{% ' not in response.text
+
+	response = requests.get(websiteUrl + "/search?q=")
+	assert '{% ' not in response.text
+
+
 # Allow the file to be run by itself, not in the pytest environment.
 # It's for easy development.
 if __name__ == "__main__":

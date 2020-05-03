@@ -62,6 +62,9 @@ def dbFilePath():
 
 @pytest.fixture
 def websiteUrl():
+	'''
+	has no trailing slash.
+	'''
 	g = websiteUrlCore()
 	yield next(g)
 	next(g, None)
