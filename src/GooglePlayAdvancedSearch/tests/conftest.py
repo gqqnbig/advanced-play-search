@@ -10,12 +10,7 @@ import psutil
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
 
-@pytest.fixture
-def dbFilePath():
-	return os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
-
-@pytest.fixture
-def websiteUrl():
+def websiteUrlCore():
 	try:
 		response = requests.get('http://localhost:8000', verify=True)
 		yield 'http://localhost:8000'
@@ -58,3 +53,13 @@ def websiteUrl():
 				parent.kill()
 			except Exception as e:
 				print('Failed to kill web server processes.\n' + str(e))
+
+
+@pytest.fixture
+def dbFilePath():
+	return os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+
+
+@pytest.fixture
+def websiteUrl():
+	return websiteUrlCore()

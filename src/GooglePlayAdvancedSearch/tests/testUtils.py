@@ -10,7 +10,7 @@ def getTestFolder():
 
 
 def startWebsite(test):
-	g = conftest.websiteUrl()
+	g = conftest.websiteUrlCore()
 	test(next(g))
 	next(g)
 
