@@ -3,8 +3,6 @@ import sqlite3
 
 import pytest
 
-import GooglePlayAdvancedSearch.tests.testUtils as testUtils
-
 from GooglePlayAdvancedSearch.DBUtils import AppAccessor
 from GooglePlayAdvancedSearch.Models import AppItem
 

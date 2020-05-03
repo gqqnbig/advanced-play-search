@@ -1,8 +1,8 @@
 import os
-import pytest
 import sys
-
 from collections import Counter
+
+import pytest
 
 testFolder = os.path.dirname(os.path.abspath(__file__))
 

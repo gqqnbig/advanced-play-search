@@ -1,9 +1,7 @@
-import io
 import os
-import pytest
 import sqlite3
-import subprocess
-import sys
+
+import pytest
 
 import GooglePlayAdvancedSearch.Errors
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils

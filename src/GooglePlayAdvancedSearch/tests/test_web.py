@@ -1,10 +1,10 @@
 import os
-import pytest
 import re
-import requests
 import shutil
 import time
 
+import pytest
+import requests
 from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.options import Options
 

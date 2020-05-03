@@ -3,9 +3,9 @@ import subprocess
 import sys
 import time
 
+import psutil
 import pytest
 import requests
-import psutil
 
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
