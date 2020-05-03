@@ -1,15 +1,13 @@
-import io
 import os
-import pytest
 import sqlite3
-import subprocess
-import sys
+
+import pytest
 
 import GooglePlayAdvancedSearch.Errors
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
 
-def test_scrapeAppsWithExoticPermissions():
+def test_scrapeAppsWithExoticPermissions(dbFilePath):
 	"""
 	Scrape apps with no permissions, only other permissions, etc.
 	Make sure scraper can correctly handle them.
@@ -22,7 +20,6 @@ def test_scrapeAppsWithExoticPermissions():
 				 'com.androidapps.unitconverter',
 				 'com.videos.freemusic.song.mp3.musicplayer.mv'}
 
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
 	if os.path.exists(dbFilePath):
 		os.remove(dbFilePath)
 

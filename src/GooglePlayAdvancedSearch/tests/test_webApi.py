@@ -1,4 +1,3 @@
-import os
 import sqlite3
 import urllib
 
@@ -10,13 +9,11 @@ import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
-def callback_searchPermissionFilter(websiteUrl):
+def test_searchPermissionFilter(websiteUrl, dbFilePath):
 	# com.tencent.mm uses permission 'read the contents of your USB storage'
 	# We exclude this permission in the search, and make sure the result doesn't have com.tencent.mm.
 
 	testUtils.runScraper(['--pytest', '-p', 'com.tencent.mm'])
-
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
 	permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
@@ -31,13 +28,11 @@ def callback_searchPermissionFilter(websiteUrl):
 	assert 'com.tencent.mm' in text, "Search for wechat allowing storage permission. The search result not have wechat."
 
 
-def callback_searchCategoryFilter(websiteUrl):
+def test_searchCategoryFilter(websiteUrl, dbFilePath):
 	# com.facebook.katana uses category 'Social'
 	# we exclude this category in the search, and make sure the result doesn't have com.facebook.katana.
 
 	testUtils.runScraper(['--pytest', '-p', 'com.facebook.katana'])
-
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
 	categories = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
@@ -52,8 +47,7 @@ def callback_searchCategoryFilter(websiteUrl):
 	assert 'com.facebook.katana' in text, "Search for facebook allowing Social category. The search result should have it."
 
 
-def callback_searchResultUpperBound(websiteUrl):
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+def test_searchResultUpperBound(websiteUrl, dbFilePath):
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
 	try:
@@ -80,9 +74,7 @@ def callback_searchResultUpperBound(websiteUrl):
 		cursor.execute('delete from App where id like :id', {'id': 'GooglePlayAdvancedSearch.testApp%'})
 
 
-def callback_notReadingStaleInfo(websiteUrl):
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
-
+def test_notReadingStaleInfo(websiteUrl, dbFilePath):
 	lastException = None
 	tryCount = 0
 	while tryCount < 2:
@@ -113,8 +105,7 @@ def callback_notReadingStaleInfo(websiteUrl):
 	pytest.skip(str(lastException))
 
 
-def callback_recentSearches(websiteUrl):
-	dbFilePath = os.path.join(testUtils.getTestFolder(), '../../data/db.sqlite3')
+def test_recentSearches(websiteUrl, dbFilePath):
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
 
@@ -130,27 +121,3 @@ def callback_recentSearches(websiteUrl):
 	finally:
 		cursor.execute("delete from Search where ip='pytest'")
 		connection.commit()
-
-
-def test_searchPermissionFilter():
-	testUtils.startWebsite(callback_searchPermissionFilter)
-
-
-def test_searchCategoryFilter():
-	testUtils.startWebsite(callback_searchCategoryFilter)
-
-
-def test_searchResultUpperBound():
-	testUtils.startWebsite(callback_searchResultUpperBound)
-
-
-def test_notReadingStaleInfo():
-	testUtils.startWebsite(callback_notReadingStaleInfo)
-
-
-def test_recentSearches():
-	testUtils.startWebsite(callback_recentSearches)
-
-
-if __name__ == "__main__":
-	test_recentSearches()
