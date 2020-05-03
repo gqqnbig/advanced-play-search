@@ -74,7 +74,11 @@ msgstr "权限"
 msgid "categories"
 msgstr "类别"
 
-#: .\templates\index.html:310
+#: .\templates\index.html:302
+msgid "Searching..."
+msgstr "正在搜索，请稍等"
+
+#: .\templates\index.html:308
 msgid ""
 "<b class='good'>True free</b> means the app is free to install and doesn't "
 "have in-app purchase."

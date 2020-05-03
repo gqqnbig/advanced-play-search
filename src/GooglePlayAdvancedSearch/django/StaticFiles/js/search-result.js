@@ -8,6 +8,7 @@ const testGoogleAnalysis = Promise.all([fetch('https://www.googletagmanager.com/
 
 const searchResult = new Vue({
 	el: "#searchResult",
+	delimiters: ["[[", "]]"],
 	data: {
 		apps: undefined,
 		errorMessage: undefined,

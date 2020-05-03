@@ -286,22 +286,21 @@
 				}
 			}
 		</style>
-		{% verbatim %}
 		<div id="searchResult">
 			<template v-if="apps">
-				<div>{{ apps.length }} results ({{ executionSeconds.toFixed(2) }} seconds)</div>
+				<div>[[ apps.length ]] results ([[ executionSeconds.toFixed(2) ]] seconds)</div>
 				<ul class="appList">
 					<li v-for="app in apps" class="box">
 						<a class="app-icon" target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`><img :src="app.app_icon"></a>
-						<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>{{ app.name }}</a></div>
+						<div><a target="_blank" :href=`https://play.google.com/store/apps/details?id=${app.id}`>[[ app.name ]]</a></div>
 						<div class="rating" :style=`width:${app.rating*16}px` v-mobile-title="'Rating '+ app.rating.toFixed(1)"></div>
-						<div class="installFee" :class="{good:!app.install_fee&&!app.inAppPurchases}">{{ getPriceText(app.install_fee, app.inAppPurchases) }}</div>
+						<div class="installFee" :class="{good:!app.install_fee&&!app.inAppPurchases}">[[ getPriceText(app.install_fee, app.inAppPurchases) ]]</div>
 						<div class="app-line3">
-							<span v-if="app.permissions" v-mobile-title="formatPermissions(app.permissions)">{{ Object.keys(app.permissions).length }} permissions, </span>
-							<span :class="{good:!app.containsAds}">{{ app.containsAds?"has":"no" }} ads</span>
+							<span v-if="app.permissions" v-mobile-title="formatPermissions(app.permissions)">[[ Object.keys(app.permissions).length ]] permissions, </span>
+							<span :class="{good:!app.containsAds}">[[ app.containsAds?"has":"no" ]] ads</span>
 						</div>
 						<ul>
-							<li>num_reviews: {{ app.num_reviews }}</li>
+							<li>num_reviews: [[ app.num_reviews ]]</li>
 						</ul>
 					</li>
 				</ul>
@@ -309,13 +308,11 @@
 			<div class="searchingPrompt" v-else>
 				<template v-if="errorMessage">
 					<div class="searchingPrompt-errorIcon" :class="errorType" style="font-size: 180px"></div>
-					<div class="text-danger searchingPrompt-errorMessage">{{ errorMessage }}</div>
+					<div class="text-danger searchingPrompt-errorMessage">[[ errorMessage ]]</div>
 				</template>
 				<template v-else>
 					<div>
-						{% endverbatim %}
 						{% include 'cssLoader/spinner.html' %}
-						{% verbatim %}
 					</div>
 					<div class="searchingPrompt-text">
 						{% trans "Searching..." %}
@@ -323,7 +320,6 @@
 				</template>
 			</div>
 		</div>
-		{% endverbatim %}
 		<ul>
 			<li>{% trans "<b class='good'>True free</b> means the app is free to install and doesn't have in-app purchase." %}</li>
 			<li>{% trans "<b>Free</b> means the app is free to install and but has in-app purchase." %}</li>
