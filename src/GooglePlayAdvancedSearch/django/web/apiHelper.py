@@ -25,6 +25,7 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 	appInfos = []
 
 	appSaver = GooglePlayAdvancedSearch.DBUtils.AppAccessor(1)
+	appsData = None
 	try:
 		while True:
 			appsData = data[0][0][0]
@@ -65,7 +66,10 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 			package = jsonLoads(response.text[response.text.index('\n') + 1:])
 			data = jsonLoads(package[0][2])
 
-	except:
-		print('appsData:')
-		print(appsData)
+	except Exception as e:
+		print(str(e))
+		if appsData is None:
+			print(f'data:\n{data}')
+		else:
+			print(f'appsData:\n{appsData}')
 	return appInfos

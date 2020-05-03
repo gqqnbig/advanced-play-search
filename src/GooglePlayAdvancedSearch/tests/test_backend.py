@@ -14,7 +14,7 @@ import GooglePlayAdvancedSearch.django.web.apiHelper as apiHelper
 
 def test_searchNoDuplicate():
 	result = apiHelper.searchGooglePlay('youtube')
-
-	duplicates = [(item,count) for item, count in Counter(result).items() if count > 1]
+	assert len(result) > 0, "Failed to find any match for keyword 'youtube'."
+	duplicates = [(item, count) for item, count in Counter(result).items() if count > 1]
 	if len(duplicates):
 		pytest.fail(f'view.searchGooglePlay returns duplicate results: {duplicates}', False)
