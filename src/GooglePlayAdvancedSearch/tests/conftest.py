@@ -62,4 +62,6 @@ def dbFilePath():
 
 @pytest.fixture
 def websiteUrl():
-	return websiteUrlCore()
+	g = websiteUrlCore()
+	yield next(g)
+	next(g, None)
