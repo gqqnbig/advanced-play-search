@@ -2,6 +2,8 @@ import re
 
 import requests
 
+# DO NOT import any django classes here.
+# This file will be called from pytest
 from json import loads as jsonLoads
 from typing import List
 
