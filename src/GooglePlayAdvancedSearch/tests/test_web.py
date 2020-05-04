@@ -10,6 +10,12 @@ from selenium.webdriver.firefox.options import Options
 
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
+"""
+Test the website using regular python/requests without executing JavaScript or advanced browsing features.
+
+If you need to execute JavaScript for testing, write tests in test_selenium.py. 
+"""
+
 testFolder = os.path.dirname(os.path.abspath(__file__))
 
 
