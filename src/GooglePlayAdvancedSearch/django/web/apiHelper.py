@@ -1,4 +1,5 @@
 import re
+import urllib.parse
 
 import requests
 
@@ -12,7 +13,7 @@ from GooglePlayAdvancedSearch.Models import AppItem
 
 
 def searchGooglePlay(keyword) -> List[AppItem]:
-	url = 'https://play.google.com/store/search?q=%s&c=apps' % keyword
+	url = 'https://play.google.com/store/search?q=%s&c=apps' % urllib.parse.quote_plus(keyword)
 	page = requests.get(url, verify=True)
 
 	# "key: 'ds:3'" is not reliable.
