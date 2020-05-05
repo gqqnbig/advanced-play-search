@@ -18,3 +18,12 @@ def test_searchNoDuplicate():
 	duplicates = [(item, count) for item, count in Counter(result).items() if count > 1]
 	if len(duplicates):
 		pytest.fail(f'view.searchGooglePlay returns duplicate results: {duplicates}', False)
+
+
+def test_searchKeywordEscpaing():
+	result = apiHelper.searchGooglePlay('calculator&type=swimming')
+	assert any('swimming' in app['name'] for app in result)
+
+
+if __name__ == '__main__':
+    test_searchKeywordEscpaing()
