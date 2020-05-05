@@ -177,6 +177,7 @@
 			</div>
 		</div>
 	</div>
+	<script src="static/js/initilize-search-tool.js"></script>
 </div>
 
 {% endverbatim %}
@@ -295,6 +296,7 @@
 			<li><b>$x.x</b> means there is a install fee, but no in-app purchase.</li>
 			<li><b>$x.x+</b> means there is a install fee and in-app purchase.</li>
 		</ul>
+		<script src="static/js/search-result.js"></script>
 	{% endif %}
 
 	<p>We have recorded <span id="appCount"></span> apps, and the number is increasing!</p>
@@ -375,129 +377,6 @@
 </footer>
 
 {% include "vue/collapsible-searchable-list.html" %}
-
-<script>
-	const currentQuery = new URLSearchParams(location.search);
-	//Cannot write map(parseInt) because parseInt can accept 2 parameters!
-	const excludedPIds = currentQuery.has('pids') ? currentQuery.get('pids').split(',').map(n => parseInt(n)) : [];
-	const excludedCIds = currentQuery.has('cids') ? currentQuery.get('cids').split(',').map(n => parseInt(n)) : [];
-
-	const searchTool = new Vue({
-		el: '#searchTool',
-		data: {
-			keyword: currentQuery.get('q'),
-			isSearchButtonEnabled: false,
-			permissionFilter: {
-				items: [],
-			},
-			categoryFilter: {
-				items: [],
-			},
-			sortType: currentQuery.get('sort') || '', // if currentQuery.get('sort')  is falsy, return empty string.
-			allowInAppPurchase: !currentQuery.get('ap'),
-			freeInstall: currentQuery.get('free') ||false,
-			allowAds: !currentQuery.get('ad'),
-		},
-		computed: {
-			queryString: function () {
-				let query = `q=${encodeURIComponent(this.keyword)}`;
-				let excludedPIds = this.permissionFilter.items.filter(p => !p.checked).map(p => p.id).join(',');
-				if (excludedPIds)
-					query += "&pids=" + excludedPIds;
-				let excludedCIds = this.categoryFilter.items.filter(p => !p.checked).map(p => p.id).join(',');
-				if (excludedCIds)
-					query += "&cids=" + excludedCIds;
-				if (this.sortType)
-					query += "&sort=" + this.sortType;
-				if (!this.allowInAppPurchase)
-					query += "&ap=false";
-				if (!this.allowAds)
-					query += "&ad=false";
-				if (this.freeInstall)
-					query += "&free=true";
-				return query;
-			}
-		}
-	});
-
-	const permissionPromise = fetch('{% url 'Api/Permissions' %}').then(r => r.json()).then(data => {
-		res = Object.entries(data).map(p => {
-			return {id: parseInt(p[0]), name: p[1], checked: !excludedPIds.includes(parseInt(p[0]))}
-		});
-		res.sort((x, y) => x.name.localeCompare(y.name));
-		searchTool.permissionFilter.items = res
-	});
-
-	const categoryPromise = fetch('{% url 'Api/Categories' %}').then(r => r.json()).then(data => {
-		res = Object.entries(data).map(p => {
-			return {id: parseInt(p[0]), name: p[1], checked: !excludedCIds.includes(parseInt(p[0]))}
-		});
-		res.sort((x, y) => x.name.localeCompare(y.name));
-		searchTool.categoryFilter.items = res;
-	});
-</script>
-{% if isSearch %}
-	<script>
-		const testGoogleAnalysis = Promise.all([fetch('https://www.googletagmanager.com/gtag/js?id=UA-83043759-2', {mode: 'no-cors'}),
-			fetch('https://www.google-analytics.com/analytics.js', {mode: 'no-cors'})]).then(r => {
-			return new Promise(resolve => resolve(true));
-		}).catch(reason => {
-			return new Promise(resolve => resolve(false));
-		});
-
-
-		const searchResult = new Vue({
-			el: "#searchResult",
-			data: {
-				apps: undefined,
-				errorMessage: undefined,
-				errorType: '',
-				executionSeconds: undefined,
-			},
-			methods: {
-				getPriceText(installFee, allowInAppPurchase) {
-					if (installFee > 0)
-						return "$" + installFee + (allowInAppPurchase ? "+" : "");
-					else
-						return (allowInAppPurchase ? "" : "True ") + "free";
-				},
-				formatPermissions(permissions) {
-					return Object.values(permissions).join('\n');
-				}
-			}
-		});
-
-		const searchingTimeoutHandler = setTimeout(() => searchResult.errorMessage = "Taking too long to load result. Something might be wrong.", 15 * 1000);
-
-		const startSearchTime = performance.now();
-		//When we got permission list and category list, then run the following code.
-		Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis]).then(function (results) {
-			if (results[2]) {
-				//it is a session cookie because it doesn't have expiration.
-				// `document.cookie =` is a special syntax that adds a SINGLE cookie.
-				// But reading document.cookie will return ALL cookies.
-				document.cookie = '_gaload=1';
-			}
-			fetch("/Api/Search?" + searchTool.queryString).then(r => r.json()).then(data => {
-				if (data.error) {
-					clearTimeout(searchingTimeoutHandler);
-					searchResult.errorMessage = data.error;
-					searchResult.errorType = "security";
-				}
-				else if (data.apps.length === 0) {
-					clearTimeout(searchingTimeoutHandler);
-					searchResult.errorMessage = "We couldn't find anything for your search.";
-					searchResult.apps = '';
-				}
-				else {
-					searchResult.apps = data.apps;
-					searchResult.executionSeconds = (performance.now() - startSearchTime) / 1000;
-					searchResult.errorMessage = undefined;
-				}
-			});
-		});
-	</script>
-{% endif %}
 
 {% include_maybe "dynamic/footer.html" %}
 </body>
