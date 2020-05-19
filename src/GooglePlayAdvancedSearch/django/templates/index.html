@@ -328,8 +328,9 @@
 	<div class="alert alert-primary">
 		<p>This application is experimental. In order to track how people are using it, help developers improve it, and prevent misuse, the application will track recent searches.</p>
 		<ul id="recentSearches">
+			<!-- Z is ISO date symbol, means UTC time. -->
 			<li v-for="item in searches">
-				[[ new Date(item.date +" UTC").toLocaleString() ]]: <a :href=`/search?${item.query}`>[[ item.keyword ]]</a>
+				[[ new Date(item.date +"Z").toLocaleString() ]]: <a :href=`/search?${item.query}`>[[ item.keyword ]]</a>
 			</li>
 		</ul>
 		<script>

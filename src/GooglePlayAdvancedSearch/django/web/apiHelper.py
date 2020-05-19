@@ -76,3 +76,13 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 		else:
 			print(f'appsData:\n{appsData}')
 	return appInfos
+
+
+def getSqlCreateTableSearch():
+	return '''
+CREATE TABLE Search (
+	keyword	TEXT NOT NULL,
+	query	TEXT NOT NULL,
+	ip TEXT NOT NULL,
+	date	TEXT NOT NULL DEFAULT (datetime('now'))
+)'''
