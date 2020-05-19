@@ -96,14 +96,8 @@ def search(request: django.http.HttpRequest):
 	with connection.cursor() as cursor:
 		try:
 			logSearch(cursor, keyword, request)
-		except django.db.utils.OperationalError as e:
-			cursor.execute('''
-CREATE TABLE Search (
-	keyword	TEXT NOT NULL,
-	query	TEXT NOT NULL,
-	ip TEXT NOT NULL,
-	date	TEXT NOT NULL DEFAULT (datetime('now'))
-)''')
+		except django.db.utils.OperationalError:
+			cursor.execute(apiHelper.getSqlCreateTableSearch())
 			try:
 				logSearch(cursor, keyword, request)
 			except Exception as e:

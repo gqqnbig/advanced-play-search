@@ -1,6 +1,8 @@
 import os
 import re
 import shutil
+import sqlite3
+import sys
 import time
 
 import pytest
@@ -8,9 +10,35 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.options import Options
 
+import GooglePlayAdvancedSearch.DBUtils
 import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 
 testFolder = os.path.dirname(os.path.abspath(__file__))
+
+# import packages in sibling folders
+sys.path.append(os.path.join(testFolder, '../web'))
+import GooglePlayAdvancedSearch.django.web.apiHelper as apiHelper
+
+
+def test_RecentSearchDateOnFirefox(dbFilePath, websiteUrl):
+	connection = sqlite3.connect(dbFilePath)
+	cursor = connection.cursor()
+
+	if GooglePlayAdvancedSearch.DBUtils.doesTableExist('Search', cursor):
+		cursor.execute('delete from Search')
+	else:
+		cursor.execute(apiHelper.getSqlCreateTableSearch())
+
+	cursor.execute('insert into Search Values("students","q=students","127.0.0.1","1989-06-04 04:00:00")')
+	connection.commit()
+
+	options = Options()
+	options.headless = True
+	with Firefox(options=options) as driver:
+		driver.get(websiteUrl)
+		time.sleep(2)
+		innerText = driver.execute_script("return document.getElementById('recentSearches').innerText")
+		assert '1989' in innerText and '6' in innerText, "Recent searches is expected to show a search on 1989-06-04"
 
 
 def test_RateLimitWithoutGA(websiteUrl):
