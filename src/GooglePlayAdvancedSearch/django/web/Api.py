@@ -177,15 +177,14 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 
 	appAccessor = AppAccessor(1)
 	scraper_fail_id = []
-	with connection.cursor() as cursor:
-		for id in appsMissingInDatabase:
-			tmp = appAccessor.getCompleteAppInfo(id)
-			if tmp:
-				app_infos[id] = tmp
-			else:
-				assert id in app_infos
-				app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
-				scraper_fail_id.append(id)
+	for id in appsMissingInDatabase:
+		tmp = appAccessor.getCompleteAppInfo(id)
+		if tmp:
+			app_infos[id] = tmp
+		else:
+			assert id in app_infos
+			app_infos[id] = {'id': id}  # if scraper fails, just pass "id" to appDetails to display
+			scraper_fail_id.append(id)
 
 	print("Scraper failed %d times: %s" % (len(scraper_fail_id), ", ".join(scraper_fail_id)))
 	print(f'total results: {len(app_ids)}')
