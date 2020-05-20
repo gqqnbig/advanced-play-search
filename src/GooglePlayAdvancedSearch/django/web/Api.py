@@ -9,8 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.cache import cache_control
 from json import loads as jsonLoads
 from typing import List, Dict, Union
-
-import json
+from urllib.parse import urlparse
 
 # import local packages
 from GooglePlayAdvancedSearch.DBUtils import AppAccessor
@@ -47,7 +46,6 @@ def getCategories(request):
 		return response
 
 
-@cache_control(max_age=3600)
 def search(request):
 	keyword = request.GET['q']
 	if 'pids' in request.GET:
@@ -59,25 +57,30 @@ def search(request):
 		excludedCIds = [int(n) for n in request.GET['cids'].split(',')]
 	else:
 		excludedCIds = []
+		
+	try:
+		appInfos = searchGooglePlay(keyword)
 
-	appInfos = searchGooglePlay(keyword)
+		needCompleteInfo = False
+		if len(excludedPIds) or len(excludedCIds):
+			needCompleteInfo = True
+		else:
+			with connection.cursor() as cursor:
+				if len(GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)) == 0 or len(GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)) == 0:
+					needCompleteInfo = True
 
-	needCompleteInfo = False
-	if len(excludedPIds) or len(excludedCIds):
-		needCompleteInfo = True
-	else:
-		with connection.cursor() as cursor:
-			if len(GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)) == 0 or len(GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)) == 0:
-				needCompleteInfo = True
+		if needCompleteInfo:
+			# We have to run scraper
+			appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
+			appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
+			appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
 
-	if needCompleteInfo:
-		# We have to run scraper
-		appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
-		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPIds) == False]
-		appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCIds) == False]
-
-	response = JsonResponse([dict(a) for a in appInfos], safe=False)
-	return response
+		response = JsonResponse([dict(a) for a in appInfos], safe=False)
+		response['Cache-Control'] = "private, max-age=3600"
+		return response
+	except requests.exceptions.SSLError as e:
+		url = urlparse(e.request.url)
+		return JsonResponse({'error': f'Searching is aborted because secure connection to https://{url.netloc} is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 
 
 def isExcluded(d: Dict, ids: List[int]):
