@@ -295,7 +295,7 @@ def recentSearches(request: django.http.HttpRequest):
 				data = cursor.fetchall()
 				json = [buildRecentSearchResult(item, showIp) for item in data]
 	except django.db.utils.OperationalError as e:
-		print(str(e))
+		print('recentSearches error:' + str(e))
 
 	# In case json is None, change it to empty list. In this way, cache knows there is an object, and we don't have handle situation of None.
 	if json is None:
