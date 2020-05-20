@@ -80,9 +80,12 @@ def search(request):
 		response['Cache-Control'] = "private, max-age=3600"
 		return response
 	except requests.exceptions.SSLError as e:
-		url = urlparse(e.request.url)
-		return JsonResponse({'error': f'Searching is aborted because secure connection to https://{url.netloc} is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
-
+		# In getCompleteAppInfo, we throw our own SSLError where we don't have request object.
+		if e.request:
+			url = urlparse(e.request.url)
+			return JsonResponse({'error': f'Searching is aborted because secure connection to https://{url.netloc} is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
+		else:
+			return JsonResponse({'error': f'Searching is aborted because secure connection is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 
 def isExcluded(d: Dict, ids: List[int]):
 	return any(excludedId in d for excludedId in ids)
@@ -177,8 +180,11 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 	# search database second pass
 	# for first-pass non-found apps, pass into scraper
 	appsMissingInDatabase = [k for k, v in app_infos.items() if v is None]
-	if os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase)) == GooglePlayAdvancedSearch.Errors.sslErrorCode:
-		pass
+
+	code2 = os.system(('python ' if sys.platform == 'win32' else '') + "../scraper/Program.py -p %s" % ",".join(appsMissingInDatabase))
+	if hasattr(os, 'WEXITSTATUS') and os.WEXITSTATUS(code2) == GooglePlayAdvancedSearch.Errors.sslErrorCode \
+		or not hasattr(os, 'WEXITSTATUS') and code2 == GooglePlayAdvancedSearch.Errors.sslErrorCode:
+		raise requests.exceptions.SSLError()
 
 	appAccessor = AppAccessor(1)
 	scraper_fail_id = []
