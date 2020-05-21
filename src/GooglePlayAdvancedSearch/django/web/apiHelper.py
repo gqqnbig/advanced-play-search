@@ -27,7 +27,7 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 
 	appInfos = []
 
-	appSaver = GooglePlayAdvancedSearch.DBUtils.AppAccessor(1)
+	appSaver = GooglePlayAdvancedSearch.DBUtils.AppAccessor()
 	appsData = None
 	try:
 		while True:
