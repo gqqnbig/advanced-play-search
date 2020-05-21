@@ -53,11 +53,9 @@ def saveSqlValue(str: str):
 
 class AppAccessor:
 
-	def __init__(self, freshDays=0):
+	def __init__(self):
 		self.__conn = sqlite3.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data/db.sqlite3'))
 		self.__cursor = self.__conn.cursor()
-
-		self.__freshDays = freshDays
 
 		if doesTableExist('App', self.__cursor):
 			self.__allPermissions = getAllPermissions(self.__cursor)
@@ -83,18 +81,14 @@ isPartialInfo integer not null
 	def __del__(self):
 		self.__conn.close()
 
-	def insertOrUpdateApp(self, item, freshDays: Optional[int] = None) -> bool:
+	def insertOrUpdateApp(self, item) -> bool:
 		"""
 		Insert or update an app.
 
-		If an app exists, and its modified date is within freshDays to now, the method doesn't update it.
+		If an app exists, the method doesn't update it.
 
-		:param freshDays: a record is considered fresh within how many days. If it's None, the value from constructor is used.
 		:return true if the database is updated. false if the database record is fresh, no need to update.
 		"""
-
-		if freshDays is None:
-			freshDays = self.__freshDays
 
 		valuesToInsert = []
 		parameters = []
@@ -135,8 +129,7 @@ isPartialInfo=excluded.isPartialInfo,
 updateDate=excluded.updateDate
 {''.join([',' + x + '=excluded.' + x for x in valuesToInsert])}
 {clearCategoriesSql}
-{clearPermissionsSql}
-where julianday('now')-?>=julianday(updateDate)'''
+{clearPermissionsSql}'''
 		self.__cursor.execute(sql, (
 			item['id'],
 			item['name'],
@@ -144,10 +137,7 @@ where julianday('now')-?>=julianday(updateDate)'''
 			item['install_fee'],
 			item['app_icon'],
 			isPartialInfo)
-							  + tuple(parameters)
-							  + (
-								  self.__freshDays if freshDays is None else freshDays,
-							  ))
+							  + tuple(parameters))
 		if self.__cursor.rowcount == 0:
 			return False
 
@@ -198,7 +188,7 @@ where julianday('now')-?>=julianday(updateDate)'''
 
 		appList = []
 
-		self.__cursor.execute(f"SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern and updateDate>=date('now','-{self.__freshDays} days') Limit " + str(MAX_SELECT),
+		self.__cursor.execute(f"SELECT id,name,rating,num_reviews,install_fee,inAppPurchases,app_icon FROM App WHERE name LIKE :namePattern Limit " + str(MAX_SELECT),
 							  {"namePattern": '%' + namePattern + '%'})
 		tmp = self.__cursor.fetchall()
 		for app in tmp:
@@ -219,7 +209,7 @@ where julianday('now')-?>=julianday(updateDate)'''
 		Find app id in database. If found, return the data, otherwise return null.
 		"""
 
-		self.__cursor.execute(f"SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon,containsAds FROM App WHERE id=:id and isPartialInfo=0 and updateDate>=date('now','-{self.__freshDays} days')",
+		self.__cursor.execute(f"SELECT name,rating,num_reviews,install_fee,inAppPurchases,app_icon,containsAds FROM App WHERE id=:id and isPartialInfo=0",
 							  {"id": id})
 		tmp = self.__cursor.fetchone()
 		if tmp is None:

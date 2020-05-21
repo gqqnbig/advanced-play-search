@@ -108,7 +108,7 @@ def search(request: django.http.HttpRequest):
 	excludedCIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
 
 	try:
-		appAccessor = AppAccessor(1)
+		appAccessor = AppAccessor()
 		appInfos = appAccessor.searchApps(keyword)
 
 		needCompleteInfo = determineAppInfoCompleteness(request)
@@ -214,7 +214,7 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 		# sys.version_info is a named tuple. https://docs.python.org/3/glossary.html#term-named-tuple
 		print(f'Python {tuple(sys.version_info)} may not keep dictionary insertion order. Upgrade to at least version 3.6.', file=sys.stderr)
 
-	appAccessor = AppAccessor(1)
+	appAccessor = AppAccessor()
 	with connection.cursor() as cursor:
 		# very important!
 		# connection.cursor() gives django cursor, connection.cursor().connection.cursor() gives underlying sqlite cursor.
@@ -234,7 +234,7 @@ def getCompleteAppInfo(app_ids: List[str]) -> List[AppItem]:
 				or not hasattr(os, 'WEXITSTATUS') and code2 == GooglePlayAdvancedSearch.Errors.sslErrorCode:
 			raise requests.exceptions.SSLError()
 
-		appAccessor = AppAccessor(1)
+		appAccessor = AppAccessor()
 		scraper_fail_id = []
 		for id in appsMissingInDatabase:
 			tmp = appAccessor.getCompleteAppInfo(id)
