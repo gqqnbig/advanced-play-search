@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script src="jumpIntoLightSpeed.js"></script>
+	<style>
+		body {
+			margin: 0;
+		}
+
+		@keyframes colorChange {
+			from {
+				fill: red;
+			}
+
+			to {
+				fill: blue;
+			}
+		}
+
+		#svgImage circle {
+			animation-duration: 3s;
+			animation-name: colorChange;
+		}
+	</style>
+</head>
+<body>
+<button onclick="lightSpeed(document.getElementById('can'))">Start</button>
+
+
+<svg id="svgImage">
+	<circle r="3" cx="100" cy="100" stroke="black" stroke-width="2" fill="red"/>
+	<circle r="3" cx="150" cy="100" stroke="black" stroke-width="2" fill="red"/>
+	<circle r="3" cx="200" cy="100" stroke="black" stroke-width="2" fill="red"/>
+</svg>
+
+<canvas id="can" width="500" height="500" style="display: block"></canvas>
+
+</body>
+</html>
