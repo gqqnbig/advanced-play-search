@@ -259,10 +259,15 @@ function draw() {
 			animateTrailStopping(now, timingStop(d / settings.stopDuration));
 			window.requestAnimationFrame(draw);
 		}
-		// else {
-		// 	bounce();
-		// 	animateTrailStopping(now, timingStop(d / settings.stopDuration));
-		// }
+		else {
+			targetCanvas.innerHTML = '';
+			targetCanvas.classList.remove('starting');
+			targetCanvas.classList.remove('running');
+			targetCanvas.classList.remove('stopping');
+
+			// 	bounce();
+			// 	animateTrailStopping(now, timingStop(d / settings.stopDuration));
+		}
 	}
 	else {
 		let d = now - startTime;
