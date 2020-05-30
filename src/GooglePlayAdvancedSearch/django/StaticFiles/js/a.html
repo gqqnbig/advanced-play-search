@@ -35,14 +35,21 @@
 
 		#svgImage.starting {
 			background-color: black;
-			animation-duration: 0.5s;
+			animation-duration: 1s;
 			animation-name: spaceToBlack;
+		}
+
+		#svgImage.running {
+			background-color: black;
 		}
 
 		#svgImage.starting line {
 			stroke: #69e8fb;
 			stroke-linecap: round;
-			animation-duration: 1s;
+		}
+
+		#svgImage.starting line.initial {
+			animation-duration: 2s;
 			animation-name: starToBlue;
 		}
 	</style>
