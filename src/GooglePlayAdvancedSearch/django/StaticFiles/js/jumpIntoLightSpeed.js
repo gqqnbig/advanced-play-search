@@ -18,6 +18,7 @@ settings.startDuration = settings.startDuration || 2000;
 let targetCanvas;
 let canvasHeight;
 let canvasWidth;
+let desiredStarCount;
 
 function timingQuad(timeFraction) {
 	return Math.pow(timeFraction, 5)
@@ -68,11 +69,11 @@ function lightSpeed(canvas) {
 	console.log(freeSpaceSize);
 
 	startTime = performance.now();
-	let starCount = freeSpaceSize * settings.starDensity;
-	// starCount = 1;
+	desiredStarCount = freeSpaceSize * settings.starDensity;
+	// desiredStarCount = 5;
 	//
 	//
-	for (let i = 0; i < starCount; i++) {
+	for (let i = 0; i < desiredStarCount; i++) {
 		spawnStar(startTime - getRandomInt(0, settings.starLifeTime * 4), ['initial']);
 	}
 	canvas.classList.add('starting');
@@ -80,23 +81,19 @@ function lightSpeed(canvas) {
 	window.requestAnimationFrame(draw);
 }
 
-function animateTrail() {
-	let now = performance.now();
-	let timeDiff = now - startTime;
+function animateTrail(now, velocityProgress) {
 	let lines = targetCanvas.querySelectorAll('line');
 
 	let centerX = canvasWidth / 2;
 	let centerY = canvasHeight / 2;
 
-
-	let velocityProgress = timingQuad(timeDiff / settings.startDuration) / timingQuad(1);
 	let currentVelocity = velocityProgress * settings.velocity;
 
 	let diedStars = 0;
 	for (const line of lines) {
-		if (parseInt(line.getAttribute('birth')) + settings.starLifeTime / velocityProgress < now) {
+		let birth = parseInt(line.getAttribute('birth'));
+		if (birth + settings.starLifeTime / velocityProgress < now) {
 			targetCanvas.removeChild(line);
-			spawnStar(now);
 			diedStars++;
 		}
 		else {
@@ -104,6 +101,7 @@ function animateTrail() {
 			let x1 = line.x1.animVal.value;
 			let y1 = line.y1.animVal.value;
 
+			let timeDiff = now - Math.max(birth, startTime);
 			let x2;
 			let y2;
 			if (x1 === centerX) {
@@ -125,16 +123,30 @@ function animateTrail() {
 			line.setAttribute('y2', y2);
 		}
 	}
-	console.log('diedStars=' + diedStars);
+
+	let addStarCount = 0;
+	let spawnProbability = Math.max(0.1, 1 - (lines.length - diedStars) / desiredStarCount);
+	if (Math.random() < spawnProbability) {
+		addStarCount = spawnProbability * (desiredStarCount - (lines.length - diedStars));
+		for (let i = 0; i < addStarCount; i++)
+			spawnStar(now);
+	}
+
+
+	console.log(`diedStars=${diedStars}, new stars=${addStarCount}`);
 }
 
 function draw() {
 	let d = performance.now() - startTime;
 	if (d < settings.startDuration) {
-		animateTrail();
-
-		window.requestAnimationFrame(draw);
+		animateTrail(performance.now(), timingQuad(d / settings.startDuration) / timingQuad(1));
 	}
+	else {
+		if (!targetCanvas.classList.contains('running'))
+			targetCanvas.classList.add('running');
+		animateTrail(performance.now(), 1);
+	}
+	window.requestAnimationFrame(draw);
 }
 
 function getRandomInt(min, max) {
