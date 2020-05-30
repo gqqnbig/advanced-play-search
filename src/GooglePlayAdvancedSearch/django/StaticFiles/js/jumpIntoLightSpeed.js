@@ -16,6 +16,7 @@ settings.velocity = settings.velocity || 1;
 
 settings.startDuration = settings.startDuration || 2000;
 settings.stopDuration = settings.stopDuration || 2000;
+settings.bounceDistance = settings.bounceDistance || 2;
 
 let targetCanvas;
 let canvasHeight;
@@ -34,12 +35,12 @@ function timingStop(t) {
 	// return -3 * Math.pow(t, 5) + 1;
 }
 
-function spawnStar(birthDate, classes) {
+function spawnStar(birthDate, classes, cameraMargin) {
 	while (true) {
 		let x = getRandomInt(0, canvasWidth);
 		let y = getRandomInt(0, canvasHeight);
 
-		if (Math.pow(Math.abs(x - canvasWidth / 2), 2) + Math.pow(Math.abs(y - canvasHeight / 2), 2) <= settings.cameraMargin * settings.cameraMargin) {
+		if (cameraMargin > 0 && Math.pow(Math.abs(x - canvasWidth / 2), 2) + Math.pow(Math.abs(y - canvasHeight / 2), 2) <= cameraMargin * cameraMargin) {
 			continue;
 		}
 
@@ -47,6 +48,13 @@ function spawnStar(birthDate, classes) {
 
 		let line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
 		line.setAttribute('stroke-width', size);
+
+		let rd = getRandomInt(-3, 3);
+		let gd = getRandomInt(-3, 3);
+		let bd = getRandomInt(-3, 3);
+
+
+		line.setAttribute('stroke', `rgb(${105 + rd * 5}, ${232 + gd * 5}, ${251 + bd * 5})`);
 		line.setAttribute('x1', x);
 		line.setAttribute('y1', y);
 		line.setAttribute('x2', x);
@@ -85,7 +93,7 @@ function enterLightSpeed(canvas) {
 	//
 	//
 	for (let i = 0; i < desiredStarCount; i++) {
-		spawnStar(startTime - getRandomInt(0, settings.starLifeTime * 4), ['initial']);
+		spawnStar(startTime - getRandomInt(0, settings.starLifeTime * 4), ['initial'], settings.cameraMargin);
 	}
 	canvas.classList.add('starting');
 	lastTick = startTime;
@@ -101,10 +109,12 @@ function animateTrail(now, velocityProgress) {
 
 	let currentVelocity = velocityProgress * settings.velocity;
 
+	let lifeTimeAnimated = settings.starLifeTime / velocityProgress;
+
 	let diedStars = 0;
 	for (const line of lines) {
 		let birth = parseInt(line.getAttribute('birth'));
-		if (birth + settings.starLifeTime / velocityProgress < now) {
+		if (birth + lifeTimeAnimated < now) {
 			targetCanvas.removeChild(line);
 			diedStars++;
 		}
@@ -136,14 +146,13 @@ function animateTrail(now, velocityProgress) {
 		}
 	}
 
-	let addStarCount = 0;
 	let spawnProbability = 1 - (lines.length - diedStars) / desiredStarCount;
-	addStarCount = spawnProbability * (desiredStarCount - (lines.length - diedStars));
+	let addStarCount = spawnProbability * (desiredStarCount - (lines.length - diedStars));
 	for (let i = 0; i < addStarCount; i++)
-		spawnStar(now);
+		spawnStar(now, undefined, settings.cameraMargin);
 
 
-	console.log(`diedStars=${diedStars}, new stars=${addStarCount}`);
+	// console.log(`diedStars=${diedStars}, new stars=${addStarCount}`);
 }
 
 /**
@@ -209,8 +218,36 @@ function animateTrailStopping(now, velocityProgress) {
 	console.log(`diedStars=${diedStars}, new stars=${addStarCount}`);
 }
 
-function getDistance() {
 
+function bounce() {
+	let lines = targetCanvas.querySelectorAll('line');
+
+	let centerX = canvasWidth / 2;
+	let centerY = canvasHeight / 2;
+
+	for (const line of lines) {
+		let x1 = line.x1.animVal.value;
+		let y1 = line.y1.animVal.value;
+
+		if (x1 === centerX) {
+			if (y1 > centerY)
+				y1 -= settings.bounceDistance;
+			else
+				y1 += settings.bounceDistance;
+		}
+		else {
+			let op1 = Math.sqrt(Math.pow(Math.abs(x1 - centerX), 2) + Math.pow(Math.abs(y1 - centerY), 2));
+			let op2 = op1 - settings.bounceDistance;
+
+			x1 = op2 * (x1 - centerX) / op1 + centerX;
+			y1 = op2 * (y1 - centerY) / op1 + centerY;
+		}
+
+		line.setAttribute('x1', x1);
+		line.setAttribute('y1', y1);
+		line.setAttribute('x2', x1);
+		line.setAttribute('y2', y1);
+	}
 }
 
 
@@ -218,10 +255,14 @@ function draw() {
 	let now = performance.now();
 	if (targetCanvas.classList.contains('stopping')) {
 		let d = now - stopRequestTime;
-		animateTrailStopping(now, timingStop(d / settings.stopDuration));
-
-		if (d < settings.stopDuration)
+		if (d < settings.stopDuration) {
+			animateTrailStopping(now, timingStop(d / settings.stopDuration));
 			window.requestAnimationFrame(draw);
+		}
+		// else {
+		// 	bounce();
+		// 	animateTrailStopping(now, timingStop(d / settings.stopDuration));
+		// }
 	}
 	else {
 		let d = now - startTime;
@@ -230,8 +271,10 @@ function draw() {
 		}
 		else //if (d < 10000)
 		{
-			if (!targetCanvas.classList.contains('running'))
+			if (!targetCanvas.classList.contains('running')) {
 				targetCanvas.classList.add('running');
+				targetCanvas.classList.remove('starting');
+			}
 			animateTrail(now, 1);
 		}
 		lastTick = now;
@@ -247,6 +290,7 @@ function getRandomInt(min, max) {
 
 function exitLightSpeed() {
 	targetCanvas.classList.add('stopping');
+	// targetCanvas.classList.remove('running');
 	stopRequestTime = performance.now();
 
 }

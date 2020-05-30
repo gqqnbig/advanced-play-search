@@ -43,8 +43,8 @@
 			background-color: black;
 		}
 
-		#svgImage.starting line {
-			stroke: #69e8fb;
+		#svgImage line {
+			/*stroke: rgb(105, 232, 251);*/
 			stroke-linecap: round;
 		}
 
@@ -52,17 +52,29 @@
 			animation-duration: 2s;
 			animation-name: starToBlue;
 		}
+
+		#svgImage.stopping {
+			animation-duration: 2s;
+			animation-name: spaceToBlack;
+			animation-direction: reverse;
+			background-color: transparent;
+		}
+
+		#svgImage.stopping line {
+			animation-duration: 2s;
+			animation-name: starToBlue;
+			animation-direction: reverse;
+
+			stroke: white;
+		}
 	</style>
 </head>
 <body>
-<button onclick="lightSpeed(document.getElementById('svgImage'))">Start</button>
+<button onclick="enterLightSpeed(document.getElementById('svgImage'))">Start</button>
+<button onclick="exitLightSpeed()">Stop</button>
 
 
-<svg id="svgImage" width="500" height="500">
-	<line x1="50" y1="50" x2="50" y2="50" stroke="red" stroke-width="2"/>
-</svg>
-
-<canvas id="can" width="500" height="500" style="display: block"></canvas>
+<svg id="svgImage" width="1500" height="500"></svg>
 
 </body>
 </html>
