@@ -1,69 +1,117 @@
+"use strict";
+
 let stage = 'prepare';
 
 const particles = [];
+let startTime;
+
+let settings = {};
+settings.cameraMargin = settings.cameraMargin || 30;
+settings.starDensity = settings.starDensity || 0.003;
+settings.starSizes = settings.starSizes || [1, 4];
+settings.starLifeTime = settings.starLifeTime || 700;
+settings.canvasWidth = settings.canvasWidth || "100%";
+settings.canvasHeight = settings.canvasHeight || "500px";
+settings.velocity = settings.velocity || 2;
+
+let targetCanvas;
+let canvasHeight;
+let canvasWidth;
 
 function lightSpeed(canvas) {
-	let settings = {};
-	settings.cameraMargin = settings.cameraMargin || 30;
-	settings.starDensity = settings.starDensity || 0.003;
-	settings.starSizes = settings.starSizes || [1, 4];
-	settings.starLifeTime = settings.starLifeTime || 700;
-	settings.canvasWidth = settings.canvasWidth || "100%";
-	settings.canvasHeight = settings.canvasHeight || "500px";
-
-	canvas.width = window.innerWidth;
-	canvas.height = 500;
-
-	// window.requestAnimationFrame(callback);
-
-	let ctx = canvas.getContext("2d");
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	targetCanvas = canvas;
+	// canvas.width = window.innerWidth;
+	// canvas.height = 500;
 
 
-	let freeSpaceSize = canvas.width * canvas.height - Math.PI * settings.cameraMargin * settings.cameraMargin;
+	canvas.classList.remove('starting');
+	canvas.innerHTML = '';
+
+	// let ctx = canvas.getContext("2d");
+	// ctx.clearRect(0, 0, canvas.width, canvas.height);
+	//
+	//
+	canvasWidth = canvas.width.animVal.value;
+	canvasHeight = canvas.height.animVal.value;
+
+	let freeSpaceSize = canvasWidth * canvasHeight - Math.PI * settings.cameraMargin * settings.cameraMargin;
 	console.log(freeSpaceSize);
 
+	startTime = performance.now();
 	let starCount = freeSpaceSize * settings.starDensity;
-	// starCount=10;
-
-
-	var time = performance.now();
+	starCount = 5;
+	//
+	//
 	for (let i = 0; i < starCount; i++) {
-		let x = getRandomInt(0, canvas.width);
-		let y = getRandomInt(0, canvas.height);
+		let x = getRandomInt(0, canvasWidth);
+		let y = getRandomInt(0, canvasHeight);
 
-		if (Math.pow(Math.abs(x - canvas.width / 2), 2) + Math.pow(Math.abs(y - canvas.height / 2), 2) <= settings.cameraMargin * settings.cameraMargin) {
+		if (Math.pow(Math.abs(x - canvasWidth / 2), 2) + Math.pow(Math.abs(y - canvasHeight / 2), 2) <= settings.cameraMargin * settings.cameraMargin) {
 			i--;
 			continue;
 		}
 
 		let size = getRandomInt(settings.starSizes[0], settings.starSizes[1]);
-		particles.push({
-			x: x,
-			y: y,
-			size: size,
-			birth: time - getRandomInt(0, settings.starLifeTime - 1),
-		});
+		// particles.push({
+		// 	x: x,
+		// 	y: y,
+		// 	size: size,
+		// 	birth: ,
+		// });
 
+		let line = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+		line.setAttribute('stroke-width', size);
+		line.setAttribute('x1', x);
+		line.setAttribute('y1', y);
+		line.setAttribute('x2', x);
+		line.setAttribute('y2', y);
+		line.setAttribute('birth', startTime - getRandomInt(0, settings.starLifeTime - 1));
+		canvas.appendChild(line);
+	}
 
-		ctx.fillStyle = "blue";
-		ctx.strokeStyle = 'blue';
-		ctx.lineWidth = size;
-		ctx.beginPath();
-		// ctx.arc(x, y, size, 0, 2 * Math.PI);
-		// ctx.fill();
-		// ctx.strokeRect(x, y, 30, 30);
-		// ctx.beginPath();
-		ctx.moveTo(x, y);
-		ctx.lineTo(x+1, y+1);
-		ctx.stroke();
+	for (const p of particles) {
 
+	}
+	canvas.classList.add('starting');
+
+	// window.requestAnimationFrame(draw);
+}
+
+function animateTrail(timeDiff) {
+	let lines = targetCanvas.querySelectorAll('line');
+
+	let centerX = canvasWidth / 2;
+	let centerY = canvasHeight / 2;
+
+	for (const line of lines) {
+		let x1 = line.x1.animVal.value;
+		let y1 = line.y1.animVal.value;
+
+		let x2;
+		let y2;
+		if (x1 === centerX) {
+			x2 = x1;
+			y2 = y1 + timeDiff * settings.velocity;
+		}
+		else {
+			let op1 = Math.sqrt(Math.pow(Math.abs(x1 - centerX), 2) + Math.pow(Math.abs(y1 - centerY), 2));
+			let op2 = op1 + timeDiff * settings.velocity;
+
+			x2 = op2 * (x1 - centerX) / op1 + centerX;
+			y2 = op2 * (y1 - centerY) / op1 + centerY;
+		}
+
+		line.setAttribute('x2', x2);
+		line.setAttribute('y2', y2);
 	}
 }
 
 function draw() {
-	if (stage === 'prepare') {
+	let d = performance.now() - startTime;
+	if (d < 1000) {
+		animateTrail(10);
 
+		// window.requestAnimationFrame(draw);
 	}
 }
 

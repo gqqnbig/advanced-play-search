@@ -9,30 +9,50 @@
 			margin: 0;
 		}
 
-		@keyframes colorChange {
+		@keyframes starToBlue {
 			from {
-				fill: red;
+				stroke: white;
 			}
 
 			to {
-				fill: blue;
+				stroke: #69e8fb;
 			}
 		}
 
-		#svgImage circle {
-			animation-duration: 3s;
-			animation-name: colorChange;
+		@keyframes spaceToBlack {
+			from {
+				background-color: transparent;
+			}
+
+			to {
+				background-color: black;
+			}
+		}
+
+		#svgImage {
+			background-color: white;
+		}
+
+		#svgImage.starting {
+			background-color: black;
+			animation-duration: 0.5s;
+			animation-name: spaceToBlack;
+		}
+
+		#svgImage.starting line {
+			stroke: #69e8fb;
+			stroke-linecap: round;
+			animation-duration: 1s;
+			animation-name: starToBlue;
 		}
 	</style>
 </head>
 <body>
-<button onclick="lightSpeed(document.getElementById('can'))">Start</button>
+<button onclick="lightSpeed(document.getElementById('svgImage'))">Start</button>
 
 
-<svg id="svgImage">
-	<circle r="3" cx="100" cy="100" stroke="black" stroke-width="2" fill="red"/>
-	<circle r="3" cx="150" cy="100" stroke="black" stroke-width="2" fill="red"/>
-	<circle r="3" cx="200" cy="100" stroke="black" stroke-width="2" fill="red"/>
+<svg id="svgImage" width="500" height="500">
+	<line x1="50" y1="50" x2="50" y2="50" stroke="red" stroke-width="2"/>
 </svg>
 
 <canvas id="can" width="500" height="500" style="display: block"></canvas>
