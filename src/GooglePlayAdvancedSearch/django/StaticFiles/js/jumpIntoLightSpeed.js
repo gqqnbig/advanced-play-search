@@ -13,7 +13,6 @@ settings.starLifeTime = settings.starLifeTime || 700;
 settings.canvasWidth = settings.canvasWidth || "100%";
 settings.canvasHeight = settings.canvasHeight || "500px";
 settings.velocity = settings.velocity || 1;
-settings.stopVelocity = settings.stopVelocity || 2;
 
 settings.startDuration = settings.startDuration || 2000;
 settings.stopDuration = settings.stopDuration || 2000;
@@ -27,6 +26,12 @@ let stopRequestTime;
 
 function timingQuad(timeFraction) {
 	return Math.pow(timeFraction, 5)
+}
+
+
+function timingStop(t) {
+	return Math.cos(t * Math.PI);
+	// return -3 * Math.pow(t, 5) + 1;
 }
 
 function spawnStar(birthDate, classes) {
@@ -60,6 +65,7 @@ function enterLightSpeed(canvas) {
 	// canvas.height = 500;
 
 
+	canvas.classList.remove('stopping');
 	canvas.classList.remove('starting');
 	canvas.innerHTML = '';
 
@@ -131,7 +137,7 @@ function animateTrail(now, velocityProgress) {
 	}
 
 	let addStarCount = 0;
-	let spawnProbability = Math.max(0.1, 1 - (lines.length - diedStars) / desiredStarCount);
+	let spawnProbability = 1 - (lines.length - diedStars) / desiredStarCount;
 	addStarCount = spawnProbability * (desiredStarCount - (lines.length - diedStars));
 	for (let i = 0; i < addStarCount; i++)
 		spawnStar(now);
@@ -140,6 +146,11 @@ function animateTrail(now, velocityProgress) {
 	console.log(`diedStars=${diedStars}, new stars=${addStarCount}`);
 }
 
+/**
+ *
+ * @param now
+ * @param velocityProgress can be negative
+ */
 function animateTrailStopping(now, velocityProgress) {
 	let lines = targetCanvas.querySelectorAll('line');
 
@@ -147,11 +158,12 @@ function animateTrailStopping(now, velocityProgress) {
 	let centerY = canvasHeight / 2;
 
 	let currentVelocity = velocityProgress * settings.velocity;
+	console.log(`velocityProgress=${velocityProgress}`);
 
 	let diedStars = 0;
 	for (const line of lines) {
 		let birth = parseInt(line.getAttribute('birth'));
-		if (birth + settings.starLifeTime / velocityProgress < now) {
+		if (velocityProgress > 0 && birth + settings.starLifeTime / velocityProgress < now) {
 			targetCanvas.removeChild(line);
 			diedStars++;
 		}
@@ -160,22 +172,26 @@ function animateTrailStopping(now, velocityProgress) {
 			let x1 = line.x1.animVal.value;
 			let y1 = line.y1.animVal.value;
 
-			let timeDiff = now - Math.max(birth, startTime);
-			let x2;
-			let y2;
+			let timeDiff = now - lastTick;
+			let x2 = line.x2.animVal.value;
+			let y2 = line.y2.animVal.value;
 			if (x1 === centerX) {
 				x2 = x1;
-				if (y1 > centerY)
-					y2 = y1 + timeDiff * currentVelocity;
+				if (y1 > centerY) {
+					y2 = Math.max(y1, y2 + timeDiff * currentVelocity);
+				}
 				else
-					y2 = y1 - timeDiff * currentVelocity;
+					y2 = Math.min(y1, y2 - timeDiff * currentVelocity);
 			}
 			else {
 				let op1 = Math.sqrt(Math.pow(Math.abs(x1 - centerX), 2) + Math.pow(Math.abs(y1 - centerY), 2));
-				let op2 = op1 + timeDiff * currentVelocity;
+				let op2 = Math.sqrt(Math.pow(Math.abs(x2 - centerX), 2) + Math.pow(Math.abs(y2 - centerY), 2));
+				let op3 = op2 + timeDiff * currentVelocity;
+				if (op3 < op1)
+					op3 = op1;
 
-				x2 = op2 * (x1 - centerX) / op1 + centerX;
-				y2 = op2 * (y1 - centerY) / op1 + centerY;
+				x2 = op3 * (x2 - centerX) / op2 + centerX;
+				y2 = op3 * (y2 - centerY) / op2 + centerY;
 			}
 
 			line.setAttribute('x2', x2);
@@ -183,7 +199,18 @@ function animateTrailStopping(now, velocityProgress) {
 		}
 	}
 
+	let addStarCount = 0;
+	let spawnProbability = 1 - (lines.length - diedStars) / desiredStarCount;
+	addStarCount = spawnProbability * (desiredStarCount - (lines.length - diedStars));
+	for (let i = 0; i < addStarCount; i++)
+		spawnStar(now);
+
+
 	console.log(`diedStars=${diedStars}, new stars=${addStarCount}`);
+}
+
+function getDistance() {
+
 }
 
 
@@ -191,7 +218,10 @@ function draw() {
 	let now = performance.now();
 	if (targetCanvas.classList.contains('stopping')) {
 		let d = now - stopRequestTime;
-		animateTrailStopping(now, 1 - timingQuad(d / settings.stopDuration) / timingQuad(1))
+		animateTrailStopping(now, timingStop(d / settings.stopDuration));
+
+		if (d < settings.stopDuration)
+			window.requestAnimationFrame(draw);
 	}
 	else {
 		let d = now - startTime;
