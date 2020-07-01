@@ -24,6 +24,7 @@ if __name__ == "__main__":
 	print(f'removed {cursor.rowcount} search records since {MAX_RECORD_DAYS} days ago.')
 
 	connection.commit()
+	connection.close()
 
 # We may want to remove unused permissions or categories.
 # However SQLite doesn't support drop columns.

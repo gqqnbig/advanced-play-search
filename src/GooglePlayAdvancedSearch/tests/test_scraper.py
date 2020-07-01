@@ -31,6 +31,7 @@ def test_scrapeAppsWithExoticPermissions(dbFilePath):
 	cursor.execute('select id from App')
 
 	s = set([r[0] for r in cursor.fetchall()])
+	connection.close()
 	failedCases = testCases - s
 
 	if len(failedCases) > 0:
