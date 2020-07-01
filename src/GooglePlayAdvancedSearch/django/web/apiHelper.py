@@ -17,7 +17,7 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 	page = requests.get(url, verify=True)
 
 	# "key: 'ds:3'" is not reliable.
-	matches = re.findall(r'<script.*?>AF_initDataCallback\(\s*{.*?data:function\(\){return\s+(\[.+?\])\s*}\s*}\s*\)\s*;\s*</script>', page.text, flags=re.DOTALL)
+	matches = re.findall(r'<script.*?>AF_initDataCallback\(\s*{.*?data:(\[\[null,\[\[\[\[\[null,\[.+?\])\s*}\s*\)\s*;\s*</script>', page.text, flags=re.DOTALL)
 	data = jsonLoads(matches[-1])
 	data = data[0][1]
 
