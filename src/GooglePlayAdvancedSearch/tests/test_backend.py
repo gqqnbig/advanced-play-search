@@ -22,7 +22,7 @@ def test_searchNoDuplicate():
 
 def test_searchKeywordEscpaing():
 	result = apiHelper.searchGooglePlay('calculator&type=swimming')
-	assert any('swimming' in app['name'] for app in result), '"calculator&type=swimming" should be considered as a single keyword. Results matching swimming are expected.'
+	assert any('swimming'.casefold() in app['name'].casefold() for app in result), '"calculator&type=swimming" should be considered as a single keyword. Results matching swimming are expected.'
 
 
 if __name__ == '__main__':
