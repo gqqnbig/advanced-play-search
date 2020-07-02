@@ -11,8 +11,10 @@ def getTestFolder():
 
 def startWebsite(test):
 	g = conftest.websiteUrlCore()
-	test(next(g))
-	next(g, None)
+	try:
+		test(next(g))
+	finally:
+		next(g, None)
 
 
 def runScraper(args):

@@ -15,6 +15,7 @@ def test_searchPermissionFilter(websiteUrl, dbFilePath):
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
 	permissions = GooglePlayAdvancedSearch.DBUtils.getAllPermissions(cursor)
+	connection.close()
 	pid = next((k for k, v in permissions.items() if 'read the contents of your USB storage' in v), None)
 
 	response = requests.get(websiteUrl + '/Api/Search?q=wechat&pids=' + str(pid), verify=True)
@@ -34,6 +35,7 @@ def test_searchCategoryFilter(websiteUrl, dbFilePath):
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
 	categories = GooglePlayAdvancedSearch.DBUtils.getAllCategories(cursor)
+	connection.close()
 	cid = next((k for k, v in categories.items() if 'Social' in v), None)
 
 	response = requests.get(websiteUrl + '/Api/Search?q=facebook&cids=' + str(cid), verify=True)
@@ -70,6 +72,8 @@ def test_searchResultUpperBound(websiteUrl, dbFilePath):
 		assert len(data['apps']) <= GooglePlayAdvancedSearch.DBUtils.MAX_SELECT, f"At most returns {GooglePlayAdvancedSearch.DBUtils.MAX_SELECT}, actually returns {len(data['apps'])}."
 	finally:
 		cursor.execute('delete from App where id like :id', {'id': 'GooglePlayAdvancedSearch.testApp%'})
+		connection.commit()
+		connection.close()
 
 
 def test_recentSearches(websiteUrl, dbFilePath):
@@ -88,3 +92,4 @@ def test_recentSearches(websiteUrl, dbFilePath):
 	finally:
 		cursor.execute("delete from Search where ip='pytest'")
 		connection.commit()
+		connection.close()

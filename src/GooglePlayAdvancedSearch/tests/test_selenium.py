@@ -31,6 +31,7 @@ def test_RecentSearchDateOnFirefox(dbFilePath, websiteUrl):
 
 	cursor.execute('insert into Search Values("students","q=students","127.0.0.1","1989-06-04 04:00:00")')
 	connection.commit()
+	connection.close()
 
 	options = Options()
 	options.headless = True
