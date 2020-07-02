@@ -1,20 +1,19 @@
 import datetime
 import os
 import subprocess
+import sys
+from types import SimpleNamespace
+from typing import List, Dict
+from urllib.parse import urlparse
 
 import django
 import requests
-import sys
-
+from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.cache import cache_control, cache_page
-from django.conf import settings
-from types import SimpleNamespace
-from typing import List, Dict
-from urllib.parse import urlparse
 
 # import local packages
 import GooglePlayAdvancedSearch.Errors
@@ -92,7 +91,7 @@ def search(request: django.http.HttpRequest):
 	if not request.COOKIES.get('_gaload') and limitRate(getClientIP(request)):
 		return JsonResponse({'error': 'Rate limit reached. Wait 60 seconds.'})
 
-	keyword = request.GET['q']
+	keyword = request.GET.get('q', '').strip()
 	with connection.cursor() as cursor:
 		try:
 			logSearch(cursor, keyword, request)

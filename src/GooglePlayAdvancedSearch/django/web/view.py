@@ -1,11 +1,10 @@
 import os
-import re
-import requests
 import sys
+
+import django.http
 
 from django.db import connection
 from django.shortcuts import render
-from json import loads as jsonLoads
 
 # import local packages
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../..'))
@@ -22,10 +21,11 @@ def index(request):
 	return render(request, 'index.html', context)
 
 
-def keyword_search(request):
+def keyword_search(request: django.http.HttpRequest):
 	context = {}
 	context['isSearch'] = True
 	context['refetchAppCount'] = True
+	context['subtitle'] = request.GET.get('q', '').strip()
 	return render(request, 'index.html', context)
 
 
