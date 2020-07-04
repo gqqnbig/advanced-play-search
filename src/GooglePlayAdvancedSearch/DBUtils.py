@@ -265,3 +265,32 @@ updateDate=excluded.updateDate
 		l = list(self.__allCategories.items())
 		usedCategories = {l[i][0]: l[i][1] for i in range(len(row)) if row[i]}
 		return usedCategories
+
+	def setLocalizedName(self, appId, language, name):
+		try:
+			self.__cursor.execute('insert into LocalizedApp(id, language, name) values(?,?,?)', (appId, language, name))
+		except:
+			self.__cursor.execute('''
+CREATE TABLE "LocalizedApp" (
+	"id"	TEXT,
+	"language"	INTEGER,
+	"name"	TEXT,
+	PRIMARY KEY("id","language")
+)''')
+			self.__cursor.execute('insert into LocalizedApp(id, language, name) values(?,?,?)', (appId, language, name))
+
+		self.__conn.commit()
+
+	def getLocalizedName(self, appId, languagePattern):
+		"""
+
+		:param appId:
+		:param languagePattern:
+		:return: None if the localized name is not found.
+		"""
+		self.__cursor.execute('select name from LocalizedApp where id=? and language like ? limit 1', (appId, languagePattern))
+		result = self.__cursor.fetchone()
+		if result is None:
+			return None
+		else:
+			return result[0]

@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 import django
 import requests
+import django.utils.translation
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
@@ -128,6 +129,13 @@ def search(request: django.http.HttpRequest):
 
 			appInfoIds = {a['id'] for a in appInfos}
 			appInfos.extend([a for a in appInfos2 if a['id'] not in appInfoIds])
+
+		language = django.utils.translation.get_language()
+		if language.startswith('zh'):
+			for app in appInfos:
+				n = appAccessor.getLocalizedName(app['id'], 'zh%')
+				if n is not None:
+					app['name'] = n
 
 		sortType = request.GET.get('sort')
 		if sortType == 'rlh':  # rating low to high
