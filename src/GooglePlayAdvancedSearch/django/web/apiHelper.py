@@ -17,9 +17,22 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 	page = requests.get(url, verify=True)
 
 	# "key: 'ds:3'" is not reliable.
-	matches = re.findall(r'<script.*?>AF_initDataCallback\(\s*{.*?data:(\[\[null,\[\[\[\[\[null,\[.+?\])\s*}\s*\)\s*;\s*</script>', page.text, flags=re.DOTALL)
-	data = jsonLoads(matches[-1])
-	data = data[0][1]
+	matches = re.findall(r'<script.*?>AF_initDataCallback\((.+?)\)\s*;\s*</script>', page.text, flags=re.DOTALL)
+
+	data = None
+	# Typically the target segment is the last match.
+	for i in range(len(matches) - 1, 0, -1):
+		m = matches[i]
+		if 'googleusercontent.com' in m:
+			try:
+				startIndex = m.find('data:')
+				endIndex = m.rfind(']', startIndex + 1)
+				m = m[startIndex + len('data:'):endIndex + 1]
+				data = jsonLoads(m)
+				data = data[0][1]
+				break
+			except:
+				pass
 
 	if not data:
 		print("We couldn't find anything for your search.")
