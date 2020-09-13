@@ -69,7 +69,7 @@ rating real,
 inAppPurchases integer, 
 containsAds integer,
 num_reviews integer,
-install_fee integer NOT NULL,
+install_fee integer,
 updateDate text NOT NULL, -- utc time
 app_icon text NOT NULL,
 isPartialInfo integer not null
