@@ -161,7 +161,8 @@ class AppInfoSpider(scrapy.Spider):
 						permissions.append(p[1])
 
 		# permissionData[1] is other permissions.
-		if len(permissionData) > 1:
+		# permissionData[1] may be None
+		if len(permissionData) > 1 and permissionData[1]:
 			for p in permissionData[1][0][2]:
 				permissions.append(p[1])
 

@@ -18,7 +18,9 @@ def test_scrapeAppsWithExoticPermissions(dbFilePath):
 				 'com.om.calc',
 				 'com.appdevgenie.electronicscalculator',
 				 'com.androidapps.unitconverter',
-				 'com.videos.freemusic.song.mp3.musicplayer.mv'}
+				 'com.videos.freemusic.song.mp3.musicplayer.mv',
+				 'com.i2mobil.minidb'
+				 }
 
 	if os.path.exists(dbFilePath):
 		os.remove(dbFilePath)
