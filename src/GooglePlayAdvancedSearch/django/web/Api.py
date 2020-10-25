@@ -151,7 +151,7 @@ def search(request: django.http.HttpRequest):
 			return JsonResponse({'error': f'Searching is aborted because secure connection is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 
 
-def filterApps(appInfos, excludedCategoryIds, excludedPermissionIds, request):
+def filterApps(appInfos: List[AppItem], excludedCategoryIds, excludedPermissionIds, request):
 	if len(excludedPermissionIds):
 		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPermissionIds) == False]
 	if len(excludedCategoryIds):
