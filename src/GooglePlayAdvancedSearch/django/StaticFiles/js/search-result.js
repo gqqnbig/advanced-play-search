@@ -71,6 +71,9 @@ Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis, searchTimin
 			});
 
 			searchResult.errorMessage = undefined;
+
+			//activate Google ads
+			(adsbygoogle = window.adsbygoogle || []).push({});
 		}
 	});
 });
