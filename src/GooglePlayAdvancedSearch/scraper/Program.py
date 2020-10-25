@@ -102,19 +102,21 @@ class AppInfoSpider(scrapy.Spider):
 			appInfo['num_reviews'] = None
 
 		feeElement = parentBox.xpath('following-sibling::*').css('span button[aria-label]')
-		if feeElement is None:
-			self.logger.error("Install fee is not found.")
+		if feeElement.get() is None:
+			self.logger.info("Install fee is not found.")
+			appInfo['install_fee'] = None
 		elif feeElement.css('::attr(data-is-free)').get() == "true":
 			appInfo['install_fee'] = 0
 		else:
 			try:
 				appInfo['install_fee'] = float(re.search(r'\d+\.\d*', feeElement.css('::attr(aria-label)').get())[0])
 			except:
-				self.logger.error(f"Unexpected install fee. feeElement: {feeElement.get()}")
-				if self.__seleniumAvailable != False:
-					baseDir = os.path.dirname(os.path.abspath(__file__)) + '../../../../screenshots/'
-					os.makedirs(baseDir, exist_ok=True)
-					self.__seleniumAvailable = getPageWithSelenium(response.url, baseDir + appInfo['id'] + '.png', 'c-wiz[data-view-instance-id]')
+				self.logger.info(f"Unexpected install fee. feeElement: {feeElement.get()}")
+				appInfo['install_fee'] = None
+				# if self.__seleniumAvailable != False:
+				# 	baseDir = os.path.dirname(os.path.abspath(__file__)) + '../../../../screenshots/'
+				# 	os.makedirs(baseDir, exist_ok=True)
+				# 	self.__seleniumAvailable = getPageWithSelenium(response.url, baseDir + appInfo['id'] + '.png', 'c-wiz[data-view-instance-id]')
 
 		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
 		appInfo['app_icon'] = ariaLabel_icon
