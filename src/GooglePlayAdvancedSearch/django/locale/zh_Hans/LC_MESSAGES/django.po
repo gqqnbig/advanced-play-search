@@ -1,0 +1,117 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-05-01 14:56-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: .\templates\index.html:7 .\templates\index.html:158
+#: .\templates\index.html:379
+msgid "Google Play Advanced Search"
+msgstr "Google Play高级搜索"
+
+#: .\templates\index.html:162
+msgid "Search"
+msgstr "搜索"
+
+#: .\templates\index.html:167
+msgid "Sort by"
+msgstr "排序方式"
+
+#: .\templates\index.html:170
+msgid "Default order"
+msgstr "默认顺序"
+
+#: .\templates\index.html:171
+msgid "Highest rating first"
+msgstr "好评在前"
+
+#: .\templates\index.html:172
+msgid "Lowest rating first"
+msgstr "差评在前"
+
+#: .\templates\index.html:173
+msgid "Most permissions first"
+msgstr "权限多在前"
+
+#: .\templates\index.html:174
+msgid "Least permissions first"
+msgstr "权限少在前"
+
+#: .\templates\index.html:178
+msgid "Allow in-app purchase"
+msgstr "允许应用内购买"
+
+#: .\templates\index.html:179
+msgid "Free install"
+msgstr "免费安装"
+
+#: .\templates\index.html:180
+msgid "Allow ads"
+msgstr "允许广告"
+
+#: .\templates\index.html:183
+msgid "Rating "
+msgstr "星级"
+
+#: .\templates\index.html:194
+msgid "permissions"
+msgstr "权限"
+
+#: .\templates\index.html:195
+msgid "categories"
+msgstr "类别"
+
+#: .\templates\index.html:302
+msgid "Searching..."
+msgstr "正在搜索，请稍等"
+
+#: .\templates\index.html:308
+msgid ""
+"<b class='good'>True free</b> means the app is free to install and doesn't "
+"have in-app purchase."
+msgstr "<b class='good'>真免费</b>表示该应用免费下载，且不含应用内购买。"
+
+#: .\templates\index.html:311
+msgid ""
+"<b>Free</b> means the app is free to install and but has in-app purchase."
+msgstr "<b>免费</b>表示该应用免费下载，但含有应用内购买。"
+
+#: .\templates\index.html:312
+msgid "<b>$x.x</b> means there is a install fee, but no in-app purchase."
+msgstr "<b>$x.x</b>表示付费下载，但无应用内购买。"
+
+#: .\templates\index.html:313
+msgid "<b>$x.x+</b> means there is a install fee and in-app purchase."
+msgstr "<b>$x.x+</b>表示付费下载，且含有应用内购买。"
+
+#: .\templates\index.html:320
+msgid ""
+"We have recorded <span id='appCount'></span> apps, and the number is "
+"increasing!"
+msgstr "我们已经记录了<span id='appCount'></span>款应用，并且还在持续增加！"
+
+#: .\templates\index.html:341
+msgid "(Show Top Apps)"
+msgstr "（热门应用）"
+
+#: .\templates\index.html:345
+msgid ""
+"This application is experimental. In order to track how people are using it, "
+"help developers improve it, and prevent misuse, the application will track "
+"recent searches."
+msgstr ""
+"本应用程序处于试验阶段，为了跟踪用户用法、帮助改进以及防止滥用，本应用程序会"
+"记录最近的搜索。"

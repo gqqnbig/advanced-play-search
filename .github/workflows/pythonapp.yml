@@ -38,13 +38,28 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r src/GooglePlayAdvancedSearch/tests/requirements.txt
+    - name: Build translation files
+      run: |
+        cd src/GooglePlayAdvancedSearch/django
+        for f in locale/*
+        do
+          if [[ ! $f =~ [^_]+_[[:upper:]]([[:upper:]]|[[:lower:]]{2,}) ]]; then
+            echo $f is invalid. If the country part is 2 characters, it must be UPPERCASE. Otherwise it must be Titlecase.
+            exit 1
+          fi
+        done
+
+        sudo apt-get --yes install gettext
+        django-admin compilemessages
+        test -f locale/zh_Hans/LC_MESSAGES/django.mo
+        test -f locale/zh_Hans/LC_MESSAGES/djangojs.mo
     - name: Lint with flake8
       run: |
         pip install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 . --count --exit-zero --ignore=W191,E501,E117,E712 --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Restore sqlite 3.31
       id: restore-sqlite-binary
