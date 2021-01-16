@@ -52,7 +52,13 @@ Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis]).then(funct
 			searchResult.apps = '';
 		}
 		else {
-			searchResult.apps = data.apps;
+			searchResult.apps = data.apps.map(d => {
+				d.ratingTitle = 'Rating ' + d.rating.toFixed(1);
+				if (d.num_reviews)
+					d.ratingTitle += ` based on ${d.num_reviews} reviews`;
+				return d;
+			});
+
 			searchResult.executionSeconds = (performance.now() - startSearchTime) / 1000;
 			searchResult.errorMessage = undefined;
 		}
