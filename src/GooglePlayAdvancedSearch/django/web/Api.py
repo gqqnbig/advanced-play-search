@@ -138,6 +138,10 @@ def search(request: django.http.HttpRequest):
 			appInfos = sorted(appInfos, key=lambda a: len(a['permissions']))
 		elif sortType == 'phl':  # number of permissions low to high
 			appInfos = sorted(appInfos, key=lambda a: len(a['permissions']), reverse=True)
+		elif sortType == 'flh':
+			appInfos = sorted(appInfos, key=lambda a: a['install_fee'] if a['install_fee'] else 0)
+		elif sortType == 'fhl':
+			appInfos = sorted(appInfos, key=lambda a: a['install_fee'] if a['install_fee'] else 0, reverse=True)
 
 		response = JsonResponse({'apps': [dict(a) for a in appInfos]}, safe=False)
 		response['Cache-Control'] = "public, max-age=3600"
