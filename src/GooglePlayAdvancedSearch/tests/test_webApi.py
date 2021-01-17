@@ -93,3 +93,27 @@ def test_recentSearches(websiteUrl, dbFilePath):
 		cursor.execute("delete from Search where ip='pytest'")
 		connection.commit()
 		connection.close()
+
+
+def test_sortByPriceWithoutDetail(websiteUrl):
+	response = requests.get(websiteUrl + '/Api/Search?q=emoji&sort=flh')
+	data = response.json()['apps']
+	assert data[0]['install_fee'] <= data[-1]['install_fee'], \
+		f'Sort apps by price from low to high, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
+
+	response = requests.get(websiteUrl + '/Api/Search?q=emoji&sort=fhl')
+	data = response.json()['apps']
+	assert data[0]['install_fee'] >= data[-1]['install_fee'], \
+		f'Sort apps by price from high to low, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
+
+
+def test_sortByPrice(websiteUrl):
+	response = requests.get(websiteUrl + '/Api/Search?q=database&sort=flh&ad=false')
+	data = response.json()['apps']
+	assert data[0]['install_fee'] <= data[-1]['install_fee'], \
+		f'Sort apps by price from low to high, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
+
+	response = requests.get(websiteUrl + '/Api/Search?q=database&sort=fhl&ad=false')
+	data = response.json()['apps']
+	assert data[0]['install_fee'] >= data[-1]['install_fee'], \
+		f'Sort apps by price from high to low, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
