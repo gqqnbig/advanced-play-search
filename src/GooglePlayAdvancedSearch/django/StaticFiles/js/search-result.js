@@ -19,7 +19,7 @@ const searchResult = new Vue({
 			if (installFee > 0)
 				return "$" + installFee + (allowInAppPurchase ? "+" : "");
 			else if (installFee == null || installFee == undefined)
-				return "" //return empty string so that we don't have to deal with the color.
+				return "?"
 			else
 				return (allowInAppPurchase ? "" : "True ") + "free";
 		},
