@@ -38,6 +38,16 @@ const searchTool = new Vue({
 				query += "&free=true";
 			return query;
 		}
+	},
+	watch: {
+		freeInstall: function (val, oldVal) {
+			if (val && this.sortType.startsWith('f'))
+				this.sortType = ''; //free to install then price is all 0, nothing to sort.
+		},
+		sortType: function (val, oldVal) {
+			if (val.startsWith('f') && this.freeInstall)
+				this.freeInstall = false; //If you want to sort prices, do not tick free to install.
+		}
 	}
 });
 
