@@ -55,7 +55,7 @@ def searchGooglePlay(keyword) -> List[AppItem]:
 				appInfo = AppItem()
 				appInfo['name'] = app[2]
 				appInfo['id'] = appId
-				appInfo['rating'] = app[6][0][2][1][1]
+				appInfo['rating'] = app[6][0][2][1][1] if app[6] is not None else 0
 				appInfo['app_icon'] = app[1][1][0][3][2]
 				if app[7]:
 					appInfo['install_fee'] = float(re.search(r'\d+\.\d*', app[7][0][3][2][1][0][2])[0])
