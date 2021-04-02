@@ -10,7 +10,7 @@ import GooglePlayAdvancedSearch.tests.testUtils as testUtils
 from GooglePlayAdvancedSearch.Models import AppItem
 
 
-def test_searchPermissionFilter(websiteUrl, dbFilePath):
+def test_searchWithPermission(websiteUrl, dbFilePath):
 	# com.tencent.mm uses permission 'read the contents of your USB storage'
 	# We exclude this permission in the search, and make sure the result doesn't have com.tencent.mm.
 
@@ -30,7 +30,7 @@ def test_searchPermissionFilter(websiteUrl, dbFilePath):
 	assert 'com.tencent.mm' in text, "Search for wechat allowing storage permission. The search result not have wechat."
 
 
-def test_searchCategoryFilter(websiteUrl, dbFilePath):
+def test_searchWithCategory(websiteUrl, dbFilePath):
 	# com.facebook.katana uses category 'Social'
 	# we exclude this category in the search, and make sure the result doesn't have com.facebook.katana.
 
