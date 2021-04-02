@@ -107,10 +107,6 @@ def search(request: django.http.HttpRequest):
 				print(str(e))
 
 	startTime = time.time()
-	excludedPIds = [int(n) for n in request.GET.get('pids', '').split(',') if n != '']
-
-	excludedCIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
-
 	try:
 		appAccessor = AppAccessor()
 		appInfos = appAccessor.searchApps(keyword)
@@ -120,7 +116,7 @@ def search(request: django.http.HttpRequest):
 		if needCompleteInfo:
 			appInfos = getCompleteAppInfo([a['id'] for a in appInfos])
 
-		appInfos = filterApps(appInfos, excludedCIds, excludedPIds, request)
+		appInfos = filterApps(appInfos, request)
 
 		# If we cannot find 200 matches from our database, we try to find more matches from Google.
 		if len(appInfos) < 200 and cache.get('searchkey-' + keyword) is None:
@@ -129,7 +125,7 @@ def search(request: django.http.HttpRequest):
 			if needCompleteInfo:
 				appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
 
-			appInfos2 = filterApps(appInfos2, excludedCIds, excludedPIds, request)
+			appInfos2 = filterApps(appInfos2, request)
 
 			appInfoIds = {a['id'] for a in appInfos}
 			appInfos.extend([a for a in appInfos2 if a['id'] not in appInfoIds])
@@ -164,7 +160,10 @@ def search(request: django.http.HttpRequest):
 			return JsonResponse({'error': f'Searching is aborted because secure connection is compromised.\nAttacker is attacking us, but we didn\'t leak your data!'})
 
 
-def filterApps(appInfos: List[AppItem], excludedCategoryIds, excludedPermissionIds, request):
+def filterApps(appInfos: List[AppItem], request):
+	excludedPermissionIds = [int(n) for n in request.GET.get('pids', '').split(',') if n != '']
+	excludedCategoryIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
+
 	if len(excludedPermissionIds):
 		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPermissionIds) == False]
 	if len(excludedCategoryIds):
