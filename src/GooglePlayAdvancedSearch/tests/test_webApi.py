@@ -1,4 +1,5 @@
 import os
+import pytest
 import sqlite3
 import time
 
@@ -99,7 +100,11 @@ def test_recentSearches(websiteUrl, dbFilePath):
 
 def test_sortByPriceWithoutDetail(websiteUrl):
 	response = requests.get(websiteUrl + '/Api/Search?q=emoji&sort=flh')
-	data = response.json()['apps']
+	try:
+		data = response.json()['apps']
+	except Exception as e:
+		pytest.fail(str(e) + f'\ndata={response.text}')
+
 	assert data[0]['install_fee'] <= data[-1]['install_fee'], \
 		f'Sort apps by price from low to high, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
 
@@ -142,7 +147,10 @@ def test_searchTiming(dbFilePath):
 
 def test_sortByPrice(websiteUrl):
 	response = requests.get(websiteUrl + '/Api/Search?q=database&sort=flh&ad=false')
-	data = response.json()['apps']
+	try:
+		data = response.json()['apps']
+	except Exception as e:
+		pytest.fail(str(e) + f'\ndata={response.text}')
 
 	p1 = data[0]['install_fee']
 	if p1 is None:
@@ -153,7 +161,10 @@ def test_sortByPrice(websiteUrl):
 	assert p1 <= p2, f'Sort apps by price from low to high, but the price of the first app is greater than the price of the last app.'
 
 	response = requests.get(websiteUrl + '/Api/Search?q=database&sort=fhl&ad=false')
-	data = response.json()['apps']
+	try:
+		data = response.json()['apps']
+	except Exception as e:
+		pytest.fail(str(e) + f'\ndata={response.text}')
 
 	p1 = data[0]['install_fee']
 	if p1 is None:
