@@ -168,15 +168,15 @@ def filterApps(appInfos: List[AppItem], request):
 	excludedCategoryIds = [int(n) for n in request.GET.get('cids', '').split(',') if n != '']
 
 	if len(excludedPermissionIds):
-		appInfos = [a for a in appInfos if isExcluded(a['permissions'], excludedPermissionIds) == False]
+		appInfos = [a for a in appInfos if 'permissions' in a and isExcluded(a['permissions'], excludedPermissionIds) == False]
 	if len(excludedCategoryIds):
-		appInfos = [a for a in appInfos if isExcluded(a['categories'], excludedCategoryIds) == False]
+		appInfos = [a for a in appInfos if 'categories' in a and isExcluded(a['categories'], excludedCategoryIds) == False]
 	if request.GET.get('free') == 'true':
 		appInfos = [a for a in appInfos if a['install_fee'] == 0]
 	if request.GET.get('ap') == 'false':
-		appInfos = [a for a in appInfos if a['inAppPurchases'] == 0]
+		appInfos = [a for a in appInfos if 'inAppPurchases' in a and a['inAppPurchases'] == 0]
 	if request.GET.get('ad') == 'false':
-		appInfos = [a for a in appInfos if a['containsAds'] == 0]
+		appInfos = [a for a in appInfos if 'containsAds' in a and a['containsAds'] == 0]
 	if request.GET.get('rating'):
 		appInfos = [a for a in appInfos if a['rating'] > int(request.GET.get('rating'))]
 	return appInfos
