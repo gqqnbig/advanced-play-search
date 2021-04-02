@@ -50,6 +50,39 @@ def test_searchCategoryFilter(websiteUrl, dbFilePath):
 	assert 'com.facebook.katana' in text, "Search for facebook allowing Social category. The search result should have it."
 
 
+def test_searchWithRatingInc(websiteUrl):
+	resultCount = 1000
+	for rating in range(-1, 5):
+		response = requests.get(websiteUrl + '/Api/Search?q=Fundamentals%20Of%20Prosperity%20Free%20eBook%20%26%20Audio%20Book&rating=' + str(rating),
+								cookies={'_gaload': 'ok'})
+		try:
+			data = response.json()
+			data = data['apps']
+		except Exception as e:
+			pytest.fail(str(e) + f'\ndata={response.text}')
+
+		assert len(data) <= resultCount, 'Rating goes higher, the search result should be less.'
+
+		for app in data:
+			assert app['rating'] > rating, f'App {app["name"]} does not match search condition.'
+
+
+def test_searchWithRatingDec(websiteUrl):
+	resultCount = -1
+	for rating in range(4, -2):
+		response = requests.get(websiteUrl + '/Api/Search?q=sms&rating=' + str(rating),
+								cookies={'_gaload': 'ok'})
+		try:
+			data = response.json()['apps']
+		except Exception as e:
+			pytest.fail(str(e) + f'\ndata={response.text}')
+
+		assert len(data) >= resultCount, 'Rating goes lower, the search result should be more.'
+
+		for app in data:
+			assert app['rating'] > rating, f'App {app["name"]} does not match search condition.'
+
+
 def test_searchResultUpperBound(websiteUrl, dbFilePath):
 	connection = sqlite3.connect(dbFilePath)
 	cursor = connection.cursor()
