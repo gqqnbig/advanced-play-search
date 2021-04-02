@@ -119,11 +119,14 @@ def search(request: django.http.HttpRequest):
 		appInfos = filterApps(appInfos, request)
 
 		# If we cannot find 200 matches from our database, we try to find more matches from Google.
-		if len(appInfos) < 200 and cache.get('searchkey-' + keyword) is None:
-			cache.set('searchkey-' + keyword, '', timeout=60 * 5)  # do not search the same keyword in 5 minutes
-			appInfos2 = apiHelper.searchGooglePlay(keyword)
-			if needCompleteInfo:
-				appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
+		if len(appInfos) < 200:
+			appInfos2 = cache.get('searchkey-' + keyword)
+			if appInfos2 is None:
+				appInfos2 = apiHelper.searchGooglePlay(keyword)
+				if needCompleteInfo:
+					appInfos2 = getCompleteAppInfo([a['id'] for a in appInfos2])
+
+				cache.set('searchkey-' + keyword, appInfos2, timeout=60 * 5)  # do not search the same keyword in 5 minutes
 
 			appInfos2 = filterApps(appInfos2, request)
 
