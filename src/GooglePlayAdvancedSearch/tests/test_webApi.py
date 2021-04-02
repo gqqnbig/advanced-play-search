@@ -110,10 +110,22 @@ def test_sortByPriceWithoutDetail(websiteUrl):
 def test_sortByPrice(websiteUrl):
 	response = requests.get(websiteUrl + '/Api/Search?q=database&sort=flh&ad=false')
 	data = response.json()['apps']
-	assert data[0]['install_fee'] <= data[-1]['install_fee'], \
-		f'Sort apps by price from low to high, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
+
+	p1 = data[0]['install_fee']
+	if p1 is None:
+		p1 = 0
+	p2 = data[-1]['install_fee']
+	if p2 is None:
+		p2 = 0
+	assert p1 <= p2, f'Sort apps by price from low to high, but the price of the first app is greater than the price of the last app.'
 
 	response = requests.get(websiteUrl + '/Api/Search?q=database&sort=fhl&ad=false')
 	data = response.json()['apps']
-	assert data[0]['install_fee'] >= data[-1]['install_fee'], \
-		f'Sort apps by price from high to low, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
+
+	p1 = data[0]['install_fee']
+	if p1 is None:
+		p1 = 0
+	p2 = data[-1]['install_fee']
+	if p2 is None:
+		p2 = 0
+	assert p1 >= p2, f'Sort apps by price from high to low, but the price of the first app is less than the price of the last app.'
