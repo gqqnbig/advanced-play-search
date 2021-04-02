@@ -76,6 +76,7 @@ def limitRate(ip):
 	if d:
 		# No more than 3 times every 30 seconds.
 		if d.count >= 3 and d.count / (datetime.datetime.now() - d.time).total_seconds() > 0.1:
+			print(f'IP {ip} is rate-limited. It has {d.count} visit in {(datetime.datetime.now() - d.time).total_seconds() :.0f} seconds.')
 			return True
 		else:
 			d.count += 1
