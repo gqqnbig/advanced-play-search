@@ -177,6 +177,8 @@ def filterApps(appInfos: List[AppItem], request):
 		appInfos = [a for a in appInfos if a['inAppPurchases'] == 0]
 	if request.GET.get('ad') == 'false':
 		appInfos = [a for a in appInfos if a['containsAds'] == 0]
+	if request.GET.get('rating'):
+		appInfos = [a for a in appInfos if a['rating'] > int(request.GET.get('rating'))]
 	return appInfos
 
 

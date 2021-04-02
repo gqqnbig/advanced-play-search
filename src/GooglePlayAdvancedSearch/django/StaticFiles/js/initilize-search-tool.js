@@ -18,6 +18,7 @@ const searchTool = new Vue({
 		allowInAppPurchase: !currentQuery.get('ap'),
 		freeInstall: currentQuery.get('free') || false,
 		allowAds: !currentQuery.get('ad'),
+		rating: currentQuery.get('rating') || -1,
 	},
 	computed: {
 		queryString: function () {
@@ -36,6 +37,8 @@ const searchTool = new Vue({
 				query += "&ad=false";
 			if (this.freeInstall)
 				query += "&free=true";
+			if (this.rating != -1)
+				query += '&rating=' + this.rating;
 			return query;
 		}
 	},
