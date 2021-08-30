@@ -1,4 +1,6 @@
+import os
 import sqlite3
+import time
 
 import requests
 
@@ -105,6 +107,37 @@ def test_sortByPriceWithoutDetail(websiteUrl):
 	data = response.json()['apps']
 	assert data[0]['install_fee'] >= data[-1]['install_fee'], \
 		f'Sort apps by price from high to low, but the price of the first app is {data[0]["install_fee"]}, the price of the last app is {data[-1]["install_fee"]}.'
+
+
+def callback_testSearchTimingFromEmpty(websiteUrl):
+	response = requests.get(websiteUrl + '/Api/SearchTiming')
+	assert response.status_code == 200
+	data = response.json()
+	assert type(data['mean']) is int
+	assert type(data['std']) is int
+
+	time.sleep(20)  # for rate control
+	requests.get(websiteUrl + '/Api/Search?q=game')
+	response = requests.get(websiteUrl + '/Api/SearchTiming')
+	assert response.status_code == 200
+	data = response.json()
+	assert type(data['mean']) is int
+	assert type(data['std']) is int
+
+	time.sleep(20)  # for rate control
+	requests.get(websiteUrl + '/Api/Search?q=book')
+	response = requests.get(websiteUrl + '/Api/SearchTiming')
+	assert response.status_code == 200
+	data = response.json()
+	assert data['mean'] > 0
+	assert data['std'] > 0  # in theory, std may be 0 for the two runs.
+
+
+def test_searchTiming(dbFilePath):
+	if os.path.exists(dbFilePath):
+		os.remove(dbFilePath)
+
+	testUtils.startWebsite(callback_testSearchTimingFromEmpty)
 
 
 def test_sortByPrice(websiteUrl):

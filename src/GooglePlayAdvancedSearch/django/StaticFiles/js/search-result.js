@@ -13,6 +13,7 @@ const searchResult = new Vue({
 		errorMessage: undefined,
 		errorType: '',
 		executionSeconds: undefined,
+		searchingPrompt: undefined,
 	},
 	methods: {
 		getPriceText(installFee, allowInAppPurchase) {
@@ -29,11 +30,18 @@ const searchResult = new Vue({
 	}
 });
 
-const searchingTimeoutHandler = setTimeout(() => searchResult.errorMessage = "Taking too long to load result. Something might be wrong.", 30 * 1000);
+let searchingTimeoutHandler = null;
+
+const searchTimingPromise = fetch('/Api/SearchTiming').then(r => r.json()).then(data => {
+	console.log('Waiting timeout (ms): ' + (data.mean + 3 * data.std));
+
+	searchResult.searchingPrompt = `Searching... Usually finish in ${(data.mean / 1000).toFixed(1)}±${(data.std / 1000).toFixed(0)}s`;
+	searchingTimeoutHandler = setTimeout(() => searchResult.errorMessage = "Taking too long to load result. Something might be wrong.", data.mean + 3 * data.std);
+});
 
 const startSearchTime = performance.now();
 //When we got permission list and category list, then run the following code.
-Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis]).then(function (results) {
+Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis, searchTimingPromise]).then(function (results) {
 	if (results[2]) {
 		//it is a session cookie because it doesn't have expiration.
 		// `document.cookie =` is a special syntax that adds a SINGLE cookie.
@@ -45,8 +53,11 @@ Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis]).then(funct
 			clearTimeout(searchingTimeoutHandler);
 			searchResult.errorMessage = data.error;
 			searchResult.errorType = "security";
+			return;
 		}
-		else if (data.apps.length === 0) {
+
+		searchResult.executionSeconds = (performance.now() - startSearchTime) / 1000;
+		if (data.apps.length === 0) {
 			clearTimeout(searchingTimeoutHandler);
 			searchResult.errorMessage = "We couldn't find anything for your search.";
 			searchResult.apps = '';
@@ -59,7 +70,6 @@ Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis]).then(funct
 				return d;
 			});
 
-			searchResult.executionSeconds = (performance.now() - startSearchTime) / 1000;
 			searchResult.errorMessage = undefined;
 		}
 	});
