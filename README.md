@@ -50,13 +50,17 @@ git sparse-checkout add deploy
 git remote set-branches origin 'dev'
 git fetch --all
 
-ln -s /var/www/play-search/deploy/systemd/system/play-search-staleAppRemover.service /etc/systemd/system/play-search-staleAppRemover.service
+sudo ln -s /var/www/play-search/deploy/systemd/system/play-search-staleAppRemover.service /lib/systemd/system/
+sudo ln -s /var/www/play-search/deploy/systemd/system/play-search-staleAppRemover.timer /lib/systemd/system/
+sudo ln -s /var/www/play-search/deploy/systemd/system/uwsgi-play-search.service /lib/systemd/system/
 
 ```
 
 ## Uninstall
 ```
-rm /etc/systemd/system/play-search-staleAppRemover.service
+rm /lib/systemd/system/play-search-staleAppRemover.service
+rm /lib/systemd/system/play-search-staleAppRemover.timer
+rm /lib/systemd/system/uwsgi-play-search.service
 ```
 
 
