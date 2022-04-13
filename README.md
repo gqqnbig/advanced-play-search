@@ -44,6 +44,7 @@ You may follow **install sqlite 3.31** section in [.github/workflows/pythonapp.y
 Make use of the sparse checkout feature since Git 2.25.
 ```bash
 git clone  --no-checkout --depth 1 https://github.com/gqqnbig/advanced-play-search.git
+cd advanced-play-search
 git sparse-checkout init --cone
 git sparse-checkout add src
 git sparse-checkout add deploy
