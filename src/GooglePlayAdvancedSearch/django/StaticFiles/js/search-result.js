@@ -64,9 +64,11 @@ Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis, searchTimin
 		}
 		else {
 			searchResult.apps = data.apps.map(d => {
-				d.ratingTitle = 'Rating ' + d.rating.toFixed(1);
-				if (d.num_reviews)
-					d.ratingTitle += ` based on ${d.num_reviews} reviews`;
+				if (d.rating) {
+					d.ratingTitle = 'Rating ' + d.rating.toFixed(1);
+					if (d.num_reviews)
+						d.ratingTitle += ` based on ${d.num_reviews} reviews`;
+				}
 				return d;
 			});
 
