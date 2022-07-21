@@ -275,10 +275,12 @@ def version(request):
 		branch = subprocess.check_output(['git', 'describe', '--dirty'], cwd=os.path.dirname(os.path.abspath(__file__)))
 		branch = branch.decode("utf-8").strip()
 	except:
+		# The exception will not contain stderr because we didn't set stderr=subprocess.STDOUT.
 		branch = None
 
 	response = HttpResponse(branch)
 	response['Cache-Control'] = "public, max-age=3600"
+	# due to @cache_page, we cannot return a http404.
 	return response
 
 
