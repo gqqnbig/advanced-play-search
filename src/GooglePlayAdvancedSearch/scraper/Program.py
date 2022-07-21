@@ -118,7 +118,7 @@ class AppInfoSpider(scrapy.Spider):
 				# 	os.makedirs(baseDir, exist_ok=True)
 				# 	self.__seleniumAvailable = getPageWithSelenium(response.url, baseDir + appInfo['id'] + '.png', 'c-wiz[data-view-instance-id]')
 
-		ariaLabel_icon = response.css("img[itemprop=image][alt='Cover art']::attr(src)").get()
+		ariaLabel_icon = response.css("img[itemprop=image][alt='Icon image']::attr(src)").get()
 		appInfo['app_icon'] = ariaLabel_icon
 
 		r = scrapy.FormRequest(r'https://play.google.com/_/PlayStoreUi/data/batchexecute?rpcids=xdSrCf&hl=en',
