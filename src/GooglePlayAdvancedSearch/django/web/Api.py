@@ -276,7 +276,7 @@ def version(request):
 		branch = branch.decode("utf-8").strip()
 	except:
 		# The exception will not contain stderr because we didn't set stderr=subprocess.STDOUT.
-		branch = None
+		branch = ""  # None makes more sense, but the JavaScript side will see "None" as string. So we return empty string here.
 
 	response = HttpResponse(branch)
 	response['Cache-Control'] = "public, max-age=3600"
