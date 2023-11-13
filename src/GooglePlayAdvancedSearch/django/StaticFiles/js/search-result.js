@@ -5,6 +5,7 @@ const testGoogleAnalysis = Promise.all([fetch('https://www.googletagmanager.com/
 	return new Promise(resolve => resolve(false));
 });
 
+let readyToShowAds = false;
 
 const searchResult = new Vue({
 	el: "#searchResult",
@@ -14,6 +15,13 @@ const searchResult = new Vue({
 		errorType: '',
 		executionSeconds: undefined,
 		searchingPrompt: undefined,
+	},
+	updated: function () {
+		if (readyToShowAds) {
+			//activate Google ads
+			(adsbygoogle = window.adsbygoogle || []).push({});
+			readyToShowAds = false;
+		}
 	},
 	methods: {
 		getPriceText(installFee, allowInAppPurchase) {
@@ -71,6 +79,8 @@ Promise.all([permissionPromise, categoryPromise, testGoogleAnalysis, searchTimin
 			});
 
 			searchResult.errorMessage = undefined;
+
+			readyToShowAds = true;
 		}
 	});
 });
